@@ -49,7 +49,7 @@ public class Request<T> implements com.auth0.requests.Request<T> {
     private final MediaType mediaType;
     private final OkHttpClient client;
 
-    private String baseUrl;
+    private HttpUrl baseUrl;
     private String path;
     private String method;
     private Object body;
@@ -75,12 +75,18 @@ public class Request<T> implements com.auth0.requests.Request<T> {
 
     @Override
     public Request<T> baseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
+        this.baseUrl = HttpUrl.parse(baseUrl);
+        if (this.baseUrl == null) {
+            throw new IllegalArgumentException("Cannot use an invalid HTTP or HTTPS url: " + baseUrl);
+        }
         return this;
     }
 
     @Override
     public ParameterizableRequest<T> addParameter(String name, Object value) {
+        if (body != null) {
+            throw new IllegalArgumentException("Cannot set body and parameters at the same time");
+        }
         bodyParameters.put(name, value);
         return this;
     }
@@ -109,9 +115,7 @@ public class Request<T> implements com.auth0.requests.Request<T> {
 
     @Override
     public ParameterizableRequest<T> post(String path, Object body) {
-        this.path = path;
-        this.method = "POST";
-        this.body = body;
+        setPathBodyAndMethod(path, body, "POST");
         return this;
     }
 
@@ -122,9 +126,7 @@ public class Request<T> implements com.auth0.requests.Request<T> {
 
     @Override
     public ParameterizableRequest<T> patch(String path, Object body) {
-        this.path = path;
-        this.method = "PATCH";
-        this.body = body;
+        setPathBodyAndMethod(path, body, "PATCH");
         return this;
     }
 
@@ -135,23 +137,19 @@ public class Request<T> implements com.auth0.requests.Request<T> {
 
     @Override
     public ParameterizableRequest<T> put(String path, Object body) {
-        this.path = path;
-        this.method = "PUT";
-        this.body = body;
+        setPathBodyAndMethod(path, body, "PUT");
         return this;
     }
 
     @Override
     public ParameterizableRequest<T> delete(String path) {
-        this.path = path;
-        this.method = "DELETE";
+        setPathBodyAndMethod(path, null, "DELETE");
         return this;
     }
 
     @Override
     public ParameterizableRequest<T> get(String path) {
-        this.path = path;
-        this.method = "GET";
+        setPathBodyAndMethod(path, null, "GET");
         return this;
     }
 
@@ -165,8 +163,18 @@ public class Request<T> implements com.auth0.requests.Request<T> {
         buildCall().start(callback);
     }
 
+    private void setPathBodyAndMethod(String path, Object body, String method) {
+        this.path = path;
+        this.body = body;
+        this.method = method;
+    }
+
     private WebServiceCall<T> buildCall() {
-        HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder()
+        if (baseUrl == null) {
+            throw new IllegalArgumentException("You must set a baseUrl");
+        }
+
+        HttpUrl.Builder urlBuilder = baseUrl.newBuilder()
                 .addPathSegments(path);
 
         for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
