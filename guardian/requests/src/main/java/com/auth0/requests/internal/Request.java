@@ -24,7 +24,9 @@ package com.auth0.requests.internal;
 
 import com.auth0.requests.Serializer;
 import com.auth0.requests.Callback;
+import com.auth0.requests.ServerErrorException;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -140,7 +142,7 @@ public class Request<T> implements com.auth0.requests.Request<T> {
     }
 
     @Override
-    public T execute() throws Exception {
+    public T execute() throws IOException, ServerErrorException {
         return buildCall().execute();
     }
 

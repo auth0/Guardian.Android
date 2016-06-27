@@ -28,7 +28,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Contains the data of a Guardian server error. Used only to parse the error response and add it to
- * the ServerErrorException as extra information.
+ * the GuardianServerErrorException as extra information.
  * <p>
  * Instances of this class should only be created by {@link GuardianAPI} and must be used as value
  * objects.

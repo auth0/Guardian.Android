@@ -23,6 +23,7 @@
 package com.auth0.requests.gson;
 
 import com.auth0.requests.Serializer;
+import com.auth0.requests.ServerErrorException;
 import com.auth0.requests.ServerErrorParser;
 import com.google.gson.Gson;
 
@@ -55,7 +56,7 @@ public class GsonSerializer implements Serializer {
     }
 
     @Override
-    public Exception parseServerError(Reader reader, int statusCode) {
+    public ServerErrorException parseServerError(Reader reader, int statusCode) {
         return errorParser.parse(reader, statusCode);
     }
 

@@ -246,34 +246,24 @@ public class GuardianAPI {
                 throw new IllegalArgumentException("baseUrl cannot be null");
             }
 
-            if (callbackExecutor == null) {
-                callbackExecutor = new DirectExecutor();
-            }
-
-            if (client == null) {
-                client = new OkHttpClient();
-            }
-
             if (gson == null) {
                 gson = new GsonBuilder()
                         .registerTypeAdapterFactory(new JsonRequiredTypeAdapterFactory())
                         .create();
             }
 
-            RequestFactory requestFactory = new RequestFactory(
-                    callbackExecutor,
-                    new GsonSerializer(gson, new GuardianServerErrorParser(gson)),
-                    client);
+            RequestFactory.Builder builder = new RequestFactory.Builder()
+                    .serializer(new GsonSerializer(gson, new GuardianServerErrorParser(gson)));
 
-            return new GuardianAPI(baseUrl, requestFactory);
-        }
-
-        private class DirectExecutor implements Executor {
-
-            @Override
-            public void execute(Runnable command) {
-                command.run();
+            if (callbackExecutor != null) {
+                builder.callbackExecutor(callbackExecutor);
             }
+
+            if (client != null) {
+                builder.client(client);
+            }
+
+            return new GuardianAPI(baseUrl, builder.build());
         }
     }
 }

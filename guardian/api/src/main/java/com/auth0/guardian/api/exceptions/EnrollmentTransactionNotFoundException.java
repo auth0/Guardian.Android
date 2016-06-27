@@ -31,11 +31,11 @@ import com.auth0.guardian.api.data.ServerError;
  * @author Nicolas Ulrich (nikolaseu@gmail.com)
  * @see com.auth0.guardian.api.GuardianAPI#getEnrollmentInfo
  */
-public class EnrollmentTransactionNotFoundException extends ServerErrorException {
+public class EnrollmentTransactionNotFoundException extends GuardianServerErrorException {
 
     public static final String ERROR_CODE = "enrollment_transaction_not_found";
 
-    public EnrollmentTransactionNotFoundException(ServerError serverError) {
-        super(serverError);
+    public EnrollmentTransactionNotFoundException(ServerError serverError, int statusCode) {
+        super(serverError, statusCode);
     }
 }

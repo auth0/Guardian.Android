@@ -23,6 +23,7 @@
 package com.auth0.guardian.api.exceptions;
 
 import com.auth0.guardian.api.data.ServerError;
+import com.auth0.requests.ServerErrorException;
 
 /**
  * This is a general exception for all errors returned by the Guardian server.
@@ -32,32 +33,25 @@ import com.auth0.guardian.api.data.ServerError;
  * @author Nicolas Ulrich (nikolaseu@gmail.com)
  * @see com.auth0.guardian.api.GuardianAPI
  */
-public class ServerErrorException extends Exception {
+public class GuardianServerErrorException extends ServerErrorException {
 
     private final String errorCode;
-    private final int statusCode;
     private final String error;
 
-    public ServerErrorException(String detailMessage, String errorCode, int statusCode, Throwable throwable) {
-        super(detailMessage, throwable);
+    public GuardianServerErrorException(String detailMessage, String errorCode, int statusCode, Throwable throwable) {
+        super(detailMessage, throwable, statusCode);
         this.errorCode = errorCode;
-        this.statusCode = statusCode;
         this.error = null;
     }
 
-    public ServerErrorException(ServerError serverError) {
-        super(serverError.getMessage());
+    public GuardianServerErrorException(ServerError serverError, int statusCode) {
+        super(serverError.getMessage(), statusCode);
         this.errorCode = serverError.getErrorCode();
-        this.statusCode = serverError.getStatusCode();
         this.error = serverError.getError();
     }
 
     public String getErrorCode() {
         return errorCode;
-    }
-
-    public int getStatusCode() {
-        return statusCode;
     }
 
     public String getError() {
@@ -66,9 +60,8 @@ public class ServerErrorException extends Exception {
 
     @Override
     public String toString() {
-        return "ServerErrorException{" +
+        return "GuardianServerErrorException{" +
                 "errorCode='" + errorCode + '\'' +
-                ", statusCode=" + statusCode +
                 ", error='" + error + '\'' +
                 ", super='" + super.toString() + '\'' +
                 '}';

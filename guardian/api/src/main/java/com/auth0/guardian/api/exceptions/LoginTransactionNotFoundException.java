@@ -35,11 +35,11 @@ import com.auth0.guardian.api.data.ServerError;
  * @see com.auth0.guardian.api.GuardianAPI#allowLogin
  * @see com.auth0.guardian.api.GuardianAPI#rejectLogin
  */
-public class LoginTransactionNotFoundException extends ServerErrorException {
+public class LoginTransactionNotFoundException extends GuardianServerErrorException {
 
     public static final String ERROR_CODE = "login_transaction_not_found";
 
-    public LoginTransactionNotFoundException(ServerError serverError) {
-        super(serverError);
+    public LoginTransactionNotFoundException(ServerError serverError, int statusCode) {
+        super(serverError, statusCode);
     }
 }

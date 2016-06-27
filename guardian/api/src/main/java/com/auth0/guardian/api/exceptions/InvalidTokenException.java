@@ -34,11 +34,11 @@ import com.auth0.guardian.api.data.ServerError;
  * @see com.auth0.guardian.api.GuardianAPI#deleteDeviceAccount
  * @see com.auth0.guardian.api.GuardianAPI#updateDeviceAccount
  */
-public class InvalidTokenException extends ServerErrorException {
+public class InvalidTokenException extends GuardianServerErrorException {
 
     public static final String ERROR_CODE = "invalid_token";
 
-    public InvalidTokenException(ServerError serverError) {
-        super(serverError);
+    public InvalidTokenException(ServerError serverError, int statusCode) {
+        super(serverError, statusCode);
     }
 }

@@ -30,7 +30,7 @@ package com.auth0.guardian.api.exceptions;
  * @author Nicolas Ulrich (nikolaseu@gmail.com)
  * @see com.auth0.guardian.api.GuardianAPI
  */
-public class UnparseableServerErrorException extends ServerErrorException {
+public class UnparseableServerErrorException extends GuardianServerErrorException {
 
     public static final String ERROR_CODE = "parse_response_error";
 

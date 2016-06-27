@@ -20,25 +20,16 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.guardian.api.exceptions;
-
-import com.auth0.guardian.api.data.ServerError;
+package com.auth0.requests;
 
 /**
- * Exception that indicates that the device account could not be found or does not exist anymore.
- * <p>
- * This exception occurs when trying to update or delete a {@link com.auth0.guardian.api.data.DeviceAccount}
- * and the Guardian server returns with the error code "device_account_not_found".
+ * Exception thrown when deserialization/parsing fails
  *
  * @author Nicolas Ulrich (nikolaseu@gmail.com)
- * @see com.auth0.guardian.api.GuardianAPI#deleteDeviceAccount
- * @see com.auth0.guardian.api.GuardianAPI#updateDeviceAccount
  */
-public class DeviceAccountNotFoundException extends GuardianServerErrorException {
+public class ParseErrorException extends ServerErrorException {
 
-    public static final String ERROR_CODE = "device_account_not_found";
-
-    public DeviceAccountNotFoundException(ServerError serverError, int statusCode) {
-        super(serverError, statusCode);
+    public ParseErrorException(Throwable cause, int statusCode) {
+        super(cause, statusCode);
     }
 }

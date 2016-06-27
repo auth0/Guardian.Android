@@ -22,6 +22,13 @@
 
 package com.auth0.requests;
 
+import com.auth0.requests.gson.GsonSerializer;
+import com.auth0.requests.gson.JsonRequiredTypeAdapterFactory;
+import com.auth0.requests.internal.DirectExecutor;
+import com.auth0.requests.internal.SimpleServerErrorParser;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
@@ -38,9 +45,9 @@ public class RequestFactory {
     private final OkHttpClient client;
     private final MediaType mediaType;
 
-    public RequestFactory(Executor callbackExecutor,
-                          Serializer serializer,
-                          OkHttpClient client) {
+    RequestFactory(Executor callbackExecutor,
+                   Serializer serializer,
+                   OkHttpClient client) {
         this.callbackExecutor = callbackExecutor;
         this.serializer = serializer;
         this.client = client;
@@ -69,5 +76,64 @@ public class RequestFactory {
                 null,
                 mediaType,
                 client);
+    }
+
+    public static class Builder {
+        private Executor callbackExecutor;
+        private Serializer serializer;
+        private ServerErrorParser errorParser;
+        private OkHttpClient client;
+
+        public Builder callbackExecutor(Executor callbackExecutor) {
+            this.callbackExecutor = callbackExecutor;
+            return this;
+        }
+
+        public Builder serializer(Serializer serializer) {
+            if (errorParser != null) {
+                throw new IllegalArgumentException("You cannot supply a serializer if already providing an error parser");
+            }
+
+            this.serializer = serializer;
+            return this;
+        }
+
+        public Builder errorParser(ServerErrorParser errorParser) {
+            if (serializer != null) {
+                throw new IllegalArgumentException("You cannot supply an errorParser if already providing a full serializer");
+            }
+
+            this.errorParser = errorParser;
+            return this;
+        }
+
+        public Builder client(OkHttpClient client) {
+            this.client = client;
+            return this;
+        }
+
+        public RequestFactory build() {
+            if (callbackExecutor == null) {
+                callbackExecutor = new DirectExecutor();
+            }
+
+            if (serializer == null) {
+                if (errorParser == null) {
+                    errorParser = new SimpleServerErrorParser();
+                }
+
+                Gson gson = new GsonBuilder()
+                        .registerTypeAdapterFactory(new JsonRequiredTypeAdapterFactory())
+                        .create();
+
+                serializer = new GsonSerializer(gson, errorParser);
+            }
+
+            if (client == null) {
+                client = new OkHttpClient();
+            }
+
+            return new RequestFactory(callbackExecutor, serializer, client);
+        }
     }
 }

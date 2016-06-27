@@ -34,7 +34,7 @@ public interface Serializer {
 
     String serialize(Object body);
 
-    Exception parseServerError(Reader reader, int statusCode);
+    ServerErrorException parseServerError(Reader reader, int statusCode);
 
     <T> Parser<T> createParserFor(Class<T> classOfT);
 

@@ -25,11 +25,12 @@ package com.auth0.guardian.api.utils;
 import com.auth0.guardian.api.data.ServerError;
 import com.auth0.guardian.api.exceptions.DeviceAccountNotFoundException;
 import com.auth0.guardian.api.exceptions.EnrollmentTransactionNotFoundException;
+import com.auth0.guardian.api.exceptions.GuardianServerErrorException;
 import com.auth0.guardian.api.exceptions.InvalidOTPCodeException;
 import com.auth0.guardian.api.exceptions.InvalidTokenException;
 import com.auth0.guardian.api.exceptions.LoginTransactionNotFoundException;
-import com.auth0.guardian.api.exceptions.ServerErrorException;
 import com.auth0.guardian.api.exceptions.UnparseableServerErrorException;
+import com.auth0.requests.ServerErrorException;
 import com.auth0.requests.ServerErrorParser;
 import com.google.gson.Gson;
 
@@ -47,23 +48,23 @@ public class GuardianServerErrorParser implements ServerErrorParser {
     }
 
     @Override
-    public Exception parse(Reader reader, int statusCode) {
+    public ServerErrorException parse(Reader reader, int statusCode) {
         try {
             ServerError serverError = gson.fromJson(reader, ServerError.class);
             switch (serverError.getErrorCode()) {
                 case InvalidTokenException.ERROR_CODE:
-                    return new InvalidTokenException(serverError);
+                    return new InvalidTokenException(serverError, statusCode);
                 case InvalidOTPCodeException.ERROR_CODE:
-                    return new InvalidOTPCodeException(serverError);
+                    return new InvalidOTPCodeException(serverError, statusCode);
                 case LoginTransactionNotFoundException.ERROR_CODE:
-                    return new LoginTransactionNotFoundException(serverError);
+                    return new LoginTransactionNotFoundException(serverError, statusCode);
                 case DeviceAccountNotFoundException.ERROR_CODE:
-                    return new DeviceAccountNotFoundException(serverError);
+                    return new DeviceAccountNotFoundException(serverError, statusCode);
                 case EnrollmentTransactionNotFoundException.ERROR_CODE:
-                    return new EnrollmentTransactionNotFoundException(serverError);
+                    return new EnrollmentTransactionNotFoundException(serverError, statusCode);
                 default:
                     // Any other unhandled error
-                    return new ServerErrorException(serverError);
+                    return new GuardianServerErrorException(serverError, statusCode);
             }
         } catch (Exception e) {
             return new UnparseableServerErrorException("Invalid server error response: " + reader, statusCode, e);

@@ -24,6 +24,7 @@ package com.auth0.requests.internal;
 
 import com.auth0.requests.Callback;
 import com.auth0.requests.Serializer;
+import com.auth0.requests.ServerErrorException;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -52,7 +53,7 @@ public class WebServiceCall<T> {
         this.call = call;
     }
 
-    public T execute() throws Exception {
+    public T execute() throws IOException, ServerErrorException {
         Response response = call.execute();
         if (response.isSuccessful()) {
             return payloadFromResponse(response);
@@ -85,21 +86,25 @@ public class WebServiceCall<T> {
         });
     }
 
-    private T payloadFromResponse(Response response) throws Exception {
+    private T payloadFromResponse(Response response) throws com.auth0.requests.ParseErrorException {
         if (parser != null) {
-            final Reader reader = response.body().charStream();
-            return parser.parse(reader);
+            try {
+                final Reader reader = response.body().charStream();
+                return parser.parse(reader);
+            } catch (Exception e) {
+                throw new com.auth0.requests.ParseErrorException(e, response.code());
+            }
         } else {
             return null;
         }
     }
 
-    private Exception exceptionFromErrorResponse(Response response) {
+    private ServerErrorException exceptionFromErrorResponse(Response response) {
         try {
             final Reader reader = response.body().charStream();
             return serializer.parseServerError(reader, response.code());
         } catch (Exception t) {
-            return t;
+            return new com.auth0.requests.ParseErrorException(t, response.code());
         }
     }
 

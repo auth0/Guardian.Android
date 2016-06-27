@@ -34,11 +34,11 @@ import com.auth0.guardian.api.data.ServerError;
  * @see com.auth0.guardian.api.GuardianAPI#allowLogin
  * @see com.auth0.guardian.api.GuardianAPI#rejectLogin
  */
-public class InvalidOTPCodeException extends ServerErrorException {
+public class InvalidOTPCodeException extends GuardianServerErrorException {
 
     public static final String ERROR_CODE = "invalid_otp";
 
-    public InvalidOTPCodeException(ServerError serverError) {
-        super(serverError);
+    public InvalidOTPCodeException(ServerError serverError, int statusCode) {
+        super(serverError, statusCode);
     }
 }

@@ -22,6 +22,8 @@
 
 package com.auth0.requests;
 
+import java.io.IOException;
+
 /**
  * @author Nicolas Ulrich (nikolaseu@gmail.com)
  */
@@ -31,9 +33,11 @@ public interface ExecutableRequest<T> {
      * Executes the request synchronously, blocking the current thread
      *
      * @return the parsed response
-     * @throws Exception when something fails
+     * @throws IOException when request couldn't be executed
+     * @throws ServerErrorException when the server returns an error or the parsing of the response
+     *         fails
      */
-    T execute() throws Exception;
+    T execute() throws IOException, ServerErrorException;
 
     /**
      * Executes the request in a background thread
