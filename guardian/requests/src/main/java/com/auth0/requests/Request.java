@@ -74,6 +74,25 @@ public interface Request<T> extends ParameterizableRequest<T> {
     ParameterizableRequest<T> patch(String path, Object body);
 
     /**
+     * Sets the path for the request and the method to 'PUT'.
+     * Useful for cases where the body was set adding individual parameters
+     *
+     * @param path the path of the endpoint
+     * @return itself
+     */
+    ParameterizableRequest<T> put(String path);
+
+    /**
+     * Sets the path for the request, the method to 'PUT' and will include the serialized object
+     * as the body of the request
+     *
+     * @param path the path of the endpoint
+     * @param body the object to be serialized and included as the body of the request
+     * @return itself
+     */
+    ParameterizableRequest<T> put(String path, Object body);
+
+    /**
      * Sets the path for the request and the method to 'DELETE'
      *
      * @param path the path of the endpoint

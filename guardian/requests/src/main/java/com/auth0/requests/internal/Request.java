@@ -22,6 +22,7 @@
 
 package com.auth0.requests.internal;
 
+import com.auth0.requests.ParameterizableRequest;
 import com.auth0.requests.Serializer;
 import com.auth0.requests.Callback;
 import com.auth0.requests.ServerErrorException;
@@ -79,35 +80,35 @@ public class Request<T> implements com.auth0.requests.Request<T> {
     }
 
     @Override
-    public Request<T> addParameter(String name, Object value) {
+    public ParameterizableRequest<T> addParameter(String name, Object value) {
         bodyParameters.put(name, value);
         return this;
     }
 
     @Override
-    public Request<T> addQueryParameter(String name, String value) {
+    public ParameterizableRequest<T> addQueryParameter(String name, String value) {
         queryParameters.put(name, value);
         return this;
     }
 
     @Override
-    public Request<T> addHeader(String name, String value) {
+    public ParameterizableRequest<T> addHeader(String name, String value) {
         headers.put(name, value);
         return this;
     }
 
     @Override
-    public Request<T> setBearer(String jwt) {
+    public ParameterizableRequest<T> setBearer(String jwt) {
         return addHeader("Authorization", "Bearer " + jwt);
     }
 
     @Override
-    public Request<T> post(String path) {
+    public ParameterizableRequest<T> post(String path) {
         return post(path, null);
     }
 
     @Override
-    public Request<T> post(String path, Object body) {
+    public ParameterizableRequest<T> post(String path, Object body) {
         this.path = path;
         this.method = "POST";
         this.body = body;
@@ -115,12 +116,12 @@ public class Request<T> implements com.auth0.requests.Request<T> {
     }
 
     @Override
-    public Request<T> patch(String path) {
+    public ParameterizableRequest<T> patch(String path) {
         return patch(path, null);
     }
 
     @Override
-    public Request<T> patch(String path, Object body) {
+    public ParameterizableRequest<T> patch(String path, Object body) {
         this.path = path;
         this.method = "PATCH";
         this.body = body;
@@ -128,14 +129,27 @@ public class Request<T> implements com.auth0.requests.Request<T> {
     }
 
     @Override
-    public Request<T> delete(String path) {
+    public ParameterizableRequest<T> put(String path) {
+        return put(path, null);
+    }
+
+    @Override
+    public ParameterizableRequest<T> put(String path, Object body) {
+        this.path = path;
+        this.method = "PUT";
+        this.body = body;
+        return this;
+    }
+
+    @Override
+    public ParameterizableRequest<T> delete(String path) {
         this.path = path;
         this.method = "DELETE";
         return this;
     }
 
     @Override
-    public Request<T> get(String path) {
+    public ParameterizableRequest<T> get(String path) {
         this.path = path;
         this.method = "GET";
         return this;
@@ -176,6 +190,6 @@ public class Request<T> implements com.auth0.requests.Request<T> {
 
         Call call = client.newCall(builder.build());
 
-        return new WebServiceCall<T>(executor, serializer, parser, call);
+        return new WebServiceCall<>(executor, serializer, parser, call);
     }
 }
