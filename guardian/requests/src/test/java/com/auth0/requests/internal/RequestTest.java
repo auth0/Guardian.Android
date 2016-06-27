@@ -95,18 +95,18 @@ public class RequestTest {
 
     Request<Void> voidRequest;
 
+    Response response = new Response.Builder()
+            .request(new okhttp3.Request.Builder()
+                    .url("https://example.com/")
+                    .build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .body(ResponseBody.create(MEDIA_TYPE, "{}"))
+            .build();
+
     @Before
     public void setUp() throws Exception {
         initMocks(this);
-
-        Response response = new Response.Builder()
-                .request(new okhttp3.Request.Builder()
-                        .url("https://example.com/")
-                        .build())
-                .protocol(Protocol.HTTP_1_1)
-                .code(200)
-                .body(ResponseBody.create(MEDIA_TYPE, "{}"))
-                .build();
 
         when(call.execute())
                 .thenReturn(response);

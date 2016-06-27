@@ -23,6 +23,7 @@
 package com.auth0.requests.internal;
 
 import com.auth0.requests.Callback;
+import com.auth0.requests.ParseErrorException;
 import com.auth0.requests.Serializer;
 import com.auth0.requests.ServerErrorException;
 
@@ -70,7 +71,7 @@ public class WebServiceCall<T> {
                     try {
                         final T data = payloadFromResponse(response);
                         callSuccess(callback, data);
-                    } catch (Exception exception) {
+                    } catch (ParseErrorException exception) {
                         callFailure(callback, exception);
                     }
                 } else {
@@ -86,13 +87,13 @@ public class WebServiceCall<T> {
         });
     }
 
-    private T payloadFromResponse(Response response) throws com.auth0.requests.ParseErrorException {
+    private T payloadFromResponse(Response response) throws ParseErrorException {
         if (parser != null) {
             try {
                 final Reader reader = response.body().charStream();
                 return parser.parse(reader);
             } catch (Exception e) {
-                throw new com.auth0.requests.ParseErrorException(e, response.code());
+                throw new ParseErrorException(e, response.code());
             }
         } else {
             return null;
@@ -104,7 +105,7 @@ public class WebServiceCall<T> {
             final Reader reader = response.body().charStream();
             return serializer.parseServerError(reader, response.code());
         } catch (Exception t) {
-            return new com.auth0.requests.ParseErrorException(t, response.code());
+            return new ParseErrorException(t, response.code());
         }
     }
 
