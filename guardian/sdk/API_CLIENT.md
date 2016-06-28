@@ -1,20 +1,20 @@
 # Guardian API client
 
-## Begin enroll, request token to update device account
+## Begin enroll, request token to create device
 
 ```java
 // Start enroll, need to obtain the device account token from the transaction id included in the QR
-// so we can later create/update the device account
-String deviceAccountToken = apiClient
-        .getEnrollmentInfo(enrollmentTransactionIdFromQR)
+// so we can later create (update) the device account
+String token = apiClient
+        .getDeviceToken(transactionCode)
         .execute();
 
 // or start async
 apiClient
-        .getEnrollmentInfo(enrollmentTransactionIdFromQR)
+        .getDeviceToken(transactionCode)
         .start(new Callback<String> {
             @Override
-            void onSuccess(String deviceAccountToken) {
+            void onSuccess(String token) {
                // we have the device account token to continue with the enroll flow
             }
 
@@ -25,24 +25,23 @@ apiClient
        }
 ```
 
-## Create/update all data of device account
+## Create (update) all data of device
 
 ```java
-// update device account
-DeviceAccount deviceAccount = apiClient
-        .deviceAccount(deviceAccountId, deviceAccountToken)
-        .update(deviceName, pushServiceToken) // use android identifier and GCM for push service
+// create device account
+Device device = apiClient
+        .device(identifier, token)
+        .create(deviceName, gcmToken) // always use android identifier and 'GCM' as push service
         .execute(); // or start() async
 ```
 
-## Update any parameter of the device account
+## Update a parameter of the device
 
 ```java
-DeviceAccount updatedDeviceAccount = apiClient
-        .deviceAccount(deviceAccountId, deviceAccountToken)
-        .updateDeviceIdentifier(deviceIdentifier) // optional
+Device updatedDevice = apiClient
+        .device(identifier, token)
         .updateDeviceName(deviceName) // optional
-        .updatePushCredentials(pushServiceName, pushServiceToken) // optional
+        .updateGCMToken(gcmToken) // optional
         .execute(); // or start() async
 ```
 
@@ -51,7 +50,7 @@ DeviceAccount updatedDeviceAccount = apiClient
 ```java
 // delete device account
 apiClient
-        .deviceAccount(deviceAccountId, deviceAccountToken)
+        .device(identifier, token)
         .delete()
         .execute(); // or start() async
 ```
@@ -60,8 +59,7 @@ apiClient
 
 ```java
 apiClient
-        .authenticationRequest(txToken)
-        .allow(otpCode)
+        .allow(txToken, otpCode)
         .execute(); // or start() async
 ```
 
@@ -69,22 +67,20 @@ apiClient
 
 ```java
 apiClient
-        .authenticationRequest(txToken)
-        .reject(otpCode)
+        .reject(txToken, otpCode)
         .execute(); // or start() async
 
 // optionally if we have a reject reason
 apiClient
-        .authenticationRequest(txToken)
-        .reject(otpCode, rejectReason)
+        .reject(txToken, otpCode, rejectReason)
         .execute(); // or start() async
 ```
 
 ## Get tenant info (picture url, friendly name)
 
 ```java
-TenantInfo tenantInfo = apiClient
-        .getTenantInfo()
+Tenant tenant = apiClient
+        .getTenant()
         .execute(); // or start() async
 ```
 
@@ -96,18 +92,20 @@ List<RejectReason> rejectReasons = apiClient
         .execute(); // or start() async
 ```
 
-## DeviceAccount
+# POJOs/VOs (only getters)
+
+## Device
 
 Includes:
 
 - **String id**: the device account id
-- **String identifier**: an identifier for debug purposes, useful to track devices (should be unique per device, like `Settings.Secure.ANDROID_ID`)
-- **String name**: the name that will be displayed to the user on the widget so he knows which device the push
-    notification has been sent (and to select the one to use in case we allow multiple devices)
+- **String localIdentifier**: an identifier for debug purposes, useful to track devices (should be unique per device, like `Settings.Secure.ANDROID_ID`)
+- **String localName**: the name that will be displayed to the user on the web widget so he knows which device the push
+    notification has been sent to (and to select the one to use in case we allow multiple devices)
 - **String pushService**: always `GCM` for android, its the id of the push notification sender in guardian server
-- **String pushToken**: the GCM token of the device, so the server can send notifications to this device
+- **String gcmToken**: the GCM token of the device, so the server can send notifications to this device
 
-## TenantInfo
+## Tenant
 
 Includes:
 
