@@ -100,24 +100,24 @@ List<RejectReason> rejectReasons = apiClient
 
 Includes:
 
-- **id**: the device account id
-- **identifier**: an identifier for debug purposes, useful to track devices (should be unique per device, like `Settings.Secure.ANDROID_ID`)
-- **name**: the name that will be displayed to the user on the widget so he knows which device the push
+- **String id**: the device account id
+- **String identifier**: an identifier for debug purposes, useful to track devices (should be unique per device, like `Settings.Secure.ANDROID_ID`)
+- **String name**: the name that will be displayed to the user on the widget so he knows which device the push
     notification has been sent (and to select the one to use in case we allow multiple devices)
-- **push service**: always `GCM` for android, its the id of the push notification sender in guardian server
-- **push service token**: the GCM token of the device, so the server can send notifications to this device
+- **String pushService**: always `GCM` for android, its the id of the push notification sender in guardian server
+- **String pushToken**: the GCM token of the device, so the server can send notifications to this device
 
 ## TenantInfo
 
 Includes:
 
-- **name**: the tenant name (kind of an identifier of the tenant)
-- **friendlyName**: a friendly name to display to the user for example
-- **pictureUrl**: the url of a tenant's picture/logo
+- **String name**: the tenant name (kind of an identifier of the tenant)
+- **String friendlyName**: a friendly name to display to the user for example
+- **String pictureUrl**: the url of a tenant's picture/logo
 
 ## RejectReason
 
 Includes:
 
-- **id**: the id used to send when rejecting an auth request
-- **description**: a description to display to display to the user
+- **String id**: the id used to send when rejecting an auth request
+- **String description**: a description to display to display to the user
