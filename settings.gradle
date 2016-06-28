@@ -5,3 +5,6 @@ project(':sdk').projectDir = new File(rootProject.projectDir, './guardian/sdk')
 
 include ':ui'
 project(':ui').projectDir = new File(rootProject.projectDir, './guardian/ui')
+
+include ':networking'
+project(':networking').projectDir = new File(rootProject.projectDir, './guardian/networking')
