@@ -1,0 +1,26 @@
+apply plugin: 'java'
+
+ext {
+    okhttpVersion = '3.3.1'
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    //Gson
+    compile 'com.google.code.gson:gson:2.6.2'
+
+    //OkHttp
+    compile "com.squareup.okhttp3:okhttp:${okhttpVersion}"
+
+    //Mockito
+    testCompile 'org.mockito:mockito-core:1.10.19'
+
+    //MockWebServer
+    testCompile "com.squareup.okhttp3:mockwebserver:${okhttpVersion}"
+
+    //Awaitility
+    testCompile 'com.jayway.awaitility:awaitility:1.7.0'
+
+    testCompile 'junit:junit:4.12'
+}

@@ -1,0 +1,10 @@
+include ':app'
+
+include ':sdk'
+project(':sdk').projectDir = new File(rootProject.projectDir, './guardian/sdk')
+
+include ':api'
+project(':api').projectDir = new File(rootProject.projectDir, './guardian/api')
+
+include ':requests'
+project(':requests').projectDir = new File(rootProject.projectDir, './guardian/requests')
