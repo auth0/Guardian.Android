@@ -1,0 +1,7 @@
+include ':app'
+
+include ':api'
+project(':api').projectDir = new File(rootProject.projectDir, './guardian/api')
+
+include ':requests'
+project(':requests').projectDir = new File(rootProject.projectDir, './guardian/requests')
