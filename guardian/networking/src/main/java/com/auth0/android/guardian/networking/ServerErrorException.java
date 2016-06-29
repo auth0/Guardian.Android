@@ -24,11 +24,8 @@ package com.auth0.android.guardian.networking;
 
 /**
  * Base class for all errors related to the server.
- *
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
- * @see ParseErrorException
  */
-public class ServerErrorException extends Exception {
+public class ServerErrorException extends RuntimeException {
 
     private final int statusCode;
 

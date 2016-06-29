@@ -31,7 +31,7 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 
 /**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
+ * A JSON {@link Serializer} that uses Gson
  */
 public class GsonSerializer implements Serializer {
 
@@ -57,7 +57,7 @@ public class GsonSerializer implements Serializer {
 
     @Override
     public ServerErrorException parseServerError(Reader reader, int statusCode) {
-        return errorParser.parse(reader, statusCode);
+        return errorParser.parseServerError(reader, statusCode);
     }
 
     @Override

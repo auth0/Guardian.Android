@@ -78,11 +78,11 @@ public class GsonSerializerTest {
 
     @Test
     public void shouldCallServerErrorParser() throws Exception {
-        when(serverErrorParser.parse(any(Reader.class), anyInt()))
+        when(serverErrorParser.parseServerError(any(Reader.class), anyInt()))
                 .thenReturn(serverErrorException);
 
         ServerErrorException error = serializer.parseServerError(reader, 123);
-        verify(serverErrorParser).parse(reader, 123);
+        verify(serverErrorParser).parseServerError(reader, 123);
 
         assertThat(error, is(sameInstance(serverErrorException)));
     }

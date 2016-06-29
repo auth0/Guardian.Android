@@ -25,7 +25,7 @@ package com.auth0.android.guardian.networking;
 import java.io.IOException;
 
 /**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
+ * A HTTP request that is ready to be executed/started
  */
 public interface ExecutableRequest<T> {
 
@@ -41,7 +41,7 @@ public interface ExecutableRequest<T> {
     T execute() throws IOException, ServerErrorException, ParseErrorException;
 
     /**
-     * Executes the request in a background thread
+     * Starts the request execution in a background thread
      *
      * @param callback where the result (or error) will be obtained
      */

@@ -24,12 +24,14 @@ package com.auth0.android.guardian.networking;
 
 /**
  * Exception thrown when deserialization/parsing fails
- *
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
  */
-public class ParseErrorException extends Exception {
+public class ParseErrorException extends RuntimeException {
 
     public ParseErrorException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public ParseErrorException(String message) {
+        super(message);
     }
 }

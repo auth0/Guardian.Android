@@ -26,22 +26,57 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 
 /**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
+ * Serializer for the body, and a parser for responses and server errors
+ *
+ * @see RequestFactory.Builder#serializer(Serializer)
  */
-public interface Serializer {
+public interface Serializer extends ServerErrorParser {
 
+    /**
+     * Should return the HTTP content type that indicates the format used by this serializer
+     */
     String getMediaType();
 
+    /**
+     * Serializes the body and returns it as a String
+     *
+     * @param body a class instance or {@code Map<String, Object>} that represents the request body
+     * @return the body serialized
+     */
     String serialize(Object body);
 
-    ServerErrorException parseServerError(Reader reader, int statusCode);
-
+    /**
+     * Returns a parser for a given Class
+     *
+     * @param classOfT the {@link Class} of the expected parsed response
+     * @param <T> the type of the expected parsed response
+     * @return the parser
+     */
     <T> Parser<T> createParserFor(Class<T> classOfT);
 
+    /**
+     * Returns a parser for the given Type
+     *
+     * @param typeOfT the {@link Type} of the expected response
+     * @param <T> the type of the expected response
+     * @return the parser
+     */
     <T> Parser<T> createParserFor(Type typeOfT);
 
+    /**
+     * Parser for a given type
+     *
+     * @param <T> the type of the expected response
+     */
     interface Parser<T> {
 
+        /**
+         * Parses the data contained in the {@link Reader} and returns it as an instance of the
+         * given type.
+         *
+         * @param reader the data container
+         * @return an instance containing the parsed data
+         */
         T parse(Reader reader);
     }
 }

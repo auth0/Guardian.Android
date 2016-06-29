@@ -25,9 +25,9 @@ package com.auth0.android.guardian.networking.internal;
 import java.util.concurrent.Executor;
 
 /**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
+ * A simple {@link Executor} that runs the submitted task immediately in the caller's thread
  */
-public class DirectExecutor  implements Executor {
+public class CurrentThreadExecutor implements Executor {
 
     @Override
     public void execute(Runnable command) {

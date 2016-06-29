@@ -28,12 +28,12 @@ import com.auth0.android.guardian.networking.ServerErrorParser;
 import java.io.Reader;
 
 /**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
+ * A simple {@link ServerErrorParser} that just includes the HTTP status code
  */
 public class SimpleServerErrorParser implements ServerErrorParser {
 
     @Override
-    public ServerErrorException parse(Reader reader, int statusCode) {
+    public ServerErrorException parseServerError(Reader reader, int statusCode) {
         return new ServerErrorException("Server error", statusCode);
     }
 }

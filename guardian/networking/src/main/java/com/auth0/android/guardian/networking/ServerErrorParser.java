@@ -29,5 +29,5 @@ import java.io.Reader;
  */
 public interface ServerErrorParser {
 
-    ServerErrorException parse(Reader reader, int statusCode);
+    ServerErrorException parseServerError(Reader reader, int statusCode);
 }

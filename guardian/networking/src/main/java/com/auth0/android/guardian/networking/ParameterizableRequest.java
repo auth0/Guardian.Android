@@ -23,7 +23,7 @@
 package com.auth0.android.guardian.networking;
 
 /**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
+ * A parameterizable HTTP request that already has a method, url and path
  */
 public interface ParameterizableRequest<T> extends ExecutableRequest<T> {
 
@@ -56,10 +56,10 @@ public interface ParameterizableRequest<T> extends ExecutableRequest<T> {
     ParameterizableRequest<T> addHeader(String name, String value);
 
     /**
-     * Set the Authorization header. Equivalent to `addHeader("Authorization", "Bearer " + jwt)`
+     * Set the Authorization header. Equivalent to `addHeader("Authorization", "Bearer " + token)`
      *
-     * @param jwt the JWT token
+     * @param token the authorization token
      * @return itself
      */
-    ParameterizableRequest<T> setBearer(String jwt);
+    ParameterizableRequest<T> setBearer(String token);
 }

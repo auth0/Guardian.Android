@@ -23,7 +23,7 @@
 package com.auth0.android.guardian.networking;
 
 /**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
+ * The starting point to create a fully customizable HTTP request
  */
 public interface Request<T> extends ParameterizableRequest<T> {
 
