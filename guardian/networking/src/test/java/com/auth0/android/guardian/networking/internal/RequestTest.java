@@ -23,7 +23,6 @@
 package com.auth0.android.guardian.networking.internal;
 
 import com.auth0.android.guardian.networking.Callback;
-import com.auth0.android.guardian.networking.ExecutableRequest;
 import com.auth0.android.guardian.networking.ParseErrorException;
 import com.auth0.android.guardian.networking.Serializer;
 import com.auth0.android.guardian.networking.ServerErrorException;
@@ -112,7 +111,7 @@ public class RequestTest {
 
     Request<Object> request;
 
-    Executor executor = new CurrentThreadExecutor();
+    Executor executor = new DirectExecutor();
 
     Response successResponse = new Response.Builder()
             .request(new okhttp3.Request.Builder()

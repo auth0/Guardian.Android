@@ -24,7 +24,7 @@ package com.auth0.android.guardian.networking;
 
 import com.auth0.android.guardian.networking.gson.GsonSerializer;
 import com.auth0.android.guardian.networking.gson.JsonRequiredTypeAdapterFactory;
-import com.auth0.android.guardian.networking.internal.CurrentThreadExecutor;
+import com.auth0.android.guardian.networking.internal.DirectExecutor;
 import com.auth0.android.guardian.networking.internal.SimpleServerErrorParser;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -217,7 +217,7 @@ public class RequestFactory {
          */
         public RequestFactory build() {
             if (callbackExecutor == null) {
-                callbackExecutor = new CurrentThreadExecutor();
+                callbackExecutor = new DirectExecutor();
             }
 
             if (serializer == null) {

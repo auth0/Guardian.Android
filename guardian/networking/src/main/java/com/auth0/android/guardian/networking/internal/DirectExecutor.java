@@ -27,7 +27,7 @@ import java.util.concurrent.Executor;
 /**
  * A simple {@link Executor} that runs the submitted task immediately in the caller's thread
  */
-public class CurrentThreadExecutor implements Executor {
+public class DirectExecutor implements Executor {
 
     @Override
     public void execute(Runnable command) {
