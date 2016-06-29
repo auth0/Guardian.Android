@@ -23,7 +23,7 @@
 package com.auth0.android.guardian.networking;
 
 /**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
+ * Callback for {@link ExecutableRequest#start(Callback)}
  */
 public interface Callback<T> {
 

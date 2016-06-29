@@ -64,9 +64,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-/**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
- */
 public class RequestTest {
 
     private static final String BASE_URL = "http://example.com";

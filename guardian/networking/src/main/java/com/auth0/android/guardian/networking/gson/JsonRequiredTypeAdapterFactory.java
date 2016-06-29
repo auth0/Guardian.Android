@@ -33,9 +33,6 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
-/**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
- */
 public class JsonRequiredTypeAdapterFactory implements TypeAdapterFactory {
 
     public <T> TypeAdapter<T> create(Gson gson, final TypeToken<T> type) {

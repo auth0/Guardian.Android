@@ -49,9 +49,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-/**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
- */
 public class GsonSerializerTest {
 
     @Mock

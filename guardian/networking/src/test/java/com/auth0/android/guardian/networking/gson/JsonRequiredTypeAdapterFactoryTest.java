@@ -31,9 +31,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-/**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
- */
 public class JsonRequiredTypeAdapterFactoryTest {
 
     Gson gson;

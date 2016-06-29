@@ -25,7 +25,7 @@ package com.auth0.android.guardian.networking;
 import java.io.Reader;
 
 /**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
+ * Parser for server errors
  */
 public interface ServerErrorParser {
 

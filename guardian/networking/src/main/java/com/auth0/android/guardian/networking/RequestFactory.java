@@ -37,8 +37,6 @@ import okhttp3.OkHttpClient;
 
 /**
  * A {@link Request} factory
- *
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
  */
 public class RequestFactory {
 
