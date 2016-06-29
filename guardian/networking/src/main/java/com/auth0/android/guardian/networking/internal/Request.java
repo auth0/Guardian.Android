@@ -28,8 +28,10 @@ import com.auth0.android.guardian.networking.ParseErrorException;
 import com.auth0.android.guardian.networking.Serializer;
 import com.auth0.android.guardian.networking.Callback;
 import com.auth0.android.guardian.networking.ServerErrorException;
+import com.auth0.android.guardian.networking.ServerErrorParser;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -39,6 +41,7 @@ import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class Request<T> implements
         com.auth0.android.guardian.networking.Request<T>,
@@ -47,7 +50,8 @@ public class Request<T> implements
 
     private final Executor executor;
     private final Serializer serializer;
-    private final Serializer.Parser<T> parser;
+    private final Serializer.Parser<T> responseParser;
+    private final ServerErrorParser serverErrorParser;
     private final MediaType mediaType;
     private final OkHttpClient client;
 
@@ -61,12 +65,14 @@ public class Request<T> implements
 
     public Request(Executor executor,
                    Serializer serializer,
-                   Serializer.Parser<T> parser,
+                   Serializer.Parser<T> responseParser,
+                   ServerErrorParser serverErrorParser,
                    MediaType mediaType,
                    OkHttpClient client) {
         this.executor = executor;
         this.serializer = serializer;
-        this.parser = parser;
+        this.responseParser = responseParser;
+        this.serverErrorParser = serverErrorParser;
         this.mediaType = mediaType;
         this.client = client;
 
@@ -157,12 +163,37 @@ public class Request<T> implements
 
     @Override
     public T execute() throws IOException, ServerErrorException, ParseErrorException {
-        return buildCall().execute();
+        Response response = buildCall().execute();
+        if (response.isSuccessful()) {
+            return payloadFromResponse(response);
+        }
+
+        throw exceptionFromErrorResponse(response);
     }
 
     @Override
-    public void start(Callback<T> callback) {
-        buildCall().start(callback);
+    public void start(final Callback<T> callback) {
+        buildCall().enqueue(new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) {
+                try {
+                    if (response.isSuccessful()) {
+                        final T data = payloadFromResponse(response);
+                        callSuccess(callback, data);
+                    } else {
+                        ServerErrorException exception = exceptionFromErrorResponse(response);
+                        callFailure(callback, exception);
+                    }
+                } catch (ParseErrorException exception) {
+                    callFailure(callback, exception);
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException t) {
+                callFailure(callback, t);
+            }
+        });
     }
 
     private void setPathBodyAndMethod(String path, Object body, String method) {
@@ -171,7 +202,7 @@ public class Request<T> implements
         this.method = method;
     }
 
-    private WebServiceCall<T> buildCall() {
+    private Call buildCall() {
         if (baseUrl == null) {
             throw new IllegalArgumentException("You must set a baseUrl");
         }
@@ -198,8 +229,46 @@ public class Request<T> implements
             builder.addHeader(entry.getKey(), entry.getValue());
         }
 
-        Call call = client.newCall(builder.build());
+        return client.newCall(builder.build());
+    }
 
-        return new WebServiceCall<>(executor, serializer, parser, call);
+    private T payloadFromResponse(Response response) throws ParseErrorException {
+        if (responseParser != null) {
+            try {
+                final Reader reader = response.body().charStream();
+                return responseParser.parse(reader);
+            } catch (Exception e) {
+                throw new ParseErrorException("Error parsing server response", e);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private ServerErrorException exceptionFromErrorResponse(Response response) throws ParseErrorException {
+        try {
+            final Reader reader = response.body().charStream();
+            return serverErrorParser.parseServerError(reader, response.code());
+        } catch (Exception t) {
+            throw new ParseErrorException("Error parsing server error", t);
+        }
+    }
+
+    private void callSuccess(final Callback<T> callback, final T data) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                callback.onSuccess(data);
+            }
+        });
+    }
+
+    private void callFailure(final Callback<T> callback, final Exception exception) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                callback.onFailure(exception);
+            }
+        });
     }
 }

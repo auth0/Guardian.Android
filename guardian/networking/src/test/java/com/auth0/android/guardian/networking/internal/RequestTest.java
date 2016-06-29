@@ -23,7 +23,11 @@
 package com.auth0.android.guardian.networking.internal;
 
 import com.auth0.android.guardian.networking.Callback;
+import com.auth0.android.guardian.networking.ExecutableRequest;
+import com.auth0.android.guardian.networking.ParseErrorException;
 import com.auth0.android.guardian.networking.Serializer;
+import com.auth0.android.guardian.networking.ServerErrorException;
+import com.auth0.android.guardian.networking.ServerErrorParser;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,6 +37,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 
+import java.io.IOException;
+import java.io.Reader;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -47,8 +53,13 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -67,13 +78,13 @@ public class RequestTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Mock
-    Executor executor;
-
-    @Mock
     Serializer serializer;
 
     @Mock
-    Serializer.Parser<Void> parser;
+    ServerErrorParser serverErrorParser;
+
+    @Mock
+    Serializer.Parser<Object> parser;
 
     @Mock
     OkHttpClient client;
@@ -82,7 +93,7 @@ public class RequestTest {
     Call call;
 
     @Mock
-    Callback callback;
+    Callback<Object> callback;
 
     @Captor
     ArgumentCaptor<okhttp3.Request> requestCaptor;
@@ -93,9 +104,17 @@ public class RequestTest {
     @Captor
     ArgumentCaptor<Map<String, Object>> mapCaptor;
 
-    Request<Void> voidRequest;
+    @Captor
+    ArgumentCaptor<Throwable> errorCaptor;
 
-    Response response = new Response.Builder()
+    @Captor
+    ArgumentCaptor<okhttp3.Callback> callbackCaptor;
+
+    Request<Object> request;
+
+    Executor executor = new CurrentThreadExecutor();
+
+    Response successResponse = new Response.Builder()
             .request(new okhttp3.Request.Builder()
                     .url("https://example.com/")
                     .build())
@@ -104,12 +123,21 @@ public class RequestTest {
             .body(ResponseBody.create(MEDIA_TYPE, "{}"))
             .build();
 
+    Response errorResponse = new Response.Builder()
+            .request(new okhttp3.Request.Builder()
+                    .url("https://example.com/")
+                    .build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(401)
+            .body(ResponseBody.create(MEDIA_TYPE, "{}"))
+            .build();
+
     @Before
     public void setUp() throws Exception {
         initMocks(this);
 
         when(call.execute())
-                .thenReturn(response);
+                .thenReturn(successResponse);
 
         when(serializer.serialize(any(Object.class)))
                 .thenReturn("{}");
@@ -117,17 +145,15 @@ public class RequestTest {
         when(client.newCall(any(okhttp3.Request.class)))
                 .thenReturn(call);
 
-        voidRequest = new Request<>(executor, serializer, parser, MEDIA_TYPE, client)
-                .baseUrl(BASE_URL);
+        request = new Request<>(executor, serializer, parser, serverErrorParser, MEDIA_TYPE, client);
     }
 
     @Test
     public void shouldFailWithoutBaseUrl() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        Request<Void> request = new Request<>(executor, serializer, parser, MEDIA_TYPE, client);
-
-        request.get("http://example.com/something")
+        request
+                .get("http://example.com/something")
                 .execute();
     }
 
@@ -135,14 +161,16 @@ public class RequestTest {
     public void shouldFailWithInvalidBaseUrl() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        voidRequest.baseUrl("invalidUrl")
+        request
+                .baseUrl("invalidUrl")
                 .get("something")
                 .execute();
     }
 
     @Test
     public void testHttpBaseUrl() throws Exception {
-        voidRequest.baseUrl("http://hello.example.com")
+        request
+                .baseUrl("http://hello.example.com")
                 .get("something")
                 .execute();
 
@@ -154,7 +182,8 @@ public class RequestTest {
 
     @Test
     public void testHttpsBaseUrl() throws Exception {
-        voidRequest.baseUrl("https://hello.example.com")
+        request
+                .baseUrl("https://hello.example.com")
                 .get("something")
                 .execute();
 
@@ -166,7 +195,9 @@ public class RequestTest {
 
     @Test
     public void testGetPath() throws Exception {
-        voidRequest.get("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .get("user/123")
                 .execute();
 
         verify(client).newCall(requestCaptor.capture());
@@ -180,14 +211,18 @@ public class RequestTest {
     public void shouldFailGetWithBody() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        voidRequest.get("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .get("user/123")
                 .addParameter("some", "parameter")
                 .execute();
     }
 
     @Test
     public void testDeletePath() throws Exception {
-        voidRequest.delete("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .delete("user/123")
                 .execute();
 
         verify(client).newCall(requestCaptor.capture());
@@ -199,7 +234,9 @@ public class RequestTest {
 
     @Test
     public void shouldNotFailIfDeleteHasBody() throws Exception {
-        voidRequest.delete("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .delete("user/123")
                 .addParameter("some", "parameter")
                 .execute();
 
@@ -217,7 +254,9 @@ public class RequestTest {
 
     @Test
     public void testPatchPath() throws Exception {
-        voidRequest.patch("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .patch("user/123")
                 .addParameter("parameter", "value")
                 .execute();
 
@@ -232,13 +271,17 @@ public class RequestTest {
     public void shouldFailPatchWithEmptyBody() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        voidRequest.patch("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .patch("user/123")
                 .execute();
     }
 
     @Test
     public void testPostPath() throws Exception {
-        voidRequest.post("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .post("user/123")
                 .addParameter("parameter", "value")
                 .execute();
 
@@ -253,13 +296,17 @@ public class RequestTest {
     public void shouldFailPostWithEmptyBody() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        voidRequest.post("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .post("user/123")
                 .execute();
     }
 
     @Test
     public void testPutPath() throws Exception {
-        voidRequest.put("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .put("user/123")
                 .addParameter("parameter", "value")
                 .execute();
 
@@ -274,13 +321,17 @@ public class RequestTest {
     public void shouldFailPutWithEmptyBody() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        voidRequest.put("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .put("user/123")
                 .execute();
     }
 
     @Test
     public void shouldNotSerializeNothing() throws Exception {
-        voidRequest.get("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .get("user/123")
                 .execute();
 
         verifyNoMoreInteractions(serializer);
@@ -294,7 +345,9 @@ public class RequestTest {
 
     @Test
     public void shouldSerializeFromParameters() throws Exception {
-        voidRequest.put("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .put("user/123")
                 .addParameter("string", "value")
                 .addParameter("number", 123)
                 .addParameter("boolean", true)
@@ -316,7 +369,9 @@ public class RequestTest {
 
     @Test
     public void shouldSerializeFromBodyObject() throws Exception {
-        voidRequest.put("user/123", BODY)
+        request
+                .baseUrl(BASE_URL)
+                .put("user/123", BODY)
                 .execute();
 
         verify(serializer).serialize(objectCaptor.capture());
@@ -335,14 +390,18 @@ public class RequestTest {
     public void shouldFailWhenAddingParametersAndAlreadyHadBody() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        voidRequest.put("user/123", BODY)
+        request
+                .baseUrl(BASE_URL)
+                .put("user/123", BODY)
                 .addParameter("parameter", "value")
                 .execute();
     }
 
     @Test
     public void shouldAddHeaders() throws Exception {
-        voidRequest.get("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .get("user/123")
                 .addHeader("header", "value")
                 .addHeader("anotherHeader", "anotherValue")
                 .execute();
@@ -356,7 +415,9 @@ public class RequestTest {
 
     @Test
     public void shouldAddAuthorizationHeader() throws Exception {
-        voidRequest.get("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .get("user/123")
                 .setBearer("some_token")
                 .execute();
 
@@ -368,7 +429,9 @@ public class RequestTest {
 
     @Test
     public void shouldAddQueryParameter() throws Exception {
-        voidRequest.get("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .get("user/123")
                 .addQueryParameter("string", "value")
                 .addQueryParameter("number", String.valueOf(123))
                 .addQueryParameter("boolean", String.valueOf(true))
@@ -384,7 +447,9 @@ public class RequestTest {
 
     @Test
     public void shouldExecuteRealCall() throws Exception {
-        voidRequest.get("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .get("user/123")
                 .execute();
 
         verify(call).execute();
@@ -392,10 +457,228 @@ public class RequestTest {
 
     @Test
     public void shouldStartRealCall() throws Exception {
-        voidRequest.get("user/123")
+        request
+                .baseUrl(BASE_URL)
+                .get("user/123")
                 .start(callback);
 
         verify(call).enqueue(any(okhttp3.Callback.class));
+    }
+
+    @Test
+    public void shouldReturnNullIfNoParserSetUpAndSuccessfulResponse() throws Exception {
+        when(call.execute())
+                .thenReturn(successResponse);
+
+        Object response = new Request<>(executor, serializer, null, serverErrorParser, MEDIA_TYPE, client)
+                .baseUrl(BASE_URL)
+                .get("something")
+                .execute();
+
+        assertThat(response, is(nullValue()));
+    }
+
+    @Test
+    public void shouldParseSuccessfulResponse() throws Exception {
+        when(call.execute())
+                .thenReturn(successResponse);
+
+        Object parsedResponse = new Object();
+
+        when(parser.parse(any(Reader.class)))
+                .thenReturn(parsedResponse);
+
+        Object response = request
+                .baseUrl(BASE_URL)
+                .get("something")
+                .execute();
+        assertThat(response, is(sameInstance(parsedResponse)));
+
+        verify(parser).parse(any(Reader.class));
+    }
+
+    @Test
+    public void shouldParseErrorResponse() throws Exception {
+        when(call.execute())
+                .thenReturn(errorResponse);
+
+        ServerErrorException parsedErrorResponse = new ServerErrorException("Error", errorResponse.code());
+
+        when(serverErrorParser.parseServerError(any(Reader.class), anyInt()))
+                .thenReturn(parsedErrorResponse);
+
+        ServerErrorException thrownException = null;
+        try {
+            request
+                    .baseUrl(BASE_URL)
+                    .get("something")
+                    .execute();
+        } catch (ServerErrorException error) {
+            thrownException = error;
+        }
+
+        verify(serverErrorParser).parseServerError(any(Reader.class), anyInt());
+
+        assertThat(thrownException, is(notNullValue()));
+        assertThat(thrownException, is(sameInstance(parsedErrorResponse)));
+    }
+
+    @Test
+    public void shouldFailParseWithSuccessResponse() throws Exception {
+        thrown.expect(ParseErrorException.class);
+
+        when(call.execute())
+                .thenReturn(successResponse);
+
+        when(parser.parse(any(Reader.class)))
+                .thenThrow(new RuntimeException());
+
+        request
+                .baseUrl(BASE_URL)
+                .get("something")
+                .execute();
+
+        verify(parser).parse(any(Reader.class));
+    }
+
+    @Test
+    public void shouldFailParseWithErrorResponse() throws Exception {
+        thrown.expect(ParseErrorException.class);
+
+        when(call.execute())
+                .thenReturn(errorResponse);
+
+        when(serverErrorParser.parseServerError(any(Reader.class), anyInt()))
+                .thenThrow(new RuntimeException());
+
+        request
+                .baseUrl(BASE_URL)
+                .get("something")
+                .execute();
+
+        verify(serverErrorParser).parseServerError(any(Reader.class), anyInt());
+    }
+
+    @Test
+    public void shouldReturnNullIfNoParserSetUpAndSuccessfulResponseAsync() throws Exception {
+        new Request<>(executor, serializer, null, serverErrorParser, MEDIA_TYPE, client)
+                .baseUrl(BASE_URL)
+                .get("something")
+                .start(callback);
+
+        verify(call).enqueue(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onResponse(call, successResponse);
+
+        verify(callback).onSuccess(objectCaptor.capture());
+        Object response = objectCaptor.getValue();
+        assertThat(response, is(nullValue()));
+    }
+
+    @Test
+    public void shouldParseSuccessfulResponseAsync() throws Exception {
+        Object parsedResponse = new Object();
+
+        when(parser.parse(any(Reader.class)))
+                .thenReturn(parsedResponse);
+
+        request
+                .baseUrl(BASE_URL)
+                .get("something")
+                .start(callback);
+
+        verify(call).enqueue(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onResponse(call, successResponse);
+
+        verify(parser).parse(any(Reader.class));
+        verify(callback).onSuccess(objectCaptor.capture());
+        Object response = objectCaptor.getValue();
+        assertThat(response, is(sameInstance(parsedResponse)));
+    }
+
+    @Test
+    public void shouldParseErrorResponseAsync() throws Exception {
+        ServerErrorException parsedErrorResponse = new ServerErrorException("Error", errorResponse.code());
+
+        when(serverErrorParser.parseServerError(any(Reader.class), anyInt()))
+                .thenReturn(parsedErrorResponse);
+
+        request
+                .baseUrl(BASE_URL)
+                .get("something")
+                .start(callback);
+        verify(call).enqueue(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onResponse(call, errorResponse);
+
+        verify(serverErrorParser).parseServerError(any(Reader.class), anyInt());
+        verify(callback).onFailure(errorCaptor.capture());
+        Throwable thrownException = errorCaptor.getValue();
+        assertThat(thrownException, is(notNullValue()));
+        assertThat(thrownException, is(instanceOf(ServerErrorException.class)));
+        ServerErrorException errorResponse = (ServerErrorException) thrownException;
+        assertThat(errorResponse, is(sameInstance(parsedErrorResponse)));
+    }
+
+    @Test
+    public void shouldFailParseWithSuccessResponseAsync() throws Exception {
+        when(parser.parse(any(Reader.class)))
+                .thenThrow(new RuntimeException());
+
+        request
+                .baseUrl(BASE_URL)
+                .get("something")
+                .start(callback);
+        verify(call).enqueue(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onResponse(call, successResponse);
+
+        verify(parser).parse(any(Reader.class));
+        verify(callback).onFailure(errorCaptor.capture());
+        Throwable thrownException = errorCaptor.getValue();
+        assertThat(thrownException, is(notNullValue()));
+        assertThat(thrownException, is(instanceOf(ParseErrorException.class)));
+    }
+
+    @Test
+    public void shouldFailParseWithErrorResponseAsync() throws Exception {
+        when(serverErrorParser.parseServerError(any(Reader.class), anyInt()))
+                .thenThrow(new RuntimeException());
+
+        request
+                .baseUrl(BASE_URL)
+                .get("something")
+                .start(callback);
+        verify(call).enqueue(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onResponse(call, errorResponse);
+
+        verify(serverErrorParser).parseServerError(any(Reader.class), anyInt());
+        verify(callback).onFailure(errorCaptor.capture());
+        Throwable thrownException = errorCaptor.getValue();
+        assertThat(thrownException, is(notNullValue()));
+        assertThat(thrownException, is(instanceOf(ParseErrorException.class)));
+    }
+
+    @Test
+    public void shouldFailWhenFailure() throws Exception {
+        IOException exception = new IOException("");
+
+        request
+                .baseUrl(BASE_URL)
+                .get("something")
+                .start(callback);
+
+        verify(call).enqueue(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onFailure(call, exception);
+
+        verify(callback).onFailure(errorCaptor.capture());
+        Throwable thrownException = errorCaptor.getValue();
+        assertThat(thrownException, is(notNullValue()));
+        assertThat(thrownException, is(instanceOf(IOException.class)));
+        assertThat((IOException)thrownException, is(sameInstance(exception)));
     }
 
     static class DummyBody {

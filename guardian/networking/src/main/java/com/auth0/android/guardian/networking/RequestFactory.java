@@ -72,6 +72,7 @@ public class RequestFactory {
         return new com.auth0.android.guardian.networking.internal.Request<>(
                 callbackExecutor, serializer,
                 serializer.createParserFor(classOfT),
+                serializer,
                 mediaType,
                 client);
     }
@@ -92,6 +93,7 @@ public class RequestFactory {
         return new com.auth0.android.guardian.networking.internal.Request<>(
                 callbackExecutor, serializer,
                 serializer.<T>createParserFor(typeOfT),
+                serializer,
                 mediaType,
                 client);
     }
@@ -108,6 +110,7 @@ public class RequestFactory {
         return new com.auth0.android.guardian.networking.internal.Request<>(
                 callbackExecutor, serializer,
                 null,
+                serializer,
                 mediaType,
                 client);
     }
