@@ -22,6 +22,7 @@
 
 package com.auth0.android.guardian.networking.internal;
 
+import com.auth0.android.guardian.networking.HttpRequest;
 import com.auth0.android.guardian.networking.ParameterizableRequest;
 import com.auth0.android.guardian.networking.ParseErrorException;
 import com.auth0.android.guardian.networking.Serializer;
@@ -39,10 +40,10 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 
-/**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
- */
-public class Request<T> implements com.auth0.android.guardian.networking.Request<T> {
+public class Request<T> implements
+        com.auth0.android.guardian.networking.Request<T>,
+        HttpRequest<T>,
+        ParameterizableRequest<T> {
 
     private final Executor executor;
     private final Serializer serializer;
@@ -75,7 +76,7 @@ public class Request<T> implements com.auth0.android.guardian.networking.Request
     }
 
     @Override
-    public Request<T> baseUrl(String baseUrl) {
+    public HttpRequest<T> baseUrl(String baseUrl) {
         this.baseUrl = HttpUrl.parse(baseUrl);
         if (this.baseUrl == null) {
             throw new IllegalArgumentException("Cannot use an invalid HTTP or HTTPS url: " + baseUrl);
@@ -105,8 +106,8 @@ public class Request<T> implements com.auth0.android.guardian.networking.Request
     }
 
     @Override
-    public ParameterizableRequest<T> setBearer(String jwt) {
-        return addHeader("Authorization", "Bearer " + jwt);
+    public ParameterizableRequest<T> setBearer(String token) {
+        return addHeader("Authorization", "Bearer " + token);
     }
 
     @Override

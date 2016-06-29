@@ -25,86 +25,14 @@ package com.auth0.android.guardian.networking;
 /**
  * The starting point to create a fully customizable HTTP request
  */
-public interface Request<T> extends ParameterizableRequest<T> {
+public interface Request<T> {
 
     /**
      * Sets the base url, the domain of the server
      *
      * @param baseUrl the domain of the server
-     * @return itself
+     * @return a {@link HttpRequest} instance where you set the path and method
+     * @throws IllegalArgumentException when the baseUrl is invalid
      */
-    Request<T> baseUrl(String baseUrl);
-
-    /**
-     * Sets the path for the request and the method to 'POST'.
-     * Useful for cases where the body was set adding individual parameters
-     *
-     * @param path the path of the endpoint
-     * @return itself
-     */
-    ParameterizableRequest<T> post(String path);
-
-    /**
-     * Sets the path for the request, the method to 'POST' and will include the serialized object
-     * as the body of the request
-     *
-     * @param path the path of the endpoint
-     * @param body the object to be serialized and included as the body of the request
-     * @return itself
-     */
-    ParameterizableRequest<T> post(String path, Object body);
-
-    /**
-     * Sets the path for the request and the method to 'PATCH'.
-     * Useful for cases where the body was set adding individual parameters
-     *
-     * @param path the path of the endpoint
-     * @return itself
-     */
-    ParameterizableRequest<T> patch(String path);
-
-    /**
-     * Sets the path for the request, the method to 'PATCH' and will include the serialized object
-     * as the body of the request
-     *
-     * @param path the path of the endpoint
-     * @param body the object to be serialized and included as the body of the request
-     * @return itself
-     */
-    ParameterizableRequest<T> patch(String path, Object body);
-
-    /**
-     * Sets the path for the request and the method to 'PUT'.
-     * Useful for cases where the body was set adding individual parameters
-     *
-     * @param path the path of the endpoint
-     * @return itself
-     */
-    ParameterizableRequest<T> put(String path);
-
-    /**
-     * Sets the path for the request, the method to 'PUT' and will include the serialized object
-     * as the body of the request
-     *
-     * @param path the path of the endpoint
-     * @param body the object to be serialized and included as the body of the request
-     * @return itself
-     */
-    ParameterizableRequest<T> put(String path, Object body);
-
-    /**
-     * Sets the path for the request and the method to 'DELETE'
-     *
-     * @param path the path of the endpoint
-     * @return itself
-     */
-    ParameterizableRequest<T> delete(String path);
-
-    /**
-     * Sets the path for the request and the method to 'GET'
-     *
-     * @param path the path of the endpoint
-     * @return itself
-     */
-    ParameterizableRequest<T> get(String path);
+    HttpRequest<T> baseUrl(String baseUrl) throws IllegalArgumentException;
 }
