@@ -20,7 +20,11 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.android.guardian.sdk;
+package com.auth0.android.guardian.sdk.networking;
 
-public class Guardian {
+public interface Callback<T> {
+
+    void onSuccess(T response);
+
+    void onFailure(Throwable exception);
 }

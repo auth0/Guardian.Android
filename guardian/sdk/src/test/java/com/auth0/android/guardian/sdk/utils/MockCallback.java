@@ -20,7 +20,43 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.android.guardian.sdk;
+package com.auth0.android.guardian.sdk.utils;
 
-public class Guardian {
+import com.auth0.android.guardian.sdk.networking.Callback;
+
+import java.util.concurrent.Callable;
+
+public class MockCallback<T> implements Callback<T> {
+
+    private T payload;
+    private Throwable error;
+
+
+    public Callable<T> payload() {
+        return new Callable<T>() {
+            @Override
+            public T call() throws Exception {
+                return payload;
+            }
+        };
+    }
+
+    public Callable<Throwable> error() {
+        return new Callable<Throwable>() {
+            @Override
+            public Throwable call() throws Exception {
+                return error;
+            }
+        };
+    }
+
+    @Override
+    public void onSuccess(T response) {
+        this.payload = response;
+    }
+
+    @Override
+    public void onFailure(Throwable error) {
+        this.error = error;
+    }
 }
