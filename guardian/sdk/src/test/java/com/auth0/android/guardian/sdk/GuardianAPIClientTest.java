@@ -22,16 +22,35 @@
 
 package com.auth0.android.guardian.sdk;
 
+import com.auth0.android.guardian.sdk.utils.CallbackMatcher;
+import com.auth0.android.guardian.sdk.utils.MockCallback;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.util.Map;
+
+import okhttp3.mockwebserver.RecordedRequest;
+
+import static com.auth0.android.guardian.sdk.utils.CallbackMatcher.hasNoError;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
 public class GuardianAPIClientTest {
+
+    private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
+    private static final String DEVICE_ACCOUNT_TOKEN = "DEVICE_ACCOUNT_TOKEN";
+    private static final String TX_TOKEN = "TX_TOKEN";
 
     MockWebService mockAPI;
 
@@ -56,5 +75,94 @@ public class GuardianAPIClientTest {
     @After
     public void tearDown() throws Exception {
         mockAPI.shutdown();
+    }
+
+    @Test
+    public void shouldGetDeviceToken() throws Exception {
+        mockAPI.willReturnEnrollmentInfo(DEVICE_ACCOUNT_TOKEN);
+
+        final MockCallback<String> callback = new MockCallback<>();
+
+        apiClient.getDeviceToken(ENROLLMENT_TX_ID)
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
+        assertThat(request.getPath(), is(equalTo("/api/enrollment-info")));
+        assertThat(request.getMethod(), is(equalTo("POST")));
+
+        Map<String, Object> body = bodyFromRequest(request);
+        assertThat(body, hasEntry("enrollment_tx_id", (Object) ENROLLMENT_TX_ID));
+
+        assertThat(callback, CallbackMatcher.hasPayloadOfType(String.class));
+        String deviceToken = callback.payload().call();
+        assertThat(deviceToken, is(equalTo(DEVICE_ACCOUNT_TOKEN)));
+    }
+
+    @Test
+    public void shouldAllowLogin() throws Exception {
+        mockAPI.willReturnSuccess(204);
+
+        final MockCallback<Void> callback = new MockCallback<>();
+
+        apiClient.allow(TX_TOKEN, "123456")
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
+        assertThat(request.getPath(), is(equalTo("/api/verify-otp")));
+        assertThat(request.getMethod(), is(equalTo("POST")));
+        assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
+
+        Map<String, Object> body = bodyFromRequest(request);
+        assertThat(body, hasEntry("type", (Object) "push_notification"));
+        assertThat(body, hasEntry("code", (Object) "123456"));
+
+        assertThat(callback, hasNoError());
+    }
+
+    @Test
+    public void shouldRejectLogin() throws Exception {
+        mockAPI.willReturnSuccess(204);
+
+        final MockCallback<Void> callback = new MockCallback<>();
+
+        apiClient.reject(TX_TOKEN, "123456", "hack")
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
+        assertThat(request.getPath(), is(equalTo("/api/reject-login")));
+        assertThat(request.getMethod(), is(equalTo("POST")));
+        assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
+
+        Map<String, Object> body = bodyFromRequest(request);
+        assertThat(body, hasEntry("code", (Object) "123456"));
+        assertThat(body, hasEntry("reason", (Object) "hack"));
+
+        assertThat(callback, hasNoError());
+    }
+
+    @Test
+    public void shouldRejectLoginWithoutReason() throws Exception {
+        mockAPI.willReturnSuccess(204);
+
+        final MockCallback<Void> callback = new MockCallback<>();
+
+        apiClient.reject(TX_TOKEN, "123456")
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
+        assertThat(request.getPath(), is(equalTo("/api/reject-login")));
+        assertThat(request.getMethod(), is(equalTo("POST")));
+        assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
+
+        Map<String, Object> body = bodyFromRequest(request);
+        assertThat(body, hasEntry("code", (Object) "123456"));
+
+        assertThat(callback, hasNoError());
+    }
+
+    private Map<String, Object> bodyFromRequest(RecordedRequest request) throws IOException {
+        Type type = new TypeToken<Map<String, Object>>() {
+        }.getType();
+        return gson.fromJson(new InputStreamReader(request.getBody().inputStream()), type);
     }
 }
