@@ -28,7 +28,7 @@ import com.auth0.android.guardian.sdk.networking.Request;
 import java.io.IOException;
 import java.util.Map;
 
-public class DeviceTokenRequest {
+class DeviceTokenRequest implements GuardianAPIRequest<String> {
 
     private static final String DEVICE_ACCOUNT_TOKEN_FIELD = "device_account_token";
     private final Request<Map<String, String>> request;
@@ -37,6 +37,7 @@ public class DeviceTokenRequest {
         this.request = request;
     }
 
+    @Override
     public String execute() throws IOException, GuardianException {
         Map<String, String> response = request.execute();
         if (!response.containsKey(DEVICE_ACCOUNT_TOKEN_FIELD)) {
@@ -46,6 +47,7 @@ public class DeviceTokenRequest {
         return response.get(DEVICE_ACCOUNT_TOKEN_FIELD);
     }
 
+    @Override
     public void start(final Callback<String> callback) {
         request.start(new Callback<Map<String, String>>() {
             @Override

@@ -51,7 +51,7 @@ public class GuardianAPIClient {
      * @param enrollmentTransactionId the enrollment transaction id
      * @return a request to execute
      */
-    public DeviceTokenRequest getDeviceToken(String enrollmentTransactionId) {
+    public GuardianAPIRequest<String> getDeviceToken(String enrollmentTransactionId) {
         Type type = new TypeToken<Map<String, String>>() {
         }.getType();
         Request<Map<String, String>> request = requestFactory

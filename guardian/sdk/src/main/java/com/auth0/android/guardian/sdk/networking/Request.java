@@ -22,6 +22,7 @@
 
 package com.auth0.android.guardian.sdk.networking;
 
+import com.auth0.android.guardian.sdk.GuardianAPIRequest;
 import com.auth0.android.guardian.sdk.GuardianException;
 import com.google.gson.reflect.TypeToken;
 
@@ -38,7 +39,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class Request<T> {
+public class Request<T> implements GuardianAPIRequest<T> {
 
     private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
 
@@ -96,6 +97,7 @@ public class Request<T> {
         return this;
     }
 
+    @Override
     public T execute() throws IOException {
         Response response = buildCall().execute();
         if (response.isSuccessful()) {
@@ -105,6 +107,7 @@ public class Request<T> {
         throw exceptionFromErrorResponse(response);
     }
 
+    @Override
     public void start(final Callback<T> callback) {
         buildCall().enqueue(new okhttp3.Callback() {
             @Override
