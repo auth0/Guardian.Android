@@ -123,7 +123,11 @@ public class GuardianAPIClient {
         private Gson gson;
 
         public Builder baseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
+            if (baseUrl.endsWith("/")) {
+                this.baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+            } else {
+                this.baseUrl = baseUrl;
+            }
             return this;
         }
 

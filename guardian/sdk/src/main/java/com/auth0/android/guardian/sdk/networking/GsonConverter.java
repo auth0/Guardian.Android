@@ -31,15 +31,15 @@ class GsonConverter {
 
     private final Gson gson;
 
-    public GsonConverter(Gson gson) {
+    GsonConverter(Gson gson) {
         this.gson = gson;
     }
 
-    public String serialize(Object body) {
+    String serialize(Object body) {
         return gson.toJson(body);
     }
 
-    public <T> T parse(Type typeOfT, Reader reader) {
+    <T> T parse(Type typeOfT, Reader reader) {
         return gson.fromJson(reader, typeOfT);
     }
 }
