@@ -60,6 +60,58 @@ public class GuardianAPIClient {
         return new DeviceTokenRequest(request);
     }
 
+    /**
+     * Allows an authentication request
+     *
+     * @param txToken the auth transaction token
+     * @param otpCode the one time password
+     * @return a request to execute
+     * @see #reject(String, String)
+     * @see #reject(String, String, String)
+     */
+    public GuardianAPIRequest<Void> allow(String txToken, String otpCode) {
+        Type type = new TypeToken<Void>() {
+        }.getType();
+        return requestFactory
+                .<Void>newRequest("POST", completeUrl("api/verify-otp"), type)
+                .setBearer(txToken)
+                .addParameter("type", "push_notification")
+                .addParameter("code", otpCode);
+    }
+
+    /**
+     * Rejects an authentication request indicating a reason
+     *
+     * @param txToken the auth transaction token
+     * @param otpCode the one time password
+     * @param reason the reject reason
+     * @return a request to execute
+     * @see #reject(String, String)
+     * @see #allow(String, String)
+     */
+    public GuardianAPIRequest<Void> reject(String txToken, String otpCode, String reason) {
+        Type type = new TypeToken<Void>() {
+        }.getType();
+        return requestFactory
+                .<Void>newRequest("POST", completeUrl("api/reject-login"), type)
+                .setBearer(txToken)
+                .addParameter("code", otpCode)
+                .addParameter("reason", reason);
+    }
+
+    /**
+     * Rejects an authentication request
+     *
+     * @param txToken the auth transaction token
+     * @param otpCode the one time password
+     * @return a request to execute
+     * @see #reject(String, String, String)
+     * @see #allow(String, String)
+     */
+    public GuardianAPIRequest<Void> reject(String txToken, String otpCode) {
+        return reject(txToken, otpCode, null);
+    }
+
     private String completeUrl(String path) {
         return String.format("%s/%s", baseUrl, path);
     }
