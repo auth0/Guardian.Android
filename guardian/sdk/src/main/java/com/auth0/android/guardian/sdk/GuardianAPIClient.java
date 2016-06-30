@@ -22,9 +22,14 @@
 
 package com.auth0.android.guardian.sdk;
 
+import com.auth0.android.guardian.sdk.networking.Request;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.Map;
 
 import okhttp3.OkHttpClient;
 
@@ -36,6 +41,23 @@ public class GuardianAPIClient {
     GuardianAPIClient(RequestFactory requestFactory, String baseUrl) {
         this.requestFactory = requestFactory;
         this.baseUrl = baseUrl;
+    }
+
+    /**
+     * Returns the "device_account_token" that can be used to update the push notification settings
+     * and also to un-enroll the device account
+     * This endpoint should only be called once (when starting the enroll)
+     *
+     * @param enrollmentTransactionId the enrollment transaction id
+     * @return a request to execute
+     */
+    public DeviceTokenRequest getDeviceToken(String enrollmentTransactionId) {
+        Type type = new TypeToken<Map<String, String>>() {
+        }.getType();
+        Request<Map<String, String>> request = requestFactory
+                .<Map<String, String>>newRequest("POST", completeUrl("api/enrollment-info"), type)
+                .addParameter("enrollment_tx_id", enrollmentTransactionId);
+        return new DeviceTokenRequest(request);
     }
 
     private String completeUrl(String path) {
