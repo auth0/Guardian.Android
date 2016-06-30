@@ -49,6 +49,7 @@ import static org.junit.Assert.*;
 public class GuardianAPIClientTest {
 
     private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
+    private static final String DEVICE_ID = "DEVICE_ID";
     private static final String DEVICE_ACCOUNT_TOKEN = "DEVICE_ACCOUNT_TOKEN";
     private static final String TX_TOKEN = "TX_TOKEN";
 
@@ -158,6 +159,22 @@ public class GuardianAPIClientTest {
         assertThat(body, hasEntry("code", (Object) "123456"));
 
         assertThat(callback, hasNoError());
+    }
+
+    @Test
+    public void shouldCreateValidDeviceAPI() throws Exception {
+        mockAPI.willReturnSuccess(200);
+
+        final MockCallback<Void> callback = new MockCallback<>();
+
+        apiClient.device(DEVICE_ID, DEVICE_ACCOUNT_TOKEN)
+                .delete()
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
+        assertThat(request.getPath(), is(equalTo(String.format("/api/device-accounts/%s", DEVICE_ID))));
+        assertThat(request.getMethod(), is(equalTo("DELETE")));
+        assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + DEVICE_ACCOUNT_TOKEN)));
     }
 
     private Map<String, Object> bodyFromRequest(RecordedRequest request) throws IOException {
