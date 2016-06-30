@@ -24,9 +24,6 @@ package com.auth0.android.guardian.sdk;
 
 import static org.junit.Assert.*;
 
-/**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
- */
 public class GuardianTest {
 
 }

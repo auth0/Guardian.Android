@@ -20,7 +20,26 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.android.guardian.sdk;
+package com.auth0.android.guardian.sdk.networking;
 
-public class Guardian {
+import com.google.gson.Gson;
+
+import java.io.Reader;
+import java.lang.reflect.Type;
+
+class GsonConverter {
+
+    private final Gson gson;
+
+    public GsonConverter(Gson gson) {
+        this.gson = gson;
+    }
+
+    public String serialize(Object body) {
+        return gson.toJson(body);
+    }
+
+    public <T> T parse(Type typeOfT, Reader reader) {
+        return gson.fromJson(reader, typeOfT);
+    }
 }

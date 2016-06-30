@@ -22,5 +22,39 @@
 
 package com.auth0.android.guardian.sdk;
 
-public class Guardian {
+import com.auth0.android.guardian.sdk.utils.MockWebService;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import org.junit.After;
+import org.junit.Before;
+
+import static org.junit.Assert.*;
+
+public class GuardianAPIClientTest {
+
+    MockWebService mockAPI;
+
+    GuardianAPIClient apiClient;
+
+    Gson gson;
+
+    @Before
+    public void setUp() throws Exception {
+        mockAPI = new MockWebService();
+        final String domain = mockAPI.getDomain();
+
+        gson = new GsonBuilder()
+                .create();
+
+        apiClient = new GuardianAPIClient.Builder()
+                .baseUrl(domain)
+                .gson(gson)
+                .build();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mockAPI.shutdown();
+    }
 }

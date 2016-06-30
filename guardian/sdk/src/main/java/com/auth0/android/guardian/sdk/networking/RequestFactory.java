@@ -20,7 +20,25 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.android.guardian.sdk;
+package com.auth0.android.guardian.sdk.networking;
 
-public class Guardian {
+import com.google.gson.Gson;
+
+import java.lang.reflect.Type;
+
+import okhttp3.OkHttpClient;
+
+public class RequestFactory {
+
+    private final GsonConverter converter;
+    private final OkHttpClient client;
+
+    public RequestFactory(Gson gson, OkHttpClient client) {
+        this.converter = new GsonConverter(gson);
+        this.client = client;
+    }
+
+    public <T> Request<T> newRequest(String method, String url, Type typeOfT) {
+        return new Request<>(method, url, converter, client, typeOfT);
+    }
 }

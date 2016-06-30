@@ -22,5 +22,17 @@
 
 package com.auth0.android.guardian.sdk;
 
-public class Guardian {
+public class GuardianException extends RuntimeException {
+
+    public GuardianException(String detailMessage) {
+        super(detailMessage);
+    }
+
+    public GuardianException(String detailMessage, Throwable throwable) {
+        super(detailMessage, throwable);
+    }
+
+    public GuardianException(String detailMessage, String errorCode) {
+        super(detailMessage);
+    }
 }
