@@ -38,6 +38,10 @@ public class GuardianAPIClient {
         this.baseUrl = baseUrl;
     }
 
+    private String completeUrl(String path) {
+        return String.format("%s/%s", baseUrl, path);
+    }
+
     public static class Builder {
 
         private String baseUrl;
