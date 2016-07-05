@@ -31,14 +31,15 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.Map;
 
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
 public class GuardianAPIClient {
 
     private final RequestFactory requestFactory;
-    private final String baseUrl;
+    private final HttpUrl baseUrl;
 
-    GuardianAPIClient(RequestFactory requestFactory, String baseUrl) {
+    GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl) {
         this.requestFactory = requestFactory;
         this.baseUrl = baseUrl;
     }
@@ -52,10 +53,9 @@ public class GuardianAPIClient {
      * @return a request to execute
      */
     public GuardianAPIRequest<String> getDeviceToken(String enrollmentTransactionId) {
-        Type type = new TypeToken<Map<String, String>>() {
-        }.getType();
+        Type type = new TypeToken<Map<String, String>>() {}.getType();
         Request<Map<String, String>> request = requestFactory
-                .<Map<String, String>>newRequest("POST", completeUrl("api/enrollment-info"), type)
+                .<Map<String, String>>newRequest("POST", baseUrl.resolve("api/enrollment-info"), type)
                 .addParameter("enrollment_tx_id", enrollmentTransactionId);
         return new DeviceTokenRequest(request);
     }
@@ -70,10 +70,9 @@ public class GuardianAPIClient {
      * @see #reject(String, String, String)
      */
     public GuardianAPIRequest<Void> allow(String txToken, String otpCode) {
-        Type type = new TypeToken<Void>() {
-        }.getType();
+        Type type = new TypeToken<Void>() {}.getType();
         return requestFactory
-                .<Void>newRequest("POST", completeUrl("api/verify-otp"), type)
+                .<Void>newRequest("POST", baseUrl.resolve("api/verify-otp"), type)
                 .setBearer(txToken)
                 .addParameter("type", "push_notification")
                 .addParameter("code", otpCode);
@@ -90,10 +89,9 @@ public class GuardianAPIClient {
      * @see #allow(String, String)
      */
     public GuardianAPIRequest<Void> reject(String txToken, String otpCode, String reason) {
-        Type type = new TypeToken<Void>() {
-        }.getType();
+        Type type = new TypeToken<Void>() {}.getType();
         return requestFactory
-                .<Void>newRequest("POST", completeUrl("api/reject-login"), type)
+                .<Void>newRequest("POST", baseUrl.resolve("api/reject-login"), type)
                 .setBearer(txToken)
                 .addParameter("code", otpCode)
                 .addParameter("reason", reason);
@@ -112,21 +110,16 @@ public class GuardianAPIClient {
         return reject(txToken, otpCode, null);
     }
 
-    private String completeUrl(String path) {
-        return String.format("%s/%s", baseUrl, path);
-    }
-
     public static class Builder {
 
-        private String baseUrl;
+        private HttpUrl baseUrl;
         private OkHttpClient client;
         private Gson gson;
 
         public Builder baseUrl(String baseUrl) {
-            if (baseUrl.endsWith("/")) {
-                this.baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-            } else {
-                this.baseUrl = baseUrl;
+            this.baseUrl = HttpUrl.parse(baseUrl);
+            if (this.baseUrl == null) {
+                throw new IllegalArgumentException("Cannot use an invalid HTTP or HTTPS url: " + baseUrl);
             }
             return this;
         }

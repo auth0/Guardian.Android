@@ -54,13 +54,12 @@ public class Request<T> implements GuardianAPIRequest<T> {
     private final Map<String, Object> bodyParameters;
     private final Map<String, String> queryParameters;
 
-    Request(String method, String url, GsonConverter converter, OkHttpClient client, Type typeOfT) {
+    Request(String method, HttpUrl url, GsonConverter converter, OkHttpClient client, Type typeOfT) {
         this.method = method;
-        this.url = HttpUrl.parse(url);
-        if (this.url == null) {
-            throw new IllegalArgumentException("Cannot use an invalid HTTP or HTTPS url: " + url);
+        if (url == null) {
+            throw new IllegalArgumentException("url cannot be null");
         }
-
+        this.url = url;
         this.converter = converter;
         this.client = client;
         this.typeOfT = typeOfT;

@@ -26,6 +26,7 @@ import com.google.gson.Gson;
 
 import java.lang.reflect.Type;
 
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
 public class RequestFactory {
@@ -38,7 +39,7 @@ public class RequestFactory {
         this.client = client;
     }
 
-    public <T> Request<T> newRequest(String method, String url, Type typeOfT) {
+    public <T> Request<T> newRequest(String method, HttpUrl url, Type typeOfT) {
         return new Request<>(method, url, converter, client, typeOfT);
     }
 }
