@@ -22,30 +22,105 @@
 
 package com.auth0.android.guardian.sdk;
 
+import com.auth0.android.guardian.sdk.networking.Request;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
+import java.util.Map;
+
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
 public class GuardianAPIClient {
 
     private final RequestFactory requestFactory;
-    private final String baseUrl;
+    private final HttpUrl baseUrl;
 
-    GuardianAPIClient(RequestFactory requestFactory, String baseUrl) {
+    GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl) {
         this.requestFactory = requestFactory;
         this.baseUrl = baseUrl;
     }
 
+    /**
+     * Returns the "device_account_token" that can be used to update the push notification settings
+     * and also to un-enroll the device account
+     * This endpoint should only be called once (when starting the enroll)
+     *
+     * @param enrollmentTransactionId the enrollment transaction id
+     * @return a request to execute
+     */
+    public GuardianAPIRequest<String> getDeviceToken(String enrollmentTransactionId) {
+        Type type = new TypeToken<Map<String, String>>() {}.getType();
+        Request<Map<String, String>> request = requestFactory
+                .<Map<String, String>>newRequest("POST", baseUrl.resolve("api/enrollment-info"), type)
+                .addParameter("enrollment_tx_id", enrollmentTransactionId);
+        return new DeviceTokenRequest(request);
+    }
+
+    /**
+     * Allows an authentication request
+     *
+     * @param txToken the auth transaction token
+     * @param otpCode the one time password
+     * @return a request to execute
+     * @see #reject(String, String)
+     * @see #reject(String, String, String)
+     */
+    public GuardianAPIRequest<Void> allow(String txToken, String otpCode) {
+        Type type = new TypeToken<Void>() {}.getType();
+        return requestFactory
+                .<Void>newRequest("POST", baseUrl.resolve("api/verify-otp"), type)
+                .setBearer(txToken)
+                .addParameter("type", "push_notification")
+                .addParameter("code", otpCode);
+    }
+
+    /**
+     * Rejects an authentication request indicating a reason
+     *
+     * @param txToken the auth transaction token
+     * @param otpCode the one time password
+     * @param reason the reject reason
+     * @return a request to execute
+     * @see #reject(String, String)
+     * @see #allow(String, String)
+     */
+    public GuardianAPIRequest<Void> reject(String txToken, String otpCode, String reason) {
+        Type type = new TypeToken<Void>() {}.getType();
+        return requestFactory
+                .<Void>newRequest("POST", baseUrl.resolve("api/reject-login"), type)
+                .setBearer(txToken)
+                .addParameter("code", otpCode)
+                .addParameter("reason", reason);
+    }
+
+    /**
+     * Rejects an authentication request
+     *
+     * @param txToken the auth transaction token
+     * @param otpCode the one time password
+     * @return a request to execute
+     * @see #reject(String, String, String)
+     * @see #allow(String, String)
+     */
+    public GuardianAPIRequest<Void> reject(String txToken, String otpCode) {
+        return reject(txToken, otpCode, null);
+    }
+
     public static class Builder {
 
-        private String baseUrl;
+        private HttpUrl baseUrl;
         private OkHttpClient client;
         private Gson gson;
 
         public Builder baseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
+            this.baseUrl = HttpUrl.parse(baseUrl);
+            if (this.baseUrl == null) {
+                throw new IllegalArgumentException("Cannot use an invalid HTTP or HTTPS url: " + baseUrl);
+            }
             return this;
         }
 

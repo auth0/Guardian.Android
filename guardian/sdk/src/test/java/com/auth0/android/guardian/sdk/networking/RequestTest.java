@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import okhttp3.Call;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -130,7 +131,7 @@ public class RequestTest {
 
     private Request<Object> getRequest(String method, String url) {
         Type type = new TypeToken<Object>() {}.getType();
-        return new Request<>(method, url, converter, client, type);
+        return new Request<>(method, HttpUrl.parse(url), converter, client, type);
     }
 
     private String getUrl(String path) {
