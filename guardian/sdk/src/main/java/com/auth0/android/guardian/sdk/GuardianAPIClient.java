@@ -110,6 +110,17 @@ public class GuardianAPIClient {
         return reject(txToken, otpCode, null);
     }
 
+    /**
+     * Returns an API client to create, update or delete a device
+     *
+     * @param id the device id
+     * @param token the device token
+     * @return an API client for the device
+     */
+    public DeviceAPIClient device(String id, String token) {
+        return new DeviceAPIClient(requestFactory, baseUrl, id, token);
+    }
+
     public static class Builder {
 
         private HttpUrl baseUrl;
