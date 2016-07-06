@@ -120,10 +120,12 @@ public class DeviceAPIClientTest {
         assertThat(body, hasEntry("identifier", (Object) "android_id"));
         assertThat(body, hasEntry("name", (Object) DEVICE_NAME));
         assertThat(body, hasKey("push_credentials"));
+        assertThat(body.size(), is(equalTo(3)));
 
         Map<String, Object> pushCredentials = (Map<String, Object>) body.get("push_credentials");
         assertThat(pushCredentials, hasEntry("service", (Object) "GCM"));
         assertThat(pushCredentials, hasEntry("token", (Object) PUSH_TOKEN));
+        assertThat(pushCredentials.size(), is(equalTo(2)));
 
         assertThat(callback, hasPayloadOfType(Device.class));
     }
@@ -164,8 +166,7 @@ public class DeviceAPIClientTest {
         final MockCallback<Device> callback = new MockCallback<>();
 
         apiClient
-                .update()
-                .localIdentifier(DEVICE_IDENTIFIER)
+                .update(DEVICE_IDENTIFIER, null, null)
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
@@ -187,8 +188,7 @@ public class DeviceAPIClientTest {
         final MockCallback<Device> callback = new MockCallback<>();
 
         apiClient
-                .update()
-                .name(DEVICE_NAME)
+                .update(null, DEVICE_NAME, null)
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
@@ -210,8 +210,7 @@ public class DeviceAPIClientTest {
         final MockCallback<Device> callback = new MockCallback<>();
 
         apiClient
-                .update()
-                .GCMToken(PUSH_TOKEN)
+                .update(null, null, PUSH_TOKEN)
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
@@ -222,38 +221,6 @@ public class DeviceAPIClientTest {
         Map<String, Object> body = bodyFromRequest(request);
         assertThat(body, hasKey("push_credentials"));
         assertThat(body.size(), is(equalTo(1)));
-
-        Map<String, Object> pushCredentials = (Map<String, Object>) body.get("push_credentials");
-        assertThat(pushCredentials, hasEntry("service", (Object) "GCM"));
-        assertThat(pushCredentials, hasEntry("token", (Object) PUSH_TOKEN));
-        assertThat(pushCredentials.size(), is(equalTo(2)));
-
-        assertThat(callback, hasPayloadOfType(Device.class));
-    }
-
-    @Test
-    public void shouldUpdateNameAndGCMTokenAndIdentifier() throws Exception {
-        mockAPI.willReturnDeviceAccount(DEVICE_ID, DEVICE_IDENTIFIER, DEVICE_NAME, PUSH_SERVICE, PUSH_TOKEN);
-
-        final MockCallback<Device> callback = new MockCallback<>();
-
-        apiClient
-                .update()
-                .localIdentifier(DEVICE_IDENTIFIER)
-                .name(DEVICE_NAME)
-                .GCMToken(PUSH_TOKEN)
-                .start(callback);
-
-        RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo(String.format("/api/device-accounts/%s", DEVICE_ID))));
-        assertThat(request.getMethod(), is(equalTo("PATCH")));
-        assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + DEVICE_ACCOUNT_TOKEN)));
-
-        Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasEntry("identifier", (Object) DEVICE_IDENTIFIER));
-        assertThat(body, hasEntry("name", (Object) DEVICE_NAME));
-        assertThat(body, hasKey("push_credentials"));
-        assertThat(body.size(), is(equalTo(3)));
 
         Map<String, Object> pushCredentials = (Map<String, Object>) body.get("push_credentials");
         assertThat(pushCredentials, hasEntry("service", (Object) "GCM"));

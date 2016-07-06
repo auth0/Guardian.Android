@@ -79,15 +79,6 @@ public class DeviceAPIClient {
     }
 
     /**
-     * Gets a request that allows to update different parameters of the device
-     *
-     * @return an update request
-     */
-    public UpdateDeviceRequest update() {
-        return new UpdateDeviceRequest(newEmptyUpdateRequest());
-    }
-
-    /**
      * Updates identifier, name and GCM token of the device
      *
      * @param identifier the local identifier
@@ -96,10 +87,17 @@ public class DeviceAPIClient {
      * @return a request to execute
      */
     public GuardianAPIRequest<Device> update(String identifier, String name, String gcmToken) {
-        return new UpdateDeviceRequest(newEmptyUpdateRequest())
-                .localIdentifier(identifier)
-                .name(name)
-                .GCMToken(gcmToken);
+        Request<Device> request = newEmptyUpdateRequest();
+        if (identifier != null) {
+            request.addParameter("identifier", identifier);
+        }
+        if (name != null) {
+            request.addParameter("name", name);
+        }
+        if (gcmToken != null) {
+            request.addParameter("push_credentials", getPushCredentials(gcmToken));
+        }
+        return request;
     }
 
     private Request<Device> newEmptyUpdateRequest() {
@@ -113,58 +111,5 @@ public class DeviceAPIClient {
         pushCredentials.put("service", "GCM");
         pushCredentials.put("token", gcmToken);
         return pushCredentials;
-    }
-
-    public static class UpdateDeviceRequest implements GuardianAPIRequest<Device> {
-
-        private final Request<Device> request;
-
-        UpdateDeviceRequest(Request<Device> request) {
-            this.request = request;
-        }
-
-        /**
-         * Updates the name of the device
-         *
-         * @param name the name of the device, used to display to the user so he can identify it
-         * @return a request that allows to update other parameters of the device or execute
-         */
-        public UpdateDeviceRequest name(String name) {
-            request.addParameter("name", name);
-            return this;
-        }
-
-        /**
-         * Updates the local identifier of the device
-         *
-         * @param identifier the local identifier of the device
-         * @return a request that allows to update other parameters of the device or execute
-         */
-        public UpdateDeviceRequest localIdentifier(String identifier) {
-            request.addParameter("identifier", identifier);
-            return this;
-        }
-
-        /**
-         * Updates the GCM token of the device. You should update the token whenever it changes,
-         * otherwise the server will not be able to send push notifications
-         *
-         * @param gcmToken the GCM token
-         * @return a request that allows to update other parameters of the device or execute
-         */
-        public UpdateDeviceRequest GCMToken(String gcmToken) {
-            request.addParameter("push_credentials", getPushCredentials(gcmToken));
-            return this;
-        }
-
-        @Override
-        public Device execute() throws IOException, GuardianException {
-            return request.execute();
-        }
-
-        @Override
-        public void start(Callback<Device> callback) {
-            request.start(callback);
-        }
     }
 }
