@@ -22,28 +22,29 @@
 
 package com.auth0.android.guardian.sdk;
 
-public class GuardianException extends RuntimeException {
+import java.util.Date;
 
-    private final String errorCode;
+public interface GuardianNotification {
 
-    public GuardianException(String detailMessage) {
-        super(detailMessage);
-        errorCode = null;
-    }
+    /**
+     * The id of the enrollment
+     */
+    String getEnrollmentId();
 
-    public GuardianException(String detailMessage, Throwable throwable) {
-        super(detailMessage, throwable);
-        errorCode = null;
-    }
+    /**
+     * The transaction token, used to identify the authentication request
+     */
+    String getTransactionToken();
 
-    public GuardianException(String detailMessage, String errorCode) {
-        super(detailMessage);
-        this.errorCode = errorCode;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString()
-                + ", {errorCode='" + errorCode + "\'}";
-    }
+    /**
+     * Just information about the authentication request
+     */
+    Date getDate();
+    String getOsName();
+    String getOsVersion();
+    String getBrowserName();
+    String getBrowserVersion();
+    String getLocation();
+    Double getLatitude();
+    Double getLongitude();
 }

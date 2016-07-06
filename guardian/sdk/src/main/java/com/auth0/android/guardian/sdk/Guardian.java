@@ -22,5 +22,109 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.auth0.android.guardian.sdk.otp.TOTP;
+import com.auth0.android.guardian.sdk.otp.utils.Base32;
+
 public class Guardian {
+
+    private final GuardianAPIClient client;
+    private final String deviceName;
+    private final String gcmToken;
+
+    Guardian(@NonNull GuardianAPIClient client,
+             @NonNull String deviceName,
+             @NonNull String gcmToken) {
+        this.client = client;
+        this.deviceName = deviceName;
+        this.gcmToken = gcmToken;
+    }
+
+    public GuardianAPIRequest<Enrollment> enroll(@NonNull String enrollmentUri) {
+        EnrollmentData enrollmentData = EnrollmentData.parse(enrollmentUri);
+        return new EnrollRequest(client, enrollmentData, deviceName, gcmToken);
+    }
+
+    public GuardianAPIRequest<Void> delete(@NonNull GuardianEnrollment enrollment) {
+        return client
+                .device(enrollment.getDeviceId(), enrollment.getDeviceToken())
+                .delete();
+    }
+
+    public GuardianAPIRequest<Void> allow(@NonNull GuardianEnrollment enrollment,
+                                          @NonNull GuardianNotification notification) {
+        return client
+                .allow(notification.getTransactionToken(), getOTPCode(enrollment));
+    }
+
+    public GuardianAPIRequest<Void> reject(@NonNull GuardianEnrollment enrollment,
+                                           @NonNull GuardianNotification notification,
+                                           @Nullable String reason) {
+        return client
+                .reject(notification.getTransactionToken(), getOTPCode(enrollment), reason);
+    }
+
+    public GuardianAPIRequest<Void> reject(@NonNull GuardianEnrollment enrollment,
+                                           @NonNull GuardianNotification notification) {
+        return reject(enrollment, notification, null);
+    }
+
+    @Nullable
+    public static Notification parseNotification(@NonNull Bundle pushNotificationPayload) {
+        return Notification.parse(pushNotificationPayload);
+    }
+
+    private String getOTPCode(GuardianEnrollment enrollment) {
+        try {
+            TOTP totp = new TOTP(
+                    enrollment.getAlgorithm(),
+                    Base32.decode(enrollment.getSecret()),
+                    enrollment.getDigits(),
+                    enrollment.getPeriod());
+            return totp.generateOTP();
+        } catch (Base32.DecodingException e) {
+            throw new GuardianException("Unable to generate OTP: could not decode secret", e);
+        }
+    }
+
+    public static class Builder {
+
+        private String url;
+        private String deviceName;
+        private String gcmToken;
+
+        public Builder url(@NonNull String url) {
+            this.url = url;
+            return this;
+        }
+
+        public Builder deviceName(@NonNull String deviceName) {
+            this.deviceName = deviceName;
+            return this;
+        }
+
+        public Builder gcmToken(@NonNull String gcmToken) {
+            this.gcmToken = gcmToken;
+            return this;
+        }
+
+        public Guardian build() {
+            GuardianAPIClient client = new GuardianAPIClient.Builder()
+                    .baseUrl(url)
+                    .build();
+
+            if (deviceName == null) {
+                throw new IllegalArgumentException("deviceName cannot be null");
+            }
+
+            if (gcmToken == null) {
+                throw new IllegalArgumentException("gcmToken cannot be null");
+            }
+
+            return new Guardian(client, deviceName, gcmToken);
+        }
+    }
 }
