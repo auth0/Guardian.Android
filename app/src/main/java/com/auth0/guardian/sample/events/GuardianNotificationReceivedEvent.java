@@ -20,10 +20,19 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.android.guardian.ui;
+package com.auth0.guardian.sample.events;
 
-/**
- * @author Nicolas Ulrich (nikolaseu@gmail.com)
- */
-public class EnrollActivity {
+import com.auth0.android.guardian.sdk.ParcelableNotification;
+
+public class GuardianNotificationReceivedEvent {
+
+    private final ParcelableNotification notification;
+
+    public GuardianNotificationReceivedEvent(ParcelableNotification notification) {
+        this.notification = notification;
+    }
+
+    public ParcelableNotification getData() {
+        return notification;
+    }
 }
