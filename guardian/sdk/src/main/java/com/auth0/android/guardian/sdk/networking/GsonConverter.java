@@ -22,6 +22,8 @@
 
 package com.auth0.android.guardian.sdk.networking;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.Gson;
 
 import java.io.Reader;
@@ -31,15 +33,15 @@ class GsonConverter {
 
     private final Gson gson;
 
-    GsonConverter(Gson gson) {
+    GsonConverter(@NonNull Gson gson) {
         this.gson = gson;
     }
 
-    String serialize(Object body) {
+    String serialize(@NonNull Object body) {
         return gson.toJson(body);
     }
 
-    <T> T parse(Type typeOfT, Reader reader) {
+    <T> T parse(@NonNull Type typeOfT, @NonNull Reader reader) {
         return gson.fromJson(reader, typeOfT);
     }
 }

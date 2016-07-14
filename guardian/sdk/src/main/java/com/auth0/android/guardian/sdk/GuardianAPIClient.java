@@ -22,6 +22,9 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.auth0.android.guardian.sdk.networking.Request;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.google.gson.Gson;
@@ -52,11 +55,11 @@ public class GuardianAPIClient {
      * @param enrollmentTransactionId the enrollment transaction id
      * @return a request to execute
      */
-    public GuardianAPIRequest<String> getDeviceToken(String enrollmentTransactionId) {
+    public GuardianAPIRequest<String> getDeviceToken(@NonNull String enrollmentTransactionId) {
         Type type = new TypeToken<Map<String, String>>() {}.getType();
         Request<Map<String, String>> request = requestFactory
                 .<Map<String, String>>newRequest("POST", baseUrl.resolve("api/enrollment-info"), type)
-                .addParameter("enrollment_tx_id", enrollmentTransactionId);
+                .setParameter("enrollment_tx_id", enrollmentTransactionId);
         return new DeviceTokenRequest(request);
     }
 
@@ -69,13 +72,13 @@ public class GuardianAPIClient {
      * @see #reject(String, String)
      * @see #reject(String, String, String)
      */
-    public GuardianAPIRequest<Void> allow(String txToken, String otpCode) {
+    public GuardianAPIRequest<Void> allow(@NonNull String txToken, @NonNull String otpCode) {
         Type type = new TypeToken<Void>() {}.getType();
         return requestFactory
                 .<Void>newRequest("POST", baseUrl.resolve("api/verify-otp"), type)
                 .setBearer(txToken)
-                .addParameter("type", "push_notification")
-                .addParameter("code", otpCode);
+                .setParameter("type", "push_notification")
+                .setParameter("code", otpCode);
     }
 
     /**
@@ -88,13 +91,15 @@ public class GuardianAPIClient {
      * @see #reject(String, String)
      * @see #allow(String, String)
      */
-    public GuardianAPIRequest<Void> reject(String txToken, String otpCode, String reason) {
+    public GuardianAPIRequest<Void> reject(@NonNull String txToken,
+                                           @NonNull String otpCode,
+                                           @Nullable String reason) {
         Type type = new TypeToken<Void>() {}.getType();
         return requestFactory
                 .<Void>newRequest("POST", baseUrl.resolve("api/reject-login"), type)
                 .setBearer(txToken)
-                .addParameter("code", otpCode)
-                .addParameter("reason", reason);
+                .setParameter("code", otpCode)
+                .setParameter("reason", reason);
     }
 
     /**
@@ -106,7 +111,7 @@ public class GuardianAPIClient {
      * @see #reject(String, String, String)
      * @see #allow(String, String)
      */
-    public GuardianAPIRequest<Void> reject(String txToken, String otpCode) {
+    public GuardianAPIRequest<Void> reject(@NonNull String txToken, @NonNull String otpCode) {
         return reject(txToken, otpCode, null);
     }
 
@@ -117,7 +122,7 @@ public class GuardianAPIClient {
      * @param token the device token
      * @return an API client for the device
      */
-    public DeviceAPIClient device(String id, String token) {
+    public DeviceAPIClient device(@NonNull String id, @NonNull String token) {
         return new DeviceAPIClient(requestFactory, baseUrl, id, token);
     }
 
@@ -127,7 +132,7 @@ public class GuardianAPIClient {
         private OkHttpClient client;
         private Gson gson;
 
-        public Builder baseUrl(String baseUrl) {
+        public Builder baseUrl(@NonNull String baseUrl) {
             this.baseUrl = HttpUrl.parse(baseUrl);
             if (this.baseUrl == null) {
                 throw new IllegalArgumentException("Cannot use an invalid HTTP or HTTPS url: " + baseUrl);
@@ -135,12 +140,12 @@ public class GuardianAPIClient {
             return this;
         }
 
-        public Builder client(OkHttpClient client) {
+        public Builder client(@NonNull OkHttpClient client) {
             this.client = client;
             return this;
         }
 
-        public Builder gson(Gson gson) {
+        public Builder gson(@NonNull Gson gson) {
             this.gson = gson;
             return this;
         }

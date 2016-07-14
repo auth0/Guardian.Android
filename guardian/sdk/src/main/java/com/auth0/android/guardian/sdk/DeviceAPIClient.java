@@ -23,13 +23,13 @@
 package com.auth0.android.guardian.sdk;
 
 import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.networking.Request;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,11 +71,11 @@ public class DeviceAPIClient {
      * @param gcmToken the GCM token
      * @return a request to execute
      */
-    public GuardianAPIRequest<Device> create(String name, String gcmToken) {
+    public GuardianAPIRequest<Device> create(@NonNull String name, @NonNull String gcmToken) {
         return newEmptyUpdateRequest()
-                .addParameter("identifier", Settings.Secure.ANDROID_ID)
-                .addParameter("name", name)
-                .addParameter("push_credentials", getPushCredentials(gcmToken));
+                .setParameter("identifier", Settings.Secure.ANDROID_ID)
+                .setParameter("name", name)
+                .setParameter("push_credentials", getPushCredentials(gcmToken));
     }
 
     /**
@@ -86,18 +86,13 @@ public class DeviceAPIClient {
      * @param gcmToken the GCM token
      * @return a request to execute
      */
-    public GuardianAPIRequest<Device> update(String identifier, String name, String gcmToken) {
-        Request<Device> request = newEmptyUpdateRequest();
-        if (identifier != null) {
-            request.addParameter("identifier", identifier);
-        }
-        if (name != null) {
-            request.addParameter("name", name);
-        }
-        if (gcmToken != null) {
-            request.addParameter("push_credentials", getPushCredentials(gcmToken));
-        }
-        return request;
+    public GuardianAPIRequest<Device> update(@NonNull String identifier,
+                                             @NonNull String name,
+                                             @NonNull String gcmToken) {
+        return newEmptyUpdateRequest()
+                .setParameter("identifier", identifier)
+                .setParameter("name", name)
+                .setParameter("push_credentials", getPushCredentials(gcmToken));
     }
 
     private Request<Device> newEmptyUpdateRequest() {
@@ -106,7 +101,11 @@ public class DeviceAPIClient {
                 .setBearer(token);
     }
 
-    private static Map<String, String> getPushCredentials(String gcmToken) {
+    private static Map<String, String> getPushCredentials(@Nullable String gcmToken) {
+        if (gcmToken == null) {
+            return null;
+        }
+
         Map<String, String> pushCredentials = new HashMap<>(2);
         pushCredentials.put("service", "GCM");
         pushCredentials.put("token", gcmToken);

@@ -22,6 +22,8 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.support.annotation.NonNull;
+
 import com.auth0.android.guardian.sdk.networking.Callback;
 
 import java.io.IOException;
@@ -30,5 +32,5 @@ public interface GuardianAPIRequest<T> {
 
     T execute() throws IOException, GuardianException;
 
-    void start(final Callback<T> callback);
+    void start(@NonNull final Callback<T> callback);
 }

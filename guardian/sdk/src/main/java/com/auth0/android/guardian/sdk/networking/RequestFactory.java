@@ -22,6 +22,8 @@
 
 package com.auth0.android.guardian.sdk.networking;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.Gson;
 
 import java.lang.reflect.Type;
@@ -34,12 +36,14 @@ public class RequestFactory {
     private final GsonConverter converter;
     private final OkHttpClient client;
 
-    public RequestFactory(Gson gson, OkHttpClient client) {
+    public RequestFactory(@NonNull Gson gson, @NonNull OkHttpClient client) {
         this.converter = new GsonConverter(gson);
         this.client = client;
     }
 
-    public <T> Request<T> newRequest(String method, HttpUrl url, Type typeOfT) {
+    public <T> Request<T> newRequest(@NonNull String method,
+                                     @NonNull HttpUrl url,
+                                     @NonNull Type typeOfT) {
         return new Request<>(method, url, converter, client, typeOfT);
     }
 }

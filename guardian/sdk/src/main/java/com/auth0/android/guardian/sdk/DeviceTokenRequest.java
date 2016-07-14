@@ -22,6 +22,8 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.support.annotation.NonNull;
+
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.networking.Request;
 
@@ -48,7 +50,7 @@ class DeviceTokenRequest implements GuardianAPIRequest<String> {
     }
 
     @Override
-    public void start(final Callback<String> callback) {
+    public void start(@NonNull final Callback<String> callback) {
         request.start(new Callback<Map<String, String>>() {
             @Override
             public void onSuccess(Map<String, String> response) {

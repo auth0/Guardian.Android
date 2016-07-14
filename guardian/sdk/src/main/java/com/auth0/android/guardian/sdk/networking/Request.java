@@ -22,6 +22,9 @@
 
 package com.auth0.android.guardian.sdk.networking;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.auth0.android.guardian.sdk.GuardianAPIRequest;
 import com.auth0.android.guardian.sdk.GuardianException;
 import com.google.gson.reflect.TypeToken;
@@ -54,11 +57,12 @@ public class Request<T> implements GuardianAPIRequest<T> {
     private final Map<String, Object> bodyParameters;
     private final Map<String, String> queryParameters;
 
-    Request(String method, HttpUrl url, GsonConverter converter, OkHttpClient client, Type typeOfT) {
+    Request(@NonNull String method,
+            @NonNull HttpUrl url,
+            @NonNull GsonConverter converter,
+            @NonNull OkHttpClient client,
+            @NonNull Type typeOfT) {
         this.method = method;
-        if (url == null) {
-            throw new IllegalArgumentException("url cannot be null");
-        }
         this.url = url;
         this.converter = converter;
         this.client = client;
@@ -69,29 +73,41 @@ public class Request<T> implements GuardianAPIRequest<T> {
         this.queryParameters = new HashMap<>();
     }
 
-    public Request<T> addParameter(String name, Object value) throws IllegalArgumentException {
+    public Request<T> setParameter(@NonNull String name, @Nullable Object value) throws IllegalArgumentException {
         if (body != null) {
             throw new IllegalArgumentException("Cannot set body and parameters at the same time");
         }
-        bodyParameters.put(name, value);
+        if (value != null) {
+            bodyParameters.put(name, value);
+        } else {
+            bodyParameters.remove(name);
+        }
         return this;
     }
 
-    public Request<T> addQueryParameter(String name, String value) {
-        queryParameters.put(name, value);
+    public Request<T> setQueryParameter(@NonNull String name, @Nullable String value) {
+        if (value != null) {
+            queryParameters.put(name, value);
+        } else {
+            queryParameters.remove(name);
+        }
         return this;
     }
 
-    public Request<T> addHeader(String name, String value) {
-        headers.put(name, value);
+    public Request<T> setHeader(@NonNull String name, @Nullable String value) {
+        if (value != null) {
+            headers.put(name, value);
+        } else {
+            headers.remove(name);
+        }
         return this;
     }
 
-    public Request<T> setBearer(String token) {
-        return addHeader("Authorization", "Bearer " + token);
+    public Request<T> setBearer(@Nullable String token) {
+        return setHeader("Authorization", "Bearer " + token);
     }
 
-    public Request<T> setBody(Object body) {
+    public Request<T> setBody(@NonNull Object body) {
         this.body = body;
         return this;
     }
@@ -107,7 +123,7 @@ public class Request<T> implements GuardianAPIRequest<T> {
     }
 
     @Override
-    public void start(final Callback<T> callback) {
+    public void start(@NonNull final Callback<T> callback) {
         buildCall().enqueue(new okhttp3.Callback() {
             @Override
             public void onResponse(Call call, Response response) {
