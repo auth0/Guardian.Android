@@ -36,6 +36,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import okhttp3.HttpUrl;
+
 public class Notification implements GuardianNotification, Parcelable {
 
     private static final String TAG = Notification.class.getName();
@@ -75,7 +77,14 @@ public class Notification implements GuardianNotification, Parcelable {
                  String location,
                  Double latitude,
                  Double longitude) {
-        this.enrollmentId = String.format("guardian://%s/%s", hostname, deviceId);
+        HttpUrl url = HttpUrl.parse(hostname);
+        if (url == null) {
+            url = new HttpUrl.Builder()
+                    .scheme("https")
+                    .host(hostname)
+                    .build();
+        }
+        this.enrollmentId = String.format("guardian://%s/%s", url.host(), deviceId);
         this.transactionToken = transactionToken;
         this.date = date;
         this.osName = osName;

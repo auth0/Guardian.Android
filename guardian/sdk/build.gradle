@@ -42,6 +42,9 @@ dependencies {
     //Awaitility
     testCompile 'com.jayway.awaitility:awaitility:1.7.0'
 
+    //Robolectric
+    testCompile 'org.robolectric:robolectric:3.0'
+
     testCompile 'junit:junit:4.12'
 }
 
