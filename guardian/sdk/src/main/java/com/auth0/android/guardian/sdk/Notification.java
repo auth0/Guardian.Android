@@ -24,6 +24,8 @@ package com.auth0.android.guardian.sdk;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -34,7 +36,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public class Notification implements GuardianNotification {
+public class Notification implements GuardianNotification, Parcelable {
 
     private static final String TAG = Notification.class.getName();
 
@@ -196,4 +198,61 @@ public class Notification implements GuardianNotification {
     public Double getLongitude() {
         return longitude;
     }
+
+    // PARCELABLE
+    protected Notification(Parcel in) {
+        enrollmentId = in.readString();
+        transactionToken = in.readString();
+        long tmpDate = in.readLong();
+        date = tmpDate != -1 ? new Date(tmpDate) : null;
+        osName = in.readString();
+        osVersion = in.readString();
+        browserName = in.readString();
+        browserVersion = in.readString();
+        location = in.readString();
+        latitude = in.readByte() == 0x00 ? null : in.readDouble();
+        longitude = in.readByte() == 0x00 ? null : in.readDouble();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(enrollmentId);
+        dest.writeString(transactionToken);
+        dest.writeLong(date != null ? date.getTime() : -1L);
+        dest.writeString(osName);
+        dest.writeString(osVersion);
+        dest.writeString(browserName);
+        dest.writeString(browserVersion);
+        dest.writeString(location);
+        if (latitude == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeDouble(latitude);
+        }
+        if (longitude == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeDouble(longitude);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<Notification> CREATOR = new Parcelable.Creator<Notification>() {
+        @Override
+        public Notification createFromParcel(Parcel in) {
+            return new Notification(in);
+        }
+
+        @Override
+        public Notification[] newArray(int size) {
+            return new Notification[size];
+        }
+    };
 }
