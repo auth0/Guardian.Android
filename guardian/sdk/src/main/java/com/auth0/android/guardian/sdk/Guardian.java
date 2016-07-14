@@ -74,6 +74,10 @@ public class Guardian implements Parcelable {
         return reject(enrollment, notification, null);
     }
 
+    public GuardianAPIClient getAPIClient() {
+        return client;
+    }
+
     @Nullable
     public static Notification parseNotification(@NonNull Bundle pushNotificationPayload) {
         return Notification.parse(pushNotificationPayload);
