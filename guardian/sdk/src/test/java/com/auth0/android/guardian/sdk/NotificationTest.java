@@ -24,7 +24,9 @@ package com.auth0.android.guardian.sdk;
 
 import android.os.Bundle;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
@@ -57,10 +59,14 @@ public class NotificationTest {
     private static final Double LATITUDE = 56.87;
     private static final Double LONGITUDE = 34.34;
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Test
     public void shouldHaveCorrectDataAfterParse() throws Exception {
         Date currentDate = new Date();
-        Bundle data = createPushNotificationPayload(HOSTNAME, currentDate);
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
 
         Notification notification = Notification.parse(data);
 
@@ -78,7 +84,8 @@ public class NotificationTest {
 
     @Test
     public void shouldHaveCorrectEnrollmentIdWithHostname() throws Exception {
-        Bundle data = createPushNotificationPayload(HOSTNAME, new Date());
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date());
 
         Notification notification = Notification.parse(data);
 
@@ -87,7 +94,8 @@ public class NotificationTest {
 
     @Test
     public void shouldHaveCorrectEnrollmentIdWithHttpsUrl() throws Exception {
-        Bundle data = createPushNotificationPayload(HOSTNAME_HTTPS, new Date());
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME_HTTPS, DEVICE_ID, TRANSACTION_TOKEN, new Date());
 
         Notification notification = Notification.parse(data);
 
@@ -96,7 +104,8 @@ public class NotificationTest {
 
     @Test
     public void shouldHaveCorrectEnrollmentIdWithHttpsAndFinalDashUrl() throws Exception {
-        Bundle data = createPushNotificationPayload(HOSTNAME_HTTPS_WITH_FINAL_DASH, new Date());
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME_HTTPS_WITH_FINAL_DASH, DEVICE_ID, TRANSACTION_TOKEN, new Date());
 
         Notification notification = Notification.parse(data);
 
@@ -105,7 +114,8 @@ public class NotificationTest {
 
     @Test
     public void shouldHaveCorrectEnrollmentIdWithHttpUrl() throws Exception {
-        Bundle data = createPushNotificationPayload(HOSTNAME_HTTP, new Date());
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME_HTTP, DEVICE_ID, TRANSACTION_TOKEN, new Date());
 
         Notification notification = Notification.parse(data);
 
@@ -114,7 +124,8 @@ public class NotificationTest {
 
     @Test
     public void shouldHaveCorrectEnrollmentIdWithHttpAndFinalDashUrl() throws Exception {
-        Bundle data = createPushNotificationPayload(HOSTNAME_HTTP_WITH_FINAL_DASH, new Date());
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME_HTTP_WITH_FINAL_DASH, DEVICE_ID, TRANSACTION_TOKEN, new Date());
 
         Notification notification = Notification.parse(data);
 
@@ -124,7 +135,8 @@ public class NotificationTest {
     @Test
     public void shouldHaveCorrectDataAfterParcel() throws Exception {
         Date currentDate = new Date();
-        Bundle data = createPushNotificationPayload(HOSTNAME, currentDate);
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
 
         Notification originalNotification = Notification.parse(data);
 
@@ -149,7 +161,8 @@ public class NotificationTest {
     @Test
     public void shouldMatchEnrollmentId() throws Exception {
         Date currentDate = new Date();
-        Bundle data = createPushNotificationPayload(HOSTNAME_HTTPS, currentDate);
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME_HTTPS, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
 
         Notification notification = Notification.parse(data);
 
@@ -160,7 +173,37 @@ public class NotificationTest {
         assertThat(notification.getEnrollmentId(), is(equalTo(enrollment.getId())));
     }
 
-    private Bundle createPushNotificationPayload(String hostname, Date date) {
+    @Test
+    public void shouldFailIfThereIsNoHostname() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        Bundle data = createPushNotificationPayload(null, DEVICE_ID, TRANSACTION_TOKEN, new Date());
+
+        Notification notification = Notification.parse(data);
+    }
+
+    @Test
+    public void shouldFailIfThereIsNoDeviceId() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        Bundle data = createPushNotificationPayload(HOSTNAME, null, TRANSACTION_TOKEN, new Date());
+
+        Notification notification = Notification.parse(data);
+    }
+
+    @Test
+    public void shouldFailIfThereIsNoTransactionToken() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, null, new Date());
+
+        Notification notification = Notification.parse(data);
+    }
+
+    private Bundle createPushNotificationPayload(String hostname,
+                                                 String deviceId,
+                                                 String transactionToken,
+                                                 Date date) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
@@ -171,8 +214,8 @@ public class NotificationTest {
         data.putString("l", "{\"n\":\""+LOCATION+"\",\"lat\":\""+LATITUDE+"\"," +
                 "\"long\":\""+LONGITUDE+"\"}");
         data.putString("sh", hostname);
-        data.putString("txtkn", TRANSACTION_TOKEN);
-        data.putString("dai", DEVICE_ID);
+        data.putString("txtkn", transactionToken);
+        data.putString("dai", deviceId);
 
         return data;
     }

@@ -98,8 +98,15 @@ public class Notification implements GuardianNotification, Parcelable {
 
     @NonNull
     public static Notification parse(@NonNull Bundle pushNotificationPayload) {
-        String transactionToken = pushNotificationPayload.getString(TRANSACTION_TOKEN_KEY);
+        String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
         String deviceAccountId = pushNotificationPayload.getString(DEVICE_ACCOUNT_ID_KEY);
+        String transactionToken = pushNotificationPayload.getString(TRANSACTION_TOKEN_KEY);
+
+        if (hostname == null || deviceAccountId == null || transactionToken == null) {
+            throw new IllegalArgumentException(
+                    "Push notification doesn't seem to be a Guardian authentication request");
+        }
+
         String dateStr = pushNotificationPayload.getString(DATE_KEY);
 
         @SuppressLint("SimpleDateFormat")
@@ -134,8 +141,6 @@ public class Notification implements GuardianNotification, Parcelable {
         } catch (Exception e) {
             Log.e(TAG, "Error while parsing source", e);
         }
-
-        String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
 
         String location = null;
         Double latitude = null;
