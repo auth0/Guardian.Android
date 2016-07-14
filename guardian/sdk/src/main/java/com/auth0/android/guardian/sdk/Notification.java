@@ -75,7 +75,7 @@ public class Notification implements GuardianNotification, Parcelable {
                  String location,
                  Double latitude,
                  Double longitude) {
-        this.enrollmentId = String.format("https://%s/%s", hostname, deviceId);
+        this.enrollmentId = String.format("guardian://%s/%s", hostname, deviceId);
         this.transactionToken = transactionToken;
         this.date = date;
         this.osName = osName;

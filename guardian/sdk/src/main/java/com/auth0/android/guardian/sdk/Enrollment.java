@@ -25,6 +25,8 @@ package com.auth0.android.guardian.sdk;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import okhttp3.HttpUrl;
+
 public class Enrollment implements GuardianEnrollment, Parcelable {
 
     private final String id;
@@ -53,7 +55,7 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
                String deviceName,
                String deviceGCMToken,
                String deviceToken) {
-        this.id = String.format("%s/%s", url, deviceId);
+        this.id = String.format("guardian://%s/%s", HttpUrl.parse(url).host(), deviceId);
         this.url = url;
         this.tenant = tenant;
         this.user = user;
