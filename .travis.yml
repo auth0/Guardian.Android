@@ -1,0 +1,23 @@
+language: android
+sudo: false
+android:
+  components:
+  - platform-tools
+  - tools
+  - build-tools-23.0.3
+  - android-23
+  - extra-google-google_play_services
+  - extra-google-m2repository
+  - extra-android-m2repository
+  - addon-google_apis-google-23
+install:
+- ./gradlew --version # show version and download Gradle Wrapper when is not present in cache
+- ./gradlew clean # clean project and download Android dependencies when are not present in cache
+script:
+- ./gradlew test --continue
+branches:
+  only:
+  - master
+notifications:
+  slack:
+    secure: yW22tSamq335XygZrZ3ucL6+bHUbtXn0SXYL3vl/bxjcYoVivM7M+CMJkta9GgQUnSyP+7CJTqXZOrdQCmWTcUtkNKxbQeDqAQYL2CNFRsVrCT27beZGPiqA+HrxoPOgj9cJHIXm2qfewkPgIkZe0lCRzgTOLydXBkKFtPO1hL+SiBPuUSW8yVQLA8q+4Gf4z1S5EIcuMtAiCnqOBYjgKx+++LEJqXf2Uc6Zsosgw1DR0H44NSOVB1KEHUKAQNZloPkOSBTT58Hk4vXTCvS4kb4TeSs3d4DXhcdcN+w6uX1dwVXhQLw7J9rbKyQU6p3qltTfIaGPIpr1Xg2ZgGaiP2OQlyFLJRrdU1iq36+S/Sq3L0jMCmgOd1xKjICRFVQCX51v2yo+JFJeQ9cNnXKJHy4+fzf4H8veMbuI3Eh317nAekNcf6EKdH6ItfUmCOcQIW5GdtziY5hqhjcqyutmoB8/8kzN1Hbzn8Y37/XPLRaGOU8AO3U7KgzmTxoe4TcvOgSHSPbwnuWdtNDVd1mN3dlwANH9H3hMlG68U7BHKN7s+a/6mpiHMmN8uim5ldCTznlHAvMpSmrow+wq/LbA//cPfy8UNIQDTaL1EWBIwdSKZ9WmeRlbcNLnIpvwouGXwUVz4rB30vK5Jvyfl23bKdD6f0EpvR2sRz0w67+Xf+U=
