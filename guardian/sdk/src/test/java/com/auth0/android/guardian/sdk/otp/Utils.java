@@ -30,7 +30,7 @@ public class Utils {
      * This method converts a HEX string to Byte[]
      *
      * @param hex: the HEX string
-     * @return: a byte array
+     * @return a byte array
      */
     public static byte[] hexStr2Bytes(String hex) {
         // Adding one byte to get the right conversion

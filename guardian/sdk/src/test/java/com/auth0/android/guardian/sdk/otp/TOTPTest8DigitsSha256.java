@@ -25,14 +25,16 @@ package com.auth0.android.guardian.sdk.otp;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mock;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(Parameterized.class)
 public class TOTPTest8DigitsSha256 {
@@ -49,25 +51,32 @@ public class TOTPTest8DigitsSha256 {
         });
     }
 
-    private long period = 30;
+    @Mock
+    TOTP.SystemClock clock;
+
+    private int period = 30;
     private int digits = 8;
 
     // Seed for HMAC-SHA256 - 32 bytes
     String secret = "3132333435363738393031323334353637383930313233343536373839303132";
 
-    private TOTP totp = new TOTP("sha256", Utils.hexStr2Bytes(secret), digits, period);
+    private TOTP totp;
 
-    private long timeSecs;
     private String expected;
 
     public TOTPTest8DigitsSha256(long timeSecs, String expected) {
-        this.timeSecs = timeSecs;
         this.expected = expected;
+
+        initMocks(this);
+
+        when(clock.getCurrentTimeSecs())
+                .thenReturn(timeSecs);
+
+        totp = new TOTP("sha256", Utils.hexStr2Bytes(secret), digits, period, clock);
     }
 
     @Test
     public void test() {
-        Date date = new Date(timeSecs * 1000);
-        assertThat(expected, is(equalTo(totp.generateOTP(date))));
+        assertThat(expected, is(equalTo(totp.generate())));
     }
 }

@@ -20,63 +20,52 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.android.guardian.sdk.otp;
+package com.auth0.android.guardian.sdk.otp.utils;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.mockito.Mock;
 
 import java.util.Arrays;
 import java.util.Collection;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
-public class TOTPTest8DigitsSha1 {
+public class Base32Test {
 
+    // test vector from https://tools.ietf.org/html/rfc4648#section-10
+    // we don't add padding, so modified accordingly
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                {59L         , "94287082"},
-                {1111111109L , "07081804"},
-                {1111111111L , "14050471"},
-                {1234567890L , "89005924"},
-                {2000000000L , "69279037"},
-                {20000000000L, "65353130"}
+                {new byte[]{}                       , ""},
+                {new byte[]{'f'}                    , "MY"},
+                {new byte[]{'f','o'}                , "MZXQ"},
+                {new byte[]{'f','o','o'}            , "MZXW6"},
+                {new byte[]{'f','o','o','b'}        , "MZXW6YQ"},
+                {new byte[]{'f','o','o','b','a'}    , "MZXW6YTB"},
+                {new byte[]{'f','o','o','b','a','r'}, "MZXW6YTBOI"}
         });
     }
 
-    @Mock
-    TOTP.SystemClock clock;
+    private byte[] decoded;
+    private String encoded;
 
-    private int period = 30;
-    private int digits = 8;
-
-    // Seed for HMAC-SHA1 - 20 bytes
-    private String secret = "3132333435363738393031323334353637383930";
-
-    private TOTP totp;
-
-    private String expected;
-
-    public TOTPTest8DigitsSha1(long timeSecs, String expected) {
-        this.expected = expected;
-
-        initMocks(this);
-
-        when(clock.getCurrentTimeSecs())
-                .thenReturn(timeSecs);
-
-        totp = new TOTP("sha1", Utils.hexStr2Bytes(secret), digits, period, clock);
+    public Base32Test(byte[] decoded, String encoded) {
+        this.decoded = decoded;
+        this.encoded = encoded;
     }
 
     @Test
-    public void test() {
-        assertThat(expected, is(equalTo(totp.generate())));
+    public void testEncode() throws Exception {
+        assertThat(Base32.encode(decoded), is(equalTo(encoded)));
+    }
+
+    @Test
+    public void testDecode() throws Exception {
+        assertThat(Base32.decode(encoded), is(equalTo(decoded)));
     }
 }

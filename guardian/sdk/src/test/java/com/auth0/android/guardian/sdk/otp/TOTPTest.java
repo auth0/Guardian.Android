@@ -22,45 +22,38 @@
 
 package com.auth0.android.guardian.sdk.otp;
 
+import org.junit.Rule;
 import org.junit.Test;
-
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.*;
+import org.junit.rules.ExpectedException;
 
 public class TOTPTest {
 
-    private long period = 30;
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    private int period = 30;
 
     // Seed for HMAC-SHA1 - 20 bytes
     private String secret = "3132333435363738393031323334353637383930";
 
     @Test
     public void shouldFailWithMoreThanEightDigits() throws Exception {
-        Exception exception = null;
-        TOTP totpSha1 = null;
-        try {
-            totpSha1 = new TOTP("sha1", Utils.hexStr2Bytes(secret), 9, period);
-        } catch (IllegalArgumentException e) {
-            exception = e;
-        }
+        thrown.expect(IllegalArgumentException.class);
 
-        assertThat(exception, is(notNullValue()));
-        assertThat(totpSha1, is(nullValue()));
+        new TOTP("sha1", Utils.hexStr2Bytes(secret), 9, period);
     }
 
     @Test
     public void shouldFailWithUnknownAlgorithm() throws Exception {
-        Exception exception = null;
-        TOTP totpSha1 = null;
-        try {
-            totpSha1 = new TOTP("sha111", Utils.hexStr2Bytes(secret), 8, period);
-        } catch (IllegalArgumentException e) {
-            exception = e;
-        }
+        thrown.expect(IllegalArgumentException.class);
 
-        assertThat(exception, is(notNullValue()));
-        assertThat(totpSha1, is(nullValue()));
+        new TOTP("sha111", Utils.hexStr2Bytes(secret), 8, period);
+    }
+
+    @Test
+    public void shouldFailWithInvalidSecret() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        new TOTP("sha256", null, 8, period);
     }
 }

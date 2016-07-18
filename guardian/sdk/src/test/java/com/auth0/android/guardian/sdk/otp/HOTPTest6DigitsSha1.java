@@ -52,12 +52,13 @@ public class HOTPTest6DigitsSha1 {
         });
     }
 
+    private int period = 30;
     private int digits = 6;
 
     // Seed for HMAC-SHA1 - 20 bytes
     private String secret = "3132333435363738393031323334353637383930";
 
-    private HOTP hotp = new HOTP("sha1", Utils.hexStr2Bytes(secret), digits);
+    private TOTP hotp = new TOTP("sha1", Utils.hexStr2Bytes(secret), digits, period);
 
     private int input;
     private String expected;
@@ -69,6 +70,6 @@ public class HOTPTest6DigitsSha1 {
 
     @Test
     public void test() {
-        assertThat(expected, is(equalTo(hotp.generateOTP(input))));
+        assertThat(expected, is(equalTo(hotp.generate(input))));
     }
 }
