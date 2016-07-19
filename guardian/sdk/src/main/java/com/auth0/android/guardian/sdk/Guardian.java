@@ -99,12 +99,26 @@ public class Guardian implements Parcelable {
 
     public static class Builder {
 
-        private String url;
+        private Uri url;
         private String deviceName;
         private String gcmToken;
 
-        public Builder url(@NonNull String url) {
+        public Builder url(@NonNull Uri url) {
+            if (this.url != null) {
+                throw new IllegalArgumentException("You need to set only one domain or url");
+            }
             this.url = url;
+            return this;
+        }
+
+        public Builder domain(@NonNull String domain) {
+            if (this.url != null) {
+                throw new IllegalArgumentException("You need to set only one domain or url");
+            }
+            this.url = new Uri.Builder()
+                    .scheme("https")
+                    .authority(domain)
+                    .build();
             return this;
         }
 
@@ -119,9 +133,9 @@ public class Guardian implements Parcelable {
         }
 
         public Guardian build() {
-            GuardianAPIClient client = new GuardianAPIClient.Builder()
-                    .baseUrl(url)
-                    .build();
+            if (url == null) {
+                throw new IllegalArgumentException("You need to set either a domain or an url");
+            }
 
             if (deviceName == null) {
                 throw new IllegalArgumentException("deviceName cannot be null");
@@ -130,6 +144,10 @@ public class Guardian implements Parcelable {
             if (gcmToken == null) {
                 throw new IllegalArgumentException("gcmToken cannot be null");
             }
+
+            GuardianAPIClient client = new GuardianAPIClient.Builder()
+                    .baseUrl(url.toString())
+                    .build();
 
             return new Guardian(client, deviceName, gcmToken);
         }
@@ -156,7 +174,7 @@ public class Guardian implements Parcelable {
             String deviceName = in.readString();
             String gcmToken = in.readString();
             return new Builder()
-                    .url(url)
+                    .url(Uri.parse(url))
                     .deviceName(deviceName)
                     .gcmToken(gcmToken)
                     .build();
