@@ -6,13 +6,12 @@ enrollment, parse a push notification and allow/reject it.
 An instance of this class will be created for a specific tenant/url.
 
 ```java
-Guardian guardian = new Guardian.Builder()
-        .url("tenant.guardian.auth0.com")
-        .build();
+Uri url = Uri.parse("tenant.guardian.auth0.com");
 
-// or we could also have a .tenant("mytenant") for cloud users
 Guardian guardian = new Guardian.Builder()
-        .tenant("mytenant") // will use "mytenant.guardian.auth0.com"
+        .url(url) // or .domain("tenant.guardian.auth0.com")
+        .deviceName("user visible name for this device")
+        .gcmToken("token")
         .build();
 ```
 
@@ -22,15 +21,15 @@ Once we have the guardian instance you can create an enrollment using the data o
 Guardian QR code:
 
 ```java
-String uriFromQr = ...; // obtain the data from a QR code
+Uri enrollmentUriFromQr = ...; // obtain the data from a QR code
 
 Enrollment enrollment = guardian
-        .enroll(uriFromQr)
+        .enroll(enrollmentUriFromQr)
         .execute();
 
 // or start async
 guardian
-        .enroll(uriFromQr)
+        .enroll(enrollmentUriFromQr)
         .start(new Callback<Enrollment> {
             @Override
             void onSuccess(Enrollment enrollment) {
@@ -53,10 +52,10 @@ public interface Enrollment /* extends Parcelabl? */ {
     // anyway, we only need to be sure we can obtain the same from the notification
     String getId();
 
-    // Guardian server url (just in case)
+    // Guardian server url (just in case, but if we use a enrollment.id != server id then we can include the url in the id itself, in case we want to avoid possible collisions)
     String getUrl();
 
-    // Issuer/tenant (just in case)
+    // Issuer/tenant (useless? maybe just call it label?)
     String getTenant();
 
     // User name/email
@@ -69,10 +68,35 @@ public interface Enrollment /* extends Parcelabl? */ {
     String getAlgorithm(); // maybe we can leave this out if we will always use the default
     String getSecret(); // base32 encoded secret, as it is on the QR
 
-    // Device class is the same from API client, includes id, name, localIdentifier and gcmToken
-    Device getDevice();
+    //
+    // Data from Device class (API client) includes id, name, localIdentifier and gcmToken
+    //
 
-    // Token used to authenticate when updating or deleting (unenrolling) the device data
+    /**
+     * This is the actual id of the enrollment on guardian server
+     */
+    String getDeviceId();
+
+    /**
+     * The identifier of the physical device, for debug/tracking purposes
+     */
+    String getDeviceLocalIdentifier();
+
+    /**
+     * The name to display to the user whenever it has to choose where to send the push notification
+     * or at the admin interface for example if the user want's to delete one enrollment
+     */
+    String getDeviceName();
+
+    /**
+     * The GCM token for this physical device, required to check against the current token and
+     * update in case it's not the same. Needs to be up-to-data for the push notifications to work.
+     */
+    String getGCMToken();
+
+    /**
+     * The token used to authenticate when updating the device data or deleting the enrollment
+     */
     String getDeviceToken();
 }
 ```
@@ -108,9 +132,9 @@ guardian
 
 ```java
 guardian
-        .update(enrollment) // we will just return the update request from the api client
-        .name("newName")
-        .GCMToken("newGcmToken") // optional, can update both or the name or token only
+        .getAPIClient()
+        .device(enrollment.getDeviceId(), enrollment.getDeviceToken())
+        .update("newIdentifier", "newName", "newGcmToken") // any value can be null (is optional, won't change the server value)
         .execute(); // or start(new Callback<> ...)
 ```
 
@@ -120,7 +144,7 @@ Guardian will also have a method to parse the `Bundle` received from GCM and ret
 notification instance ready to be used.
 
 ```java
-Notification notification = guardian.getNotification(bundle);
+Notification notification = Guardian.parseNotification(bundle); // static method
 ```
 
 Then we use this instance to display info on the UI, or create an android notification or whatever.
@@ -130,16 +154,29 @@ We'll need some way to establish a relation with the enrollment since the SDK us
 their users connect with more than one account. This object will have (at least) these methods:
 
 ```java
-public class Notification /* implements Parcelabl? */ {
-    String getEnrollmentId(); // to establish the relation with an enrollment
-    String getTransactionToken(); // the token used to allow/reject together with the totp code
+public class Notification {
 
-    String getBrowser();
-    String getBrowserVersion();
-    String getOS();
-    String getOSVersion();
-    String getLocation(); // getLatitude/Longitude also? maybe the user wants to display it on map
+    /**
+     * The id of the enrollment
+     */
+    String getEnrollmentId();
+
+    /**
+     * The transaction token, used to identify the authentication request
+     */
+    String getTransactionToken();
+
+    /**
+     * Just information about the authentication request
+     */
     Date getDate();
+    String getOsName();
+    String getOsVersion();
+    String getBrowserName();
+    String getBrowserVersion();
+    String getLocation();
+    Double getLatitude();
+    Double getLongitude();
 }
 ```
 
@@ -151,7 +188,7 @@ notification.
 
 ```java
 // at the GCM listener we receive a Bundle
-Notification notification = guardian.getNotification(bundle);
+Notification notification = Guardian.parseNotification(bundle);
 
 // get corresponding enrollment from wherever we have them stored
 Enrollment enrollment = myEnrollmentsStorage.get(notification.getEnrollmentId());
@@ -161,9 +198,13 @@ Enrollment enrollment = myEnrollmentsStorage.get(notification.getEnrollmentId())
  */
 
 // finally do something
-guardian.allow(enrollment, notification).execute();
+guardian
+        .allow(enrollment, notification)
+        .execute(); // or start(new Callback<> ...)
 // or
-guardian.reject(enrollment, notification).execute();
+guardian
+        .reject(enrollment, notification)
+        .execute(); // or start(new Callback<> ...)
 ```
 
 # UI components
