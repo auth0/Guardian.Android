@@ -22,6 +22,7 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -45,7 +46,7 @@ public class Guardian implements Parcelable {
         this.gcmToken = gcmToken;
     }
 
-    public GuardianAPIRequest<Enrollment> enroll(@NonNull String enrollmentUri) {
+    public GuardianAPIRequest<Enrollment> enroll(@NonNull Uri enrollmentUri) {
         EnrollmentData enrollmentData = EnrollmentData.parse(enrollmentUri);
         return new EnrollRequest(client, enrollmentData, deviceName, gcmToken);
     }
@@ -90,7 +91,7 @@ public class Guardian implements Parcelable {
                     Base32.decode(enrollment.getSecret()),
                     enrollment.getDigits(),
                     enrollment.getPeriod());
-            return totp.generateOTP();
+            return totp.generate();
         } catch (Base32.DecodingException e) {
             throw new GuardianException("Unable to generate OTP: could not decode secret", e);
         }

@@ -43,7 +43,7 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
     private final String deviceGCMToken;
     private final String deviceToken;
 
-    Enrollment(String url,
+    Enrollment(HttpUrl url,
                String tenant,
                String user,
                int period,
@@ -55,8 +55,8 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
                String deviceName,
                String deviceGCMToken,
                String deviceToken) {
-        this.id = String.format("guardian://%s/%s", HttpUrl.parse(url).host(), deviceId);
-        this.url = url;
+        this.id = String.format("guardian://%s/%s", url.host(), deviceId);
+        this.url = url.toString();
         this.tenant = tenant;
         this.user = user;
         this.period = period;

@@ -95,7 +95,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
     }
 
     private Enrollment createEnrollment(@NonNull Device device, @NonNull String deviceToken) {
-        return new Enrollment(enrollmentData.getBaseUrl(), enrollmentData.getIssuer(),
+        return new Enrollment(enrollmentData.getUrl(), enrollmentData.getIssuer(),
                 enrollmentData.getUser(), enrollmentData.getPeriod(), enrollmentData.getDigits(),
                 enrollmentData.getAlgorithm(), enrollmentData.getSecret(), device.getId(),
                 device.getLocalIdentifier(), device.getName(), device.getGCMToken(), deviceToken);

@@ -35,6 +35,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import okhttp3.HttpUrl;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -162,12 +164,12 @@ public class NotificationTest {
     public void shouldMatchEnrollmentId() throws Exception {
         Date currentDate = new Date();
         Bundle data = createPushNotificationPayload(
-                HOSTNAME_HTTPS, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
 
         Notification notification = Notification.parse(data);
 
         Enrollment enrollment = new Enrollment(
-                HOSTNAME_HTTPS, null, null, 6, 30, null, null,
+                HttpUrl.parse(HOSTNAME_HTTPS), null, null, 6, 30, null, null,
                 DEVICE_ID, null, null, null, null);
 
         assertThat(notification.getEnrollmentId(), is(equalTo(enrollment.getId())));

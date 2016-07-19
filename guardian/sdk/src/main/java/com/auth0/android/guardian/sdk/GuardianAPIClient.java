@@ -47,7 +47,7 @@ public class GuardianAPIClient {
         this.baseUrl = baseUrl;
     }
 
-    public String getUrl() {
+    String getUrl() {
         return baseUrl.toString();
     }
 

@@ -22,6 +22,8 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.net.Uri;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -46,68 +48,78 @@ public class EnrollmentDataTest {
     public void shouldFailWithInvalidScheme() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        EnrollmentData shouldBeNull = EnrollmentData.parse("invalidScheme://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("invalidScheme://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData shouldBeNull = EnrollmentData.parse(uri);
     }
 
     @Test
     public void shouldFailWithInvalidAuthority() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        EnrollmentData shouldBeNull = EnrollmentData.parse("otpauth://invalidAuthority/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://invalidAuthority/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData shouldBeNull = EnrollmentData.parse(uri);
     }
 
     @Test
     public void shouldFailWithInvalidIssuer() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        EnrollmentData shouldBeNull = EnrollmentData.parse("otpauth://totp/tenant:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/tenant:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData shouldBeNull = EnrollmentData.parse(uri);
     }
 
     @Test
     public void shouldFailWithInvalidDigits() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        EnrollmentData shouldBeNull = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=six&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=six&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData shouldBeNull = EnrollmentData.parse(uri);
     }
 
     @Test
     public void shouldFailWithInvalidDigitsFloat() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        EnrollmentData shouldBeNull = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6.1&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6.1&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData shouldBeNull = EnrollmentData.parse(uri);
     }
 
     @Test
     public void shouldFailWithInvalidPeriod() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        EnrollmentData shouldBeNull = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=thirty&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=thirty&base_url=https://tenant.pig.com");
+        EnrollmentData shouldBeNull = EnrollmentData.parse(uri);
     }
 
     @Test
     public void shouldFailWithInvalidPeriodFloat() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        EnrollmentData shouldBeNull = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30.1&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30.1&base_url=https://tenant.pig.com");
+        EnrollmentData shouldBeNull = EnrollmentData.parse(uri);
     }
 
     @Test
     public void shouldFailWithNoLabel() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        EnrollmentData shouldBeNull = EnrollmentData.parse("otpauth://totp/?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData shouldBeNull = EnrollmentData.parse(uri);
     }
 
     @Test
     public void shouldFailWithNoSecret() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        EnrollmentData shouldBeNull = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData shouldBeNull = EnrollmentData.parse(uri);
     }
 
     @Test
     public void shouldReturnValidData() throws Exception {
-        EnrollmentData data = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData data = EnrollmentData.parse(uri);
 
         assertThat(data, is(not(nullValue())));
         assertThat(data.getUser(), is(equalTo("user@email.com")));
@@ -118,12 +130,13 @@ public class EnrollmentDataTest {
         assertThat(data.getAlgorithm(), is(equalTo("SHA1")));
         assertThat(data.getDigits(), is(equalTo(6)));
         assertThat(data.getPeriod(), is(equalTo(30)));
-        assertThat(data.getBaseUrl(), is(equalTo("https://tenant.pig.com")));
+        assertThat(data.getUrl().toString(), is(equalTo("https://tenant.pig.com/")));
     }
 
     @Test
     public void shouldReturnValidDataWithoutIssuer() throws Exception {
-        EnrollmentData data = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?secret=secret&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?secret=secret&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData data = EnrollmentData.parse(uri);
 
         assertThat(data, is(not(nullValue())));
         assertThat(data.getUser(), is(equalTo("user@email.com")));
@@ -134,12 +147,13 @@ public class EnrollmentDataTest {
         assertThat(data.getAlgorithm(), is(equalTo("SHA1")));
         assertThat(data.getDigits(), is(equalTo(6)));
         assertThat(data.getPeriod(), is(equalTo(30)));
-        assertThat(data.getBaseUrl(), is(equalTo("https://tenant.pig.com")));
+        assertThat(data.getUrl().toString(), is(equalTo("https://tenant.pig.com/")));
     }
 
     @Test
     public void shouldReturnValidDataWithoutIssuerPrefix() throws Exception {
-        EnrollmentData data = EnrollmentData.parse("otpauth://totp/user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA1&digits=6&period=30&base_url=https://tenant.pig.com");
+        EnrollmentData data = EnrollmentData.parse(uri);
 
         assertThat(data, is(not(nullValue())));
         assertThat(data.getUser(), is(equalTo("user@email.com")));
@@ -150,12 +164,13 @@ public class EnrollmentDataTest {
         assertThat(data.getAlgorithm(), is(equalTo("SHA1")));
         assertThat(data.getDigits(), is(equalTo(6)));
         assertThat(data.getPeriod(), is(equalTo(30)));
-        assertThat(data.getBaseUrl(), is(equalTo("https://tenant.pig.com")));
+        assertThat(data.getUrl().toString(), is(equalTo("https://tenant.pig.com/")));
     }
 
     @Test
     public void shouldReturnDefaultDigits() throws Exception {
-        EnrollmentData data = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA256&period=31&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA256&period=31&base_url=https://tenant.pig.com");
+        EnrollmentData data = EnrollmentData.parse(uri);
 
         assertThat(data, is(not(nullValue())));
         assertThat(data.getUser(), is(equalTo("user@email.com")));
@@ -166,12 +181,13 @@ public class EnrollmentDataTest {
         assertThat(data.getAlgorithm(), is(equalTo("SHA256")));
         assertThat(data.getDigits(), is(equalTo(6)));
         assertThat(data.getPeriod(), is(equalTo(31)));
-        assertThat(data.getBaseUrl(), is(equalTo("https://tenant.pig.com")));
+        assertThat(data.getUrl().toString(), is(equalTo("https://tenant.pig.com/")));
     }
 
     @Test
     public void shouldReturnDefaultPeriod() throws Exception {
-        EnrollmentData data = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA512&digits=8&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&algorithm=SHA512&digits=8&base_url=https://tenant.pig.com");
+        EnrollmentData data = EnrollmentData.parse(uri);
 
         assertThat(data, is(not(nullValue())));
         assertThat(data.getUser(), is(equalTo("user@email.com")));
@@ -182,12 +198,13 @@ public class EnrollmentDataTest {
         assertThat(data.getAlgorithm(), is(equalTo("SHA512")));
         assertThat(data.getDigits(), is(equalTo(8)));
         assertThat(data.getPeriod(), is(equalTo(30)));
-        assertThat(data.getBaseUrl(), is(equalTo("https://tenant.pig.com")));
+        assertThat(data.getUrl().toString(), is(equalTo("https://tenant.pig.com/")));
     }
 
     @Test
     public void shouldReturnDefaultAlgorithm() throws Exception {
-        EnrollmentData data = EnrollmentData.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&digits=7&period=33&base_url=https://tenant.pig.com");
+        Uri uri = Uri.parse("otpauth://totp/issuer:user@email.com?secret=secret&issuer=issuer&enrollment_tx_id=enrollment_tx_id&id=device_account_id&digits=7&period=33&base_url=https://tenant.pig.com");
+        EnrollmentData data = EnrollmentData.parse(uri);
 
         assertThat(data, is(not(nullValue())));
         assertThat(data.getUser(), is(equalTo("user@email.com")));
@@ -198,6 +215,6 @@ public class EnrollmentDataTest {
         assertThat(data.getAlgorithm(), is(equalTo("SHA1")));
         assertThat(data.getDigits(), is(equalTo(7)));
         assertThat(data.getPeriod(), is(equalTo(33)));
-        assertThat(data.getBaseUrl(), is(equalTo("https://tenant.pig.com")));
+        assertThat(data.getUrl().toString(), is(equalTo("https://tenant.pig.com/")));
     }
 }

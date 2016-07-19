@@ -66,7 +66,7 @@ public class Notification implements GuardianNotification, Parcelable {
     private final Double latitude;
     private final Double longitude;
 
-    Notification(String hostname,
+    Notification(HttpUrl url,
                  String deviceId,
                  String transactionToken,
                  Date date,
@@ -77,13 +77,6 @@ public class Notification implements GuardianNotification, Parcelable {
                  String location,
                  Double latitude,
                  Double longitude) {
-        HttpUrl url = HttpUrl.parse(hostname);
-        if (url == null) {
-            url = new HttpUrl.Builder()
-                    .scheme("https")
-                    .host(hostname)
-                    .build();
-        }
         this.enrollmentId = String.format("guardian://%s/%s", url.host(), deviceId);
         this.transactionToken = transactionToken;
         this.date = date;
@@ -107,60 +100,14 @@ public class Notification implements GuardianNotification, Parcelable {
                     "Push notification doesn't seem to be a Guardian authentication request");
         }
 
-        String dateStr = pushNotificationPayload.getString(DATE_KEY);
+        HttpUrl url = parseHostname(hostname);
+        Date date = parseDate(pushNotificationPayload);
+        Source source = parseSource(pushNotificationPayload);
+        Location location = parseLocation(pushNotificationPayload);
 
-        @SuppressLint("SimpleDateFormat")
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        Date date = null;
-        try {
-            date = simpleDateFormat.parse(dateStr);
-        } catch (ParseException e) {
-            Log.e(TAG, "Error while parsing date", e);
-        }
-
-        String browserName = null;
-        String browserVersion = null;
-        String osName = null;
-        String osVersion = null;
-
-        // source ("s") arrives as a JSON encoded string
-        String sourceJson = pushNotificationPayload.getString(SOURCE_KEY);
-        try {
-            JSONObject sourceData = new JSONObject(sourceJson);
-            JSONObject browserData = sourceData.getJSONObject(BROWSER_KEY);
-            if (browserData != null) {
-                browserName = browserData.getString(NAME_KEY);
-                browserVersion = browserData.getString(VERSION_KEY);
-            }
-            JSONObject osData = sourceData.getJSONObject(OS_KEY);
-            if (osData != null) {
-                osName = osData.getString(NAME_KEY);
-                osVersion = osData.getString(VERSION_KEY);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error while parsing source", e);
-        }
-
-        String location = null;
-        Double latitude = null;
-        Double longitude = null;
-
-        // location ("l") arrives as a JSON encoded string
-        if (pushNotificationPayload.containsKey(LOCATION_KEY)) {
-            String locationJson = pushNotificationPayload.getString(LOCATION_KEY);
-            try {
-                JSONObject locationData = new JSONObject(locationJson);
-                location = locationData.getString(NAME_KEY);
-                latitude = locationData.getDouble(LATITUDE_KEY);
-                longitude = locationData.getDouble(LONGITUDE_KEY);
-            } catch (Exception e) {
-                Log.e(TAG, "Error while parsing location", e);
-            }
-        }
-
-        return new Notification(hostname, deviceAccountId, transactionToken, date, osName,
-                osVersion, browserName, browserVersion, location, latitude, longitude);
+        return new Notification(url, deviceAccountId, transactionToken, date,
+                source.osName, source.osVersion, source.browserName, source.browserVersion,
+                location.location, location.latitude, location.longitude);
     }
 
     @Override
@@ -211,6 +158,109 @@ public class Notification implements GuardianNotification, Parcelable {
     @Override
     public Double getLongitude() {
         return longitude;
+    }
+
+    private static HttpUrl parseHostname(String hostname) {
+        HttpUrl url = HttpUrl.parse(hostname);
+        if (url == null) {
+            url = new HttpUrl.Builder()
+                    .scheme("https")
+                    .host(hostname)
+                    .build();
+        }
+        return url;
+    }
+
+    private static Date parseDate(Bundle pushNotificationPayload) {
+        String dateStr = pushNotificationPayload.getString(DATE_KEY);
+
+        @SuppressLint("SimpleDateFormat") // remove warning about date format non "local"
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date date = null;
+        try {
+            date = simpleDateFormat.parse(dateStr);
+        } catch (ParseException e) {
+            Log.e(TAG, "Error while parsing date", e);
+        }
+
+        return date;
+    }
+
+    private static Source parseSource(Bundle pushNotificationPayload) {
+        String browserName = null;
+        String browserVersion = null;
+        String osName = null;
+        String osVersion = null;
+
+        // source ("s") arrives as a JSON encoded string
+        String sourceJson = pushNotificationPayload.getString(SOURCE_KEY);
+        try {
+            JSONObject sourceData = new JSONObject(sourceJson);
+            JSONObject browserData = sourceData.getJSONObject(BROWSER_KEY);
+            if (browserData != null) {
+                browserName = browserData.getString(NAME_KEY);
+                browserVersion = browserData.getString(VERSION_KEY);
+            }
+            JSONObject osData = sourceData.getJSONObject(OS_KEY);
+            if (osData != null) {
+                osName = osData.getString(NAME_KEY);
+                osVersion = osData.getString(VERSION_KEY);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error while parsing source", e);
+        }
+
+        return new Source(browserName, browserVersion, osName, osVersion);
+    }
+
+    private static Location parseLocation(Bundle pushNotificationPayload) {
+        String location = null;
+        Double latitude = null;
+        Double longitude = null;
+
+        // location ("l") arrives as a JSON encoded string
+        if (pushNotificationPayload.containsKey(LOCATION_KEY)) {
+            String locationJson = pushNotificationPayload.getString(LOCATION_KEY);
+            try {
+                JSONObject locationData = new JSONObject(locationJson);
+                location = locationData.getString(NAME_KEY);
+                latitude = locationData.getDouble(LATITUDE_KEY);
+                longitude = locationData.getDouble(LONGITUDE_KEY);
+            } catch (Exception e) {
+                Log.e(TAG, "Error while parsing location", e);
+            }
+        }
+
+        return new Location(location, latitude, longitude);
+    }
+
+    private static class Source {
+
+        private final String browserName;
+        private final String browserVersion;
+        private final String osName;
+        private final String osVersion;
+
+        public Source(String browserName, String browserVersion, String osName, String osVersion) {
+            this.browserName = browserName;
+            this.browserVersion = browserVersion;
+            this.osName = osName;
+            this.osVersion = osVersion;
+        }
+    }
+
+    private static class Location {
+
+        private final String location;
+        private final Double latitude;
+        private final Double longitude;
+
+        public Location(String location, Double latitude, Double longitude) {
+            this.location = location;
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
     }
 
     // PARCELABLE

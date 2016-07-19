@@ -29,6 +29,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
 
+import okhttp3.HttpUrl;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -38,10 +40,10 @@ import static org.hamcrest.Matchers.notNullValue;
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 public class EnrollmentTest {
 
-    private static final String URL_HTTPS = "https://example.com";
-    private static final String URL_HTTPS_WITH_FINAL_DASH = "https://example.com/";
-    private static final String URL_HTTP = "http://example.com";
-    private static final String URL_HTTP_WITH_FINAL_DASH = "http://example.com/";
+    private static final HttpUrl URL_HTTPS = HttpUrl.parse("https://example.com");
+    private static final HttpUrl URL_HTTPS_WITH_FINAL_DASH = HttpUrl.parse("https://example.com/");
+    private static final HttpUrl URL_HTTP = HttpUrl.parse("http://example.com");
+    private static final HttpUrl URL_HTTP_WITH_FINAL_DASH = HttpUrl.parse("http://example.com/");
     private static final String TENANT = "TENANT";
     private static final String USER = "USER";
     private static final int PERIOD = 30;
@@ -91,7 +93,7 @@ public class EnrollmentTest {
         Enrollment enrollment = new Enrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
                 DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
                 DEVICE_GCM_TOKEN, DEVICE_TOKEN);
-        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
+        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH.toString())));
         assertThat(enrollment.getTenant(), is(equalTo(TENANT)));
         assertThat(enrollment.getUser(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
@@ -117,7 +119,7 @@ public class EnrollmentTest {
 
         assertThat(enrollment, is(notNullValue()));
 
-        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
+        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH.toString())));
         assertThat(enrollment.getTenant(), is(equalTo(TENANT)));
         assertThat(enrollment.getUser(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
