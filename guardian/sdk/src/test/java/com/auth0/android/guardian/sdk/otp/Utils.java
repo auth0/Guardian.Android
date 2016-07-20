@@ -20,30 +20,27 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.android.guardian.sdk.networking;
+package com.auth0.android.guardian.sdk.otp;
 
-import android.support.annotation.NonNull;
+import java.math.BigInteger;
 
-import com.google.gson.Gson;
+public class Utils {
 
-import java.lang.reflect.Type;
+    /**
+     * This method converts a HEX string to Byte[]
+     *
+     * @param hex: the HEX string
+     * @return a byte array
+     */
+    public static byte[] hexStr2Bytes(String hex) {
+        // Adding one byte to get the right conversion
+        // Values starting with "0" can be converted
+        byte[] bArray = new BigInteger("10" + hex, 16).toByteArray();
 
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-
-public class RequestFactory {
-
-    private final GsonConverter converter;
-    private final OkHttpClient client;
-
-    public RequestFactory(@NonNull Gson gson, @NonNull OkHttpClient client) {
-        this.converter = new GsonConverter(gson);
-        this.client = client;
-    }
-
-    public <T> Request<T> newRequest(@NonNull String method,
-                                     @NonNull HttpUrl url,
-                                     @NonNull Type typeOfT) {
-        return new Request<>(method, url, converter, client, typeOfT);
+        // Copy all the REAL bytes, not the "first"
+        byte[] ret = new byte[bArray.length - 1];
+        for (int i = 0; i < ret.length; i++)
+            ret[i] = bArray[i + 1];
+        return ret;
     }
 }

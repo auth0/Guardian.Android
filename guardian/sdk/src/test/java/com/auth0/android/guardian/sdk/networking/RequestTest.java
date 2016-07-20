@@ -52,10 +52,10 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -139,14 +139,6 @@ public class RequestTest {
     }
 
     @Test
-    public void shouldFailWithInvalidBaseUrl() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-
-        getRequest("GET", "invalid://example.com/something")
-                .execute();
-    }
-
-    @Test
     public void testHttpBaseUrl() throws Exception {
         getRequest("GET", "http://hello.example.com/something")
                 .execute();
@@ -197,7 +189,7 @@ public class RequestTest {
         thrown.expect(IllegalArgumentException.class);
 
         getRequest("GET", getUrl("/user/123"))
-                .addParameter("some", "parameter")
+                .setParameter("some", "parameter")
                 .execute();
     }
 
@@ -216,7 +208,7 @@ public class RequestTest {
     @Test
     public void shouldNotFailIfDeleteHasBody() throws Exception {
         getRequest("DELETE", getUrl("/user/123"))
-                .addParameter("some", "parameter")
+                .setParameter("some", "parameter")
                 .execute();
 
         verify(converter).serialize(mapCaptor.capture());
@@ -235,7 +227,7 @@ public class RequestTest {
     @Test
     public void testPatchPath() throws Exception {
         getRequest("PATCH", getUrl("/user/123"))
-                .addParameter("parameter", "value")
+                .setParameter("parameter", "value")
                 .execute();
 
         verify(client).newCall(requestCaptor.capture());
@@ -256,7 +248,7 @@ public class RequestTest {
     @Test
     public void testPostPath() throws Exception {
         getRequest("POST", getUrl("/user/123"))
-                .addParameter("parameter", "value")
+                .setParameter("parameter", "value")
                 .execute();
 
         verify(client).newCall(requestCaptor.capture());
@@ -277,7 +269,7 @@ public class RequestTest {
     @Test
     public void testPutPath() throws Exception {
         getRequest("PUT", getUrl("/user/123"))
-                .addParameter("parameter", "value")
+                .setParameter("parameter", "value")
                 .execute();
 
         verify(client).newCall(requestCaptor.capture());
@@ -313,9 +305,9 @@ public class RequestTest {
     @Test
     public void shouldSerializeFromParameters() throws Exception {
         getRequest("PUT", getUrl("/user/123"))
-                .addParameter("string", "value")
-                .addParameter("number", 123)
-                .addParameter("boolean", true)
+                .setParameter("string", "value")
+                .setParameter("number", 123)
+                .setParameter("boolean", true)
                 .execute();
 
         verify(converter).serialize(mapCaptor.capture());
@@ -356,15 +348,39 @@ public class RequestTest {
 
         getRequest("PUT", getUrl("/user/123"))
                 .setBody(BODY)
-                .addParameter("parameter", "value")
+                .setParameter("parameter", "value")
                 .execute();
+    }
+
+    @Test
+    public void shouldAddParametersAndRemoveItWhenNull() throws Exception {
+        getRequest("PUT", getUrl("/user/123"))
+                .setParameter("string", "value")
+                .setParameter("number", 123)
+                .setParameter("boolean", true)
+                .setParameter("string", null)
+                .execute();
+
+        verify(converter).serialize(mapCaptor.capture());
+        verify(converter).parse(any(Type.class), any(Reader.class));
+        verifyNoMoreInteractions(converter);
+        Map<String, Object> body = mapCaptor.getValue();
+        assertThat(body, hasEntry("number", (Object) 123));
+        assertThat(body, hasEntry("boolean", (Object) true));
+        assertThat(body.size(), is(equalTo(2)));
+
+        verify(client).newCall(requestCaptor.capture());
+        okhttp3.Request request = requestCaptor.getValue();
+
+        assertThat(request.method(), is(equalTo("PUT")));
+        assertThat(request.url().encodedPath(), is(equalTo("/user/123")));
     }
 
     @Test
     public void shouldAddHeaders() throws Exception {
         getRequest("GET", getUrl("/user/123"))
-                .addHeader("header", "value")
-                .addHeader("anotherHeader", "anotherValue")
+                .setHeader("header", "value")
+                .setHeader("anotherHeader", "anotherValue")
                 .execute();
 
         verify(client).newCall(requestCaptor.capture());
@@ -372,6 +388,22 @@ public class RequestTest {
 
         assertThat(request.header("header"), is(equalTo("value")));
         assertThat(request.header("anotherHeader"), is(equalTo("anotherValue")));
+    }
+
+    @Test
+    public void shouldAddHeadersAndRemoveItWhenNull() throws Exception {
+        getRequest("GET", getUrl("/user/123"))
+                .setHeader("header", "value")
+                .setHeader("anotherHeader", "anotherValue")
+                .setHeader("anotherHeader", null)
+                .execute();
+
+        verify(client).newCall(requestCaptor.capture());
+        okhttp3.Request request = requestCaptor.getValue();
+
+        assertThat(request.header("header"), is(equalTo("value")));
+        assertThat(request.header("anotherHeader"), is(nullValue()));
+        assertThat(request.headers().size(), is(equalTo(1)));
     }
 
     @Test
@@ -389,9 +421,9 @@ public class RequestTest {
     @Test
     public void shouldAddQueryParameter() throws Exception {
         getRequest("GET", getUrl("/user/123"))
-                .addQueryParameter("string", "value")
-                .addQueryParameter("number", String.valueOf(123))
-                .addQueryParameter("boolean", String.valueOf(true))
+                .setQueryParameter("string", "value")
+                .setQueryParameter("number", String.valueOf(123))
+                .setQueryParameter("boolean", String.valueOf(true))
                 .execute();
 
         verify(client).newCall(requestCaptor.capture());
@@ -400,6 +432,24 @@ public class RequestTest {
         assertThat(request.url().queryParameter("string"), is(equalTo("value")));
         assertThat(request.url().queryParameter("number"), is(equalTo("123")));
         assertThat(request.url().queryParameter("boolean"), is(equalTo("true")));
+    }
+
+    @Test
+    public void shouldAddQueryParameterAndRemoveItWhenNull() throws Exception {
+        getRequest("GET", getUrl("/user/123"))
+                .setQueryParameter("string", "value")
+                .setQueryParameter("number", String.valueOf(123))
+                .setQueryParameter("boolean", String.valueOf(true))
+                .setQueryParameter("string", null)
+                .execute();
+
+        verify(client).newCall(requestCaptor.capture());
+        okhttp3.Request request = requestCaptor.getValue();
+
+        assertThat(request.url().queryParameter("string"), is(nullValue()));
+        assertThat(request.url().queryParameter("number"), is(equalTo("123")));
+        assertThat(request.url().queryParameter("boolean"), is(equalTo("true")));
+        assertThat(request.url().querySize(), is(equalTo(2)));
     }
 
     @Test

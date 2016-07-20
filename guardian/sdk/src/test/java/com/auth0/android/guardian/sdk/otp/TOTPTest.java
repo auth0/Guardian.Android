@@ -20,30 +20,40 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.android.guardian.sdk.networking;
+package com.auth0.android.guardian.sdk.otp;
 
-import android.support.annotation.NonNull;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-import com.google.gson.Gson;
+public class TOTPTest {
 
-import java.lang.reflect.Type;
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
+    private int period = 30;
 
-public class RequestFactory {
+    // Seed for HMAC-SHA1 - 20 bytes
+    private String secret = "3132333435363738393031323334353637383930";
 
-    private final GsonConverter converter;
-    private final OkHttpClient client;
+    @Test
+    public void shouldFailWithMoreThanEightDigits() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
 
-    public RequestFactory(@NonNull Gson gson, @NonNull OkHttpClient client) {
-        this.converter = new GsonConverter(gson);
-        this.client = client;
+        new TOTP("sha1", Utils.hexStr2Bytes(secret), 9, period);
     }
 
-    public <T> Request<T> newRequest(@NonNull String method,
-                                     @NonNull HttpUrl url,
-                                     @NonNull Type typeOfT) {
-        return new Request<>(method, url, converter, client, typeOfT);
+    @Test
+    public void shouldFailWithUnknownAlgorithm() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        new TOTP("sha111", Utils.hexStr2Bytes(secret), 8, period);
+    }
+
+    @Test
+    public void shouldFailWithInvalidSecret() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        new TOTP("sha256", null, 8, period);
     }
 }

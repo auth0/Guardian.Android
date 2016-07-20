@@ -20,30 +20,39 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.android.guardian.sdk.networking;
+package com.auth0.android.guardian.sdk;
 
-import android.support.annotation.NonNull;
+import com.google.gson.annotations.SerializedName;
 
-import com.google.gson.Gson;
+import java.util.Map;
 
-import java.lang.reflect.Type;
+public class Device {
 
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
+    @SerializedName("id")
+    private String id;
 
-public class RequestFactory {
+    @SerializedName("identifier")
+    private String localIdentifier;
 
-    private final GsonConverter converter;
-    private final OkHttpClient client;
+    @SerializedName("name")
+    private String name;
 
-    public RequestFactory(@NonNull Gson gson, @NonNull OkHttpClient client) {
-        this.converter = new GsonConverter(gson);
-        this.client = client;
+    @SerializedName("push_credentials")
+    private Map<String, String> pushCredentials;
+
+    public String getId() {
+        return id;
     }
 
-    public <T> Request<T> newRequest(@NonNull String method,
-                                     @NonNull HttpUrl url,
-                                     @NonNull Type typeOfT) {
-        return new Request<>(method, url, converter, client, typeOfT);
+    public String getLocalIdentifier() {
+        return localIdentifier;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getGCMToken() {
+        return pushCredentials.get("token");
     }
 }
