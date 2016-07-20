@@ -46,17 +46,17 @@ guardian
 A successful enroll will return an object implementing the following interface
 
 ```java
-public interface Enrollment /* extends Parcelabl? */ {
-    // we'll need to generate something so we can match push notifications with the enrollment
-    // or we could use the device id since this will be for single tenants?
-    // anyway, we only need to be sure we can obtain the same from the notification
+public interface Enrollment /* extends Parcelable? */ {
+    /**
+     * This is the actual id of the enrollment on guardian server
+     */
     String getId();
 
     // Guardian server url (just in case, but if we use a enrollment.id != server id then we can include the url in the id itself, in case we want to avoid possible collisions)
     String getUrl();
 
-    // Issuer/tenant (useless? maybe just call it label?)
-    String getTenant();
+    // Issuer/tenant (useless? maybe useful so dev/user can change for whatever he wants to show, it will be used in notification activity for example)
+    String getLabel();
 
     // User name/email
     String getUser();
@@ -68,19 +68,10 @@ public interface Enrollment /* extends Parcelabl? */ {
     String getAlgorithm(); // maybe we can leave this out if we will always use the default
     String getSecret(); // base32 encoded secret, as it is on the QR
 
-    //
-    // Data from Device class (API client) includes id, name, localIdentifier and gcmToken
-    //
-
-    /**
-     * This is the actual id of the enrollment on guardian server
-     */
-    String getDeviceId();
-
     /**
      * The identifier of the physical device, for debug/tracking purposes
      */
-    String getDeviceLocalIdentifier();
+    String getDeviceIdentifier();
 
     /**
      * The name to display to the user whenever it has to choose where to send the push notification
@@ -133,7 +124,7 @@ guardian
 ```java
 guardian
         .getAPIClient()
-        .device(enrollment.getDeviceId(), enrollment.getDeviceToken())
+        .device(enrollment.getId(), enrollment.getDeviceToken())
         .update("newIdentifier", "newName", "newGcmToken") // any value can be null (is optional, won't change the server value)
         .execute(); // or start(new Callback<> ...)
 ```
