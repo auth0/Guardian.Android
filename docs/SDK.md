@@ -10,8 +10,6 @@ Uri url = Uri.parse("tenant.guardian.auth0.com");
 
 Guardian guardian = new Guardian.Builder()
         .url(url) // or .domain("tenant.guardian.auth0.com")
-        .deviceName("user visible name for this device")
-        .gcmToken("token")
         .build();
 ```
 
@@ -24,12 +22,12 @@ Guardian QR code:
 Uri enrollmentUriFromQr = ...; // obtain the data from a QR code
 
 Enrollment enrollment = guardian
-        .enroll(enrollmentUriFromQr)
+        .enroll(enrollmentUriFromQr, "deviceName", "gcmToken")
         .execute();
 
 // or start async
 guardian
-        .enroll(enrollmentUriFromQr)
+        .enroll(enrollmentUriFromQr, "deviceName", "gcmToken")
         .start(new Callback<Enrollment> {
             @Override
             void onSuccess(Enrollment enrollment) {
@@ -107,7 +105,7 @@ guardian
 
 ```java
 guardian
-        .allow(enrollment, notification)
+        .allow(notification, enrollment)
         .execute(); // or start(new Callback<> ...)
 ```
 
@@ -115,7 +113,7 @@ guardian
 
 ```java
 guardian
-        .reject(enrollment, notification) // or reject(enrollment, notification, reason)
+        .reject(notification, enrollment) // or reject(notification, enrollment, reason)
         .execute(); // or start(new Callback<> ...)
 ```
 
