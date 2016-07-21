@@ -40,9 +40,6 @@ import static org.hamcrest.Matchers.notNullValue;
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 public class EnrollmentTest {
 
-    private static final HttpUrl URL_HTTPS = HttpUrl.parse("https://example.com");
-    private static final HttpUrl URL_HTTPS_WITH_FINAL_DASH = HttpUrl.parse("https://example.com/");
-    private static final HttpUrl URL_HTTP = HttpUrl.parse("http://example.com");
     private static final HttpUrl URL_HTTP_WITH_FINAL_DASH = HttpUrl.parse("http://example.com/");
     private static final String TENANT = "TENANT";
     private static final String USER = "USER";
@@ -57,51 +54,19 @@ public class EnrollmentTest {
     private static final String DEVICE_TOKEN = "DEVICE_TOKEN";
 
     @Test
-    public void shouldHaveCorrectIdWithHttpsUrl() throws Exception {
-        Enrollment enrollment = new Enrollment(URL_HTTPS, TENANT, USER, PERIOD,
-                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
-                DEVICE_GCM_TOKEN, DEVICE_TOKEN);
-        assertThat(enrollment.getId(), is(equalTo("guardian://example.com/DEVICE_ID")));
-    }
-
-    @Test
-    public void shouldHaveCorrectIdWithHttpsAndFinalDashUrl() throws Exception {
-        Enrollment enrollment = new Enrollment(URL_HTTPS_WITH_FINAL_DASH, TENANT, USER, PERIOD,
-                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
-                DEVICE_GCM_TOKEN, DEVICE_TOKEN);
-        assertThat(enrollment.getId(), is(equalTo("guardian://example.com/DEVICE_ID")));
-    }
-
-    @Test
-    public void shouldHaveCorrectIdWithHttpUrl() throws Exception {
-        Enrollment enrollment = new Enrollment(URL_HTTP, TENANT, USER, PERIOD,
-                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
-                DEVICE_GCM_TOKEN, DEVICE_TOKEN);
-        assertThat(enrollment.getId(), is(equalTo("guardian://example.com/DEVICE_ID")));
-    }
-
-    @Test
-    public void shouldHaveCorrectIdWithHttpAndFinalDashUrl() throws Exception {
-        Enrollment enrollment = new Enrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
-                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
-                DEVICE_GCM_TOKEN, DEVICE_TOKEN);
-        assertThat(enrollment.getId(), is(equalTo("guardian://example.com/DEVICE_ID")));
-    }
-
-    @Test
     public void shouldHaveCorrectData() throws Exception {
         Enrollment enrollment = new Enrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
                 DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
                 DEVICE_GCM_TOKEN, DEVICE_TOKEN);
         assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH.toString())));
-        assertThat(enrollment.getTenant(), is(equalTo(TENANT)));
+        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUser(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
         assertThat(enrollment.getAlgorithm(), is(equalTo(ALGORITHM)));
         assertThat(enrollment.getSecret(), is(equalTo(SECRET_BASE32)));
-        assertThat(enrollment.getDeviceId(), is(equalTo(DEVICE_ID)));
-        assertThat(enrollment.getDeviceLocalIdentifier(), is(equalTo(DEVICE_LOCAL_IDENTIFIER)));
+        assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
+        assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_LOCAL_IDENTIFIER)));
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
         assertThat(enrollment.getGCMToken(), is(equalTo(DEVICE_GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
@@ -120,14 +85,14 @@ public class EnrollmentTest {
         assertThat(enrollment, is(notNullValue()));
 
         assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH.toString())));
-        assertThat(enrollment.getTenant(), is(equalTo(TENANT)));
+        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUser(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
         assertThat(enrollment.getAlgorithm(), is(equalTo(ALGORITHM)));
         assertThat(enrollment.getSecret(), is(equalTo(SECRET_BASE32)));
-        assertThat(enrollment.getDeviceId(), is(equalTo(DEVICE_ID)));
-        assertThat(enrollment.getDeviceLocalIdentifier(), is(equalTo(DEVICE_LOCAL_IDENTIFIER)));
+        assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
+        assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_LOCAL_IDENTIFIER)));
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
         assertThat(enrollment.getGCMToken(), is(equalTo(DEVICE_GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));

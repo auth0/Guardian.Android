@@ -55,6 +55,7 @@ public class Notification implements GuardianNotification, Parcelable {
     private static final String NAME_KEY = "n";
     private static final String VERSION_KEY = "v";
 
+    private final String url;
     private final String enrollmentId;
     private final String transactionToken;
     private final Date date;
@@ -77,7 +78,8 @@ public class Notification implements GuardianNotification, Parcelable {
                  String location,
                  Double latitude,
                  Double longitude) {
-        this.enrollmentId = String.format("guardian://%s/%s", url.host(), deviceId);
+        this.url = url.toString();
+        this.enrollmentId = deviceId;
         this.transactionToken = transactionToken;
         this.date = date;
         this.osName = osName;
@@ -118,6 +120,11 @@ public class Notification implements GuardianNotification, Parcelable {
     @Override
     public String getTransactionToken() {
         return transactionToken;
+    }
+
+    @Override
+    public String getUrl() {
+        return url;
     }
 
     @Override
@@ -265,6 +272,7 @@ public class Notification implements GuardianNotification, Parcelable {
 
     // PARCELABLE
     protected Notification(Parcel in) {
+        url = in.readString();
         enrollmentId = in.readString();
         transactionToken = in.readString();
         long tmpDate = in.readLong();
@@ -285,6 +293,7 @@ public class Notification implements GuardianNotification, Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(url);
         dest.writeString(enrollmentId);
         dest.writeString(transactionToken);
         dest.writeLong(date != null ? date.getTime() : -1L);

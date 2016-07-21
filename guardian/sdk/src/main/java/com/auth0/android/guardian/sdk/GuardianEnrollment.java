@@ -22,57 +22,101 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.provider.Settings;
+
+/**
+ * The representation of a Guardian Enrollment
+ */
 public interface GuardianEnrollment {
 
-    // we'll need to generate something so we can match push notifications with the enrollment
-    // or we could use the device id since this will be for single tenants?
-    // anyway, we only need to be sure we can obtain the same from the notification
+    /**
+     * The Guardian enrollment id
+     *
+     * @return the id
+     */
     String getId();
 
-    // Guardian server url (just in case)
+    /**
+     * The Guardian server url
+     *
+     * @return the url
+     */
     String getUrl();
 
-    // Issuer/tenant (just in case)
-    String getTenant();
+    /**
+     * A label for the enrollment. This will be pre-filled with the Guardian tenant, but since it's
+     * only used to display to the user, this could be overriden to return whatever the developer
+     * wants.
+     *
+     * @return the label
+     */
+    String getLabel();
 
-    // User name/email
+    /**
+     * The name or email for this enrollment's user
+     *
+     * @return the user name or email
+     */
     String getUser();
 
-    // TOTP data, all data we require to generate the code
-    // maybe create a class for this? so we have everything in one place?
-    int getPeriod(); // maybe we can leave this out if we will always use the default
-    int getDigits(); // maybe we can leave this out if we will always use the default
+    /**
+     * The TOTP period
+     *
+     * @return the period, in seconds
+     */
+    int getPeriod();
+
+    /**
+     * The TOTP digits, i.e. the code length
+     *
+     * @return the amount of digits of the code
+     */
+    int getDigits();
+
+    /**
+     * The TOTP algorithm
+     *
+     * @return the algorithm name
+     */
     String getAlgorithm(); // maybe we can leave this out if we will always use the default
-    String getSecret(); // base32 encoded secret, as it is on the QR
-
-    //
-    // Data from Device class (API client) includes id, name, localIdentifier and gcmToken
-    //
 
     /**
-     * This is the actual id of the enrollment on guardian server
+     * The TOTP secret, Base32 encoded
+     *
+     * @return the encoded secret
      */
-    String getDeviceId();
+    String getSecret();
 
     /**
-     * The identifier of the physical device, for debug/tracking purposes
+     * The identifier of the physical device, for debug/tracking purposes.
+     * Usually will be {@link Settings.Secure#ANDROID_ID}
+     *
+     * @return a unique device identifier
      */
-    String getDeviceLocalIdentifier();
+    String getDeviceIdentifier();
 
     /**
-     * The name to display to the user whenever it has to choose where to send the push notification
-     * or at the admin interface for example if the user want's to delete one enrollment
+     * The name to display whenever it is necessary to identify this specific enrollment.
+     * For example when the user has to choose where to send the push notification, or at the admin
+     * interface if the user wants to delete an enrollment from there
+     *
+     * @return the name
      */
     String getDeviceName();
 
     /**
      * The GCM token for this physical device, required to check against the current token and
-     * update in case it's not the same. Needs to be up-to-data for the push notifications to work.
+     * update the server in case it's not the same.
+     * Needs to be up-to-data for the push notifications to work.
+     *
+     * @return the GCM token
      */
     String getGCMToken();
 
     /**
      * The token used to authenticate when updating the device data or deleting the enrollment
+     *
+     * @return the Guardian token
      */
     String getDeviceToken();
 }

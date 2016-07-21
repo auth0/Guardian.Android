@@ -37,8 +37,7 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
     private final int digits;
     private final String algorithm;
     private final String secret;
-    private final String deviceId;
-    private final String deviceLocalIdentifier;
+    private final String deviceIdentifier;
     private final String deviceName;
     private final String deviceGCMToken;
     private final String deviceToken;
@@ -51,11 +50,10 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
                String algorithm,
                String secret,
                String deviceId,
-               String deviceLocalIdentifier,
+               String deviceIdentifier,
                String deviceName,
                String deviceGCMToken,
                String deviceToken) {
-        this.id = String.format("guardian://%s/%s", url.host(), deviceId);
         this.url = url.toString();
         this.tenant = tenant;
         this.user = user;
@@ -63,8 +61,8 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
         this.digits = digits;
         this.algorithm = algorithm;
         this.secret = secret;
-        this.deviceId = deviceId;
-        this.deviceLocalIdentifier = deviceLocalIdentifier;
+        this.id = deviceId;
+        this.deviceIdentifier = deviceIdentifier;
         this.deviceName = deviceName;
         this.deviceGCMToken = deviceGCMToken;
         this.deviceToken = deviceToken;
@@ -81,7 +79,7 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
     }
 
     @Override
-    public String getTenant() {
+    public String getLabel() {
         return tenant;
     }
 
@@ -111,13 +109,8 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
     }
 
     @Override
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    @Override
-    public String getDeviceLocalIdentifier() {
-        return deviceLocalIdentifier;
+    public String getDeviceIdentifier() {
+        return deviceIdentifier;
     }
 
     @Override
@@ -135,7 +128,7 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
         return deviceToken;
     }
 
-    //// PARCELABLE
+    // PARCELABLE
     protected Enrollment(Parcel in) {
         id = in.readString();
         url = in.readString();
@@ -145,8 +138,7 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
         digits = in.readInt();
         algorithm = in.readString();
         secret = in.readString();
-        deviceId = in.readString();
-        deviceLocalIdentifier = in.readString();
+        deviceIdentifier = in.readString();
         deviceName = in.readString();
         deviceGCMToken = in.readString();
         deviceToken = in.readString();
@@ -167,8 +159,7 @@ public class Enrollment implements GuardianEnrollment, Parcelable {
         dest.writeInt(digits);
         dest.writeString(algorithm);
         dest.writeString(secret);
-        dest.writeString(deviceId);
-        dest.writeString(deviceLocalIdentifier);
+        dest.writeString(deviceIdentifier);
         dest.writeString(deviceName);
         dest.writeString(deviceGCMToken);
         dest.writeString(deviceToken);

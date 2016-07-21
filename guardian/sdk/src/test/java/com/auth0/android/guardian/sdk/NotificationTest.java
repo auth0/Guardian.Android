@@ -47,10 +47,7 @@ import static org.hamcrest.Matchers.notNullValue;
 public class NotificationTest {
 
     private static final String HOSTNAME = "example.com";
-    private static final String HOSTNAME_HTTPS = "https://example.com";
-    private static final String HOSTNAME_HTTPS_WITH_FINAL_DASH = "https://example.com/";
-    private static final String HOSTNAME_HTTP = "http://example.com";
-    private static final String HOSTNAME_HTTP_WITH_FINAL_DASH = "http://example.com/";
+    private static final String HOSTNAME_HTTPS = "https://example.com/";
     private static final String DEVICE_ID = "DEVICE_ID";
     private static final String TRANSACTION_TOKEN = "TRANSACTION_TOKEN";
     private static final String BROWSER_NAME = "BROWSER_NAME";
@@ -72,66 +69,17 @@ public class NotificationTest {
 
         Notification notification = Notification.parse(data);
 
+        assertThat(notification.getUrl(), is(equalTo(HOSTNAME_HTTPS)));
         assertThat(notification.getDate(), is(equalTo(currentDate)));
         assertThat(notification.getBrowserName(), is(equalTo(BROWSER_NAME)));
         assertThat(notification.getBrowserVersion(), is(equalTo(BROWSER_VERSION)));
         assertThat(notification.getOsName(), is(equalTo(OS_NAME)));
         assertThat(notification.getOsVersion(), is(equalTo(OS_VERSION)));
-        assertThat(notification.getEnrollmentId(), is(equalTo("guardian://example.com/DEVICE_ID")));
+        assertThat(notification.getEnrollmentId(), is(equalTo(DEVICE_ID)));
         assertThat(notification.getTransactionToken(), is(equalTo(TRANSACTION_TOKEN)));
         assertThat(notification.getLocation(), is(equalTo(LOCATION)));
         assertThat(notification.getLatitude(), is(equalTo(LATITUDE)));
         assertThat(notification.getLongitude(), is(equalTo(LONGITUDE)));
-    }
-
-    @Test
-    public void shouldHaveCorrectEnrollmentIdWithHostname() throws Exception {
-        Bundle data = createPushNotificationPayload(
-                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date());
-
-        Notification notification = Notification.parse(data);
-
-        assertThat(notification.getEnrollmentId(), is(equalTo("guardian://example.com/DEVICE_ID")));
-    }
-
-    @Test
-    public void shouldHaveCorrectEnrollmentIdWithHttpsUrl() throws Exception {
-        Bundle data = createPushNotificationPayload(
-                HOSTNAME_HTTPS, DEVICE_ID, TRANSACTION_TOKEN, new Date());
-
-        Notification notification = Notification.parse(data);
-
-        assertThat(notification.getEnrollmentId(), is(equalTo("guardian://example.com/DEVICE_ID")));
-    }
-
-    @Test
-    public void shouldHaveCorrectEnrollmentIdWithHttpsAndFinalDashUrl() throws Exception {
-        Bundle data = createPushNotificationPayload(
-                HOSTNAME_HTTPS_WITH_FINAL_DASH, DEVICE_ID, TRANSACTION_TOKEN, new Date());
-
-        Notification notification = Notification.parse(data);
-
-        assertThat(notification.getEnrollmentId(), is(equalTo("guardian://example.com/DEVICE_ID")));
-    }
-
-    @Test
-    public void shouldHaveCorrectEnrollmentIdWithHttpUrl() throws Exception {
-        Bundle data = createPushNotificationPayload(
-                HOSTNAME_HTTP, DEVICE_ID, TRANSACTION_TOKEN, new Date());
-
-        Notification notification = Notification.parse(data);
-
-        assertThat(notification.getEnrollmentId(), is(equalTo("guardian://example.com/DEVICE_ID")));
-    }
-
-    @Test
-    public void shouldHaveCorrectEnrollmentIdWithHttpAndFinalDashUrl() throws Exception {
-        Bundle data = createPushNotificationPayload(
-                HOSTNAME_HTTP_WITH_FINAL_DASH, DEVICE_ID, TRANSACTION_TOKEN, new Date());
-
-        Notification notification = Notification.parse(data);
-
-        assertThat(notification.getEnrollmentId(), is(equalTo("guardian://example.com/DEVICE_ID")));
     }
 
     @Test
@@ -148,12 +96,13 @@ public class NotificationTest {
 
         assertThat(notification, is(notNullValue()));
 
+        assertThat(notification.getUrl(), is(equalTo(HOSTNAME_HTTPS)));
         assertThat(notification.getDate(), is(equalTo(currentDate)));
         assertThat(notification.getBrowserName(), is(equalTo(BROWSER_NAME)));
         assertThat(notification.getBrowserVersion(), is(equalTo(BROWSER_VERSION)));
         assertThat(notification.getOsName(), is(equalTo(OS_NAME)));
         assertThat(notification.getOsVersion(), is(equalTo(OS_VERSION)));
-        assertThat(notification.getEnrollmentId(), is(equalTo("guardian://example.com/DEVICE_ID")));
+        assertThat(notification.getEnrollmentId(), is(equalTo(DEVICE_ID)));
         assertThat(notification.getTransactionToken(), is(equalTo(TRANSACTION_TOKEN)));
         assertThat(notification.getLocation(), is(equalTo(LOCATION)));
         assertThat(notification.getLatitude(), is(equalTo(LATITUDE)));
@@ -161,7 +110,7 @@ public class NotificationTest {
     }
 
     @Test
-    public void shouldMatchEnrollmentId() throws Exception {
+    public void shouldMatchEnrollment() throws Exception {
         Date currentDate = new Date();
         Bundle data = createPushNotificationPayload(
                 HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
@@ -173,6 +122,7 @@ public class NotificationTest {
                 DEVICE_ID, null, null, null, null);
 
         assertThat(notification.getEnrollmentId(), is(equalTo(enrollment.getId())));
+        assertThat(notification.getUrl(), is(equalTo(enrollment.getUrl())));
     }
 
     @Test

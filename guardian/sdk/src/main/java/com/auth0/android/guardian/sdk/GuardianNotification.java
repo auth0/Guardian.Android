@@ -37,14 +37,47 @@ public interface GuardianNotification {
     String getTransactionToken();
 
     /**
-     * Just information about the authentication request
+     * The Guardian server url
+     */
+    String getUrl();
+
+    /**
+     * The date/time when the authentication request was initiated
      */
     Date getDate();
+
+    /**
+     * The name of the operating system where the authentication request was initiated
+     */
     String getOsName();
+
+    /**
+     * The version of the operating system
+     */
     String getOsVersion();
+
+    /**
+     * The name of the browser where the authentication request was initiated
+     */
     String getBrowserName();
+
+    /**
+     * The version of the browser
+     */
     String getBrowserVersion();
+
+    /**
+     * The name of the (approximate) location where the authentication request was initiated
+     */
     String getLocation();
+
+    /**
+     * The latitude of the (approximate) location
+     */
     Double getLatitude();
+
+    /**
+     * The longitude of the (approximate) location
+     */
     Double getLongitude();
 }

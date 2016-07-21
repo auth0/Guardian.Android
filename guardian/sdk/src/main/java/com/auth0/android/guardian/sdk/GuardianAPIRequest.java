@@ -28,9 +28,26 @@ import com.auth0.android.guardian.sdk.networking.Callback;
 
 import java.io.IOException;
 
+/**
+ * A Guardian request that could be executed synchronously or in a background thread.
+ * @param <T> the type of the expected response
+ */
 public interface GuardianAPIRequest<T> {
 
+    /**
+     * Executes the request synchronously, blocking the current thread until the request finishes
+     *
+     * @return the response
+     * @throws IOException when there's a connection problem
+     * @throws GuardianException when something else went wrong
+     */
     T execute() throws IOException, GuardianException;
 
+    /**
+     * Starts to execute the request asynchronously, in a background thread. A successful response
+     * or the fail cause will be notified to the callback
+     *
+     * @param callback the Callback where the response or failure will be received
+     */
     void start(@NonNull final Callback<T> callback);
 }
