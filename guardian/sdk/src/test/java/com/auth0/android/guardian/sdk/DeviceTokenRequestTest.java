@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -121,6 +122,7 @@ public class DeviceTokenRequestTest {
         networkCallbackCaptor.getValue().onSuccess(successResponse);
 
         verify(callback).onSuccess("theDeviceAccountToken");
+        verifyNoMoreInteractions(callback);
     }
 
     @Test
@@ -131,6 +133,7 @@ public class DeviceTokenRequestTest {
         networkCallbackCaptor.getValue().onSuccess(invalidResponse);
 
         verify(callback).onFailure(any(GuardianException.class));
+        verifyNoMoreInteractions(callback);
     }
 
     @Test
@@ -141,5 +144,6 @@ public class DeviceTokenRequestTest {
         networkCallbackCaptor.getValue().onFailure(exception);
 
         verify(callback).onFailure(exception);
+        verifyNoMoreInteractions(callback);
     }
 }

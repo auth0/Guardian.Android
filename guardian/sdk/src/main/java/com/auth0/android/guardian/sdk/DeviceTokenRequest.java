@@ -43,7 +43,7 @@ class DeviceTokenRequest implements GuardianAPIRequest<String> {
     public String execute() throws IOException, GuardianException {
         Map<String, String> response = request.execute();
         if (!response.containsKey(DEVICE_ACCOUNT_TOKEN_FIELD)) {
-            throw new GuardianException("Invalid server error response: " + response);
+            throw new GuardianException("Invalid server response: " + response);
         }
 
         return response.get(DEVICE_ACCOUNT_TOKEN_FIELD);
@@ -55,7 +55,8 @@ class DeviceTokenRequest implements GuardianAPIRequest<String> {
             @Override
             public void onSuccess(Map<String, String> response) {
                 if (!response.containsKey(DEVICE_ACCOUNT_TOKEN_FIELD)) {
-                    callback.onFailure(new GuardianException("Invalid server error response: " + response));
+                    callback.onFailure(new GuardianException("Invalid server response: " + response));
+                    return;
                 }
 
                 callback.onSuccess(response.get(DEVICE_ACCOUNT_TOKEN_FIELD));
