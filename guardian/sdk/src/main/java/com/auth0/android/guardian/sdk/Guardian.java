@@ -145,7 +145,7 @@ public class Guardian implements Parcelable {
         return Notification.parse(pushNotificationPayload);
     }
 
-    private String getOTPCode(GuardianEnrollment enrollment) {
+    String getOTPCode(GuardianEnrollment enrollment) {
         try {
             TOTP totp = new TOTP(
                     enrollment.getAlgorithm(),

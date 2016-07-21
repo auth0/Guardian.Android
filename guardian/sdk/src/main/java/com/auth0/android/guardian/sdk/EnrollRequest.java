@@ -30,10 +30,10 @@ import java.io.IOException;
 
 class EnrollRequest implements GuardianAPIRequest<Enrollment> {
 
-    private final GuardianAPIClient client;
-    private final EnrollmentData enrollmentData;
-    private final String deviceName;
-    private final String gcmToken;
+    final GuardianAPIClient client;
+    final EnrollmentData enrollmentData;
+    final String deviceName;
+    final String gcmToken;
 
     EnrollRequest(@NonNull GuardianAPIClient client,
                   @NonNull EnrollmentData enrollmentData,
@@ -95,7 +95,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
     }
 
     private Enrollment createEnrollment(@NonNull Device device, @NonNull String deviceToken) {
-        return new Enrollment(enrollmentData.getUrl(), enrollmentData.getIssuer(),
+        return new Enrollment(client.getUrl(), enrollmentData.getIssuer(),
                 enrollmentData.getUser(), enrollmentData.getPeriod(), enrollmentData.getDigits(),
                 enrollmentData.getAlgorithm(), enrollmentData.getSecret(), device.getId(),
                 device.getLocalIdentifier(), device.getName(), device.getGCMToken(), deviceToken);

@@ -40,7 +40,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
 public class EnrollmentTest {
 
-    private static final HttpUrl URL_HTTP_WITH_FINAL_DASH = HttpUrl.parse("http://example.com/");
+    private static final String URL_HTTP_WITH_FINAL_DASH = "http://example.com/";
     private static final String TENANT = "TENANT";
     private static final String USER = "USER";
     private static final int PERIOD = 30;
@@ -58,7 +58,7 @@ public class EnrollmentTest {
         Enrollment enrollment = new Enrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
                 DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
                 DEVICE_GCM_TOKEN, DEVICE_TOKEN);
-        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH.toString())));
+        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUser(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
@@ -84,7 +84,7 @@ public class EnrollmentTest {
 
         assertThat(enrollment, is(notNullValue()));
 
-        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH.toString())));
+        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUser(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));

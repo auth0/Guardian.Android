@@ -118,7 +118,7 @@ public class NotificationTest {
         Notification notification = Notification.parse(data);
 
         Enrollment enrollment = new Enrollment(
-                HttpUrl.parse(HOSTNAME_HTTPS), null, null, 6, 30, null, null,
+                HOSTNAME_HTTPS, null, null, 6, 30, null, null,
                 DEVICE_ID, null, null, null, null);
 
         assertThat(notification.getEnrollmentId(), is(equalTo(enrollment.getId())));
