@@ -28,7 +28,7 @@ import com.auth0.android.guardian.sdk.networking.Callback;
 
 import java.io.IOException;
 
-class EnrollRequest implements GuardianAPIRequest<Enrollment> {
+class EnrollRequest implements GuardianAPIRequest<ParcelableEnrollment> {
 
     final GuardianAPIClient client;
     final EnrollmentData enrollmentData;
@@ -46,7 +46,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
     }
 
     @Override
-    public Enrollment execute() throws IOException, GuardianException {
+    public ParcelableEnrollment execute() throws IOException, GuardianException {
         String deviceToken = client
                 .getDeviceToken(enrollmentData.getEnrollmentTransactionId())
                 .execute();
@@ -57,12 +57,12 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
     }
 
     @Override
-    public void start(@NonNull final Callback<Enrollment> callback) {
+    public void start(@NonNull final Callback<ParcelableEnrollment> callback) {
         client.getDeviceToken(enrollmentData.getEnrollmentTransactionId())
                 .start(deviceTokenCallback(callback));
     }
 
-    private Callback<String> deviceTokenCallback(@NonNull final Callback<Enrollment> callback) {
+    private Callback<String> deviceTokenCallback(@NonNull final Callback<ParcelableEnrollment> callback) {
         return new Callback<String>() {
             @Override
             public void onSuccess(String deviceToken) {
@@ -79,11 +79,11 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
     }
 
     private Callback<Device> createDeviceCallback(@NonNull final String deviceToken,
-                                                  @NonNull final Callback<Enrollment> callback) {
+                                                  @NonNull final Callback<ParcelableEnrollment> callback) {
         return new Callback<Device>() {
             @Override
             public void onSuccess(Device device) {
-                Enrollment enrollment = createEnrollment(device, deviceToken);
+                ParcelableEnrollment enrollment = createEnrollment(device, deviceToken);
                 callback.onSuccess(enrollment);
             }
 
@@ -94,8 +94,8 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
         };
     }
 
-    private Enrollment createEnrollment(@NonNull Device device, @NonNull String deviceToken) {
-        return new Enrollment(client.getUrl(), enrollmentData.getIssuer(),
+    private ParcelableEnrollment createEnrollment(@NonNull Device device, @NonNull String deviceToken) {
+        return new ParcelableEnrollment(client.getUrl(), enrollmentData.getIssuer(),
                 enrollmentData.getUser(), enrollmentData.getPeriod(), enrollmentData.getDigits(),
                 enrollmentData.getAlgorithm(), enrollmentData.getSecret(), device.getEnrollmentId(),
                 device.getDeviceIdentifier(), device.getDeviceName(), device.getGCMToken(), deviceToken);

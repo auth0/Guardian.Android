@@ -29,8 +29,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
 
-import okhttp3.HttpUrl;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -38,7 +36,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
-public class EnrollmentTest {
+public class ParcelableEnrollmentTest {
 
     private static final String URL_HTTP_WITH_FINAL_DASH = "http://example.com/";
     private static final String TENANT = "TENANT";
@@ -55,7 +53,7 @@ public class EnrollmentTest {
 
     @Test
     public void shouldHaveCorrectData() throws Exception {
-        Enrollment enrollment = new Enrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
+        ParcelableEnrollment enrollment = new ParcelableEnrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
                 DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
                 DEVICE_GCM_TOKEN, DEVICE_TOKEN);
         assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
@@ -74,13 +72,13 @@ public class EnrollmentTest {
 
     @Test
     public void shouldHaveCorrectDataAfterParcel() throws Exception {
-        Enrollment originalEnrollment = new Enrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
+        ParcelableEnrollment originalEnrollment = new ParcelableEnrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
                 DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
                 DEVICE_GCM_TOKEN, DEVICE_TOKEN);
 
         Bundle bundle = new Bundle();
         bundle.putParcelable("ENROLLMENT", originalEnrollment);
-        Enrollment enrollment = bundle.getParcelable("ENROLLMENT");
+        ParcelableEnrollment enrollment = bundle.getParcelable("ENROLLMENT");
 
         assertThat(enrollment, is(notNullValue()));
 

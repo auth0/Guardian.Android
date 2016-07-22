@@ -22,159 +22,101 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.provider.Settings;
 
-import okhttp3.HttpUrl;
+/**
+ * The representation of a Guardian Enrollment
+ */
+public interface Enrollment {
 
-public class Enrollment implements GuardianEnrollment, Parcelable {
+    /**
+     * The Guardian enrollment id
+     *
+     * @return the id
+     */
+    String getId();
 
-    private final String id;
-    private final String url;
-    private final String tenant;
-    private final String user;
-    private final int period;
-    private final int digits;
-    private final String algorithm;
-    private final String secret;
-    private final String deviceIdentifier;
-    private final String deviceName;
-    private final String deviceGCMToken;
-    private final String deviceToken;
+    /**
+     * The Guardian server url
+     *
+     * @return the url
+     */
+    String getUrl();
 
-    Enrollment(String url,
-               String tenant,
-               String user,
-               int period,
-               int digits,
-               String algorithm,
-               String secret,
-               String deviceId,
-               String deviceIdentifier,
-               String deviceName,
-               String deviceGCMToken,
-               String deviceToken) {
-        this.url = url;
-        this.tenant = tenant;
-        this.user = user;
-        this.period = period;
-        this.digits = digits;
-        this.algorithm = algorithm;
-        this.secret = secret;
-        this.id = deviceId;
-        this.deviceIdentifier = deviceIdentifier;
-        this.deviceName = deviceName;
-        this.deviceGCMToken = deviceGCMToken;
-        this.deviceToken = deviceToken;
-    }
+    /**
+     * A label for the enrollment. This will be pre-filled with the Guardian tenant, but since it's
+     * only used to display to the user, this could be overriden to return whatever the developer
+     * wants.
+     *
+     * @return the label
+     */
+    String getLabel();
 
-    @Override
-    public String getId() {
-        return id;
-    }
+    /**
+     * The name or email for this enrollment's user
+     *
+     * @return the user name or email
+     */
+    String getUser();
 
-    @Override
-    public String getUrl() {
-        return url;
-    }
+    /**
+     * The TOTP period
+     *
+     * @return the period, in seconds
+     */
+    int getPeriod();
 
-    @Override
-    public String getLabel() {
-        return tenant;
-    }
+    /**
+     * The TOTP digits, i.e. the code length
+     *
+     * @return the amount of digits of the code
+     */
+    int getDigits();
 
-    @Override
-    public String getUser() {
-        return user;
-    }
+    /**
+     * The TOTP algorithm
+     *
+     * @return the algorithm name
+     */
+    String getAlgorithm(); // maybe we can leave this out if we will always use the default
 
-    @Override
-    public int getPeriod() {
-        return period;
-    }
+    /**
+     * The TOTP secret, Base32 encoded
+     *
+     * @return the encoded secret
+     */
+    String getSecret();
 
-    @Override
-    public int getDigits() {
-        return digits;
-    }
+    /**
+     * The identifier of the physical device, for debug/tracking purposes.
+     * Usually will be {@link Settings.Secure#ANDROID_ID}
+     *
+     * @return a unique device identifier
+     */
+    String getDeviceIdentifier();
 
-    @Override
-    public String getAlgorithm() {
-        return algorithm;
-    }
+    /**
+     * The name to display whenever it is necessary to identify this specific enrollment.
+     * For example when the user has to choose where to send the push notification, or at the admin
+     * interface if the user wants to delete an enrollment from there
+     *
+     * @return the name
+     */
+    String getDeviceName();
 
-    @Override
-    public String getSecret() {
-        return secret;
-    }
+    /**
+     * The GCM token for this physical device, required to check against the current token and
+     * update the server in case it's not the same.
+     * Needs to be up-to-data for the push notifications to work.
+     *
+     * @return the GCM token
+     */
+    String getGCMToken();
 
-    @Override
-    public String getDeviceIdentifier() {
-        return deviceIdentifier;
-    }
-
-    @Override
-    public String getDeviceName() {
-        return deviceName;
-    }
-
-    @Override
-    public String getGCMToken() {
-        return deviceGCMToken;
-    }
-
-    @Override
-    public String getDeviceToken() {
-        return deviceToken;
-    }
-
-    // PARCELABLE
-    protected Enrollment(Parcel in) {
-        id = in.readString();
-        url = in.readString();
-        tenant = in.readString();
-        user = in.readString();
-        period = in.readInt();
-        digits = in.readInt();
-        algorithm = in.readString();
-        secret = in.readString();
-        deviceIdentifier = in.readString();
-        deviceName = in.readString();
-        deviceGCMToken = in.readString();
-        deviceToken = in.readString();
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(id);
-        dest.writeString(url);
-        dest.writeString(tenant);
-        dest.writeString(user);
-        dest.writeInt(period);
-        dest.writeInt(digits);
-        dest.writeString(algorithm);
-        dest.writeString(secret);
-        dest.writeString(deviceIdentifier);
-        dest.writeString(deviceName);
-        dest.writeString(deviceGCMToken);
-        dest.writeString(deviceToken);
-    }
-
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<Enrollment> CREATOR = new Parcelable.Creator<Enrollment>() {
-        @Override
-        public Enrollment createFromParcel(Parcel in) {
-            return new Enrollment(in);
-        }
-
-        @Override
-        public Enrollment[] newArray(int size) {
-            return new Enrollment[size];
-        }
-    };
+    /**
+     * The token used to authenticate when updating the device data or deleting the enrollment
+     *
+     * @return the Guardian token
+     */
+    String getDeviceToken();
 }

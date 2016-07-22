@@ -58,9 +58,9 @@ public class Guardian implements Parcelable {
      *                                  uri
      */
     @NonNull
-    public GuardianAPIRequest<Enrollment> enroll(@NonNull Uri enrollmentUri,
-                                                 @NonNull String deviceName,
-                                                 @NonNull String gcmToken) {
+    public GuardianAPIRequest<ParcelableEnrollment> enroll(@NonNull Uri enrollmentUri,
+                                                           @NonNull String deviceName,
+                                                           @NonNull String gcmToken) {
         EnrollmentData enrollmentData = EnrollmentData.parse(enrollmentUri);
         return new EnrollRequest(client, enrollmentData, deviceName, gcmToken);
     }
@@ -73,7 +73,7 @@ public class Guardian implements Parcelable {
      * @return a request to execute or start
      */
     @NonNull
-    public GuardianAPIRequest<Void> delete(@NonNull GuardianEnrollment enrollment) {
+    public GuardianAPIRequest<Void> delete(@NonNull Enrollment enrollment) {
         return client
                 .device(enrollment.getId(), enrollment.getDeviceToken())
                 .delete();
@@ -87,8 +87,8 @@ public class Guardian implements Parcelable {
      * @return a request to execute or start
      */
     @NonNull
-    public GuardianAPIRequest<Void> allow(@NonNull GuardianNotification notification,
-                                          @NonNull GuardianEnrollment enrollment) {
+    public GuardianAPIRequest<Void> allow(@NonNull Notification notification,
+                                          @NonNull Enrollment enrollment) {
         return client
                 .allow(notification.getTransactionToken(), getOTPCode(enrollment));
     }
@@ -100,12 +100,12 @@ public class Guardian implements Parcelable {
      * @param enrollment the enrollment to whom the notification corresponds
      * @param reason the reject reason
      * @return a request to execute or start
-     * @see #reject(GuardianNotification, GuardianEnrollment)
+     * @see #reject(Notification, Enrollment)
      * @throws IllegalArgumentException when the enrollment's TOTP data is not valid
      */
     @NonNull
-    public GuardianAPIRequest<Void> reject(@NonNull GuardianNotification notification,
-                                           @NonNull GuardianEnrollment enrollment,
+    public GuardianAPIRequest<Void> reject(@NonNull Notification notification,
+                                           @NonNull Enrollment enrollment,
                                            @Nullable String reason) {
         return client
                 .reject(notification.getTransactionToken(), getOTPCode(enrollment), reason);
@@ -117,26 +117,20 @@ public class Guardian implements Parcelable {
      * @param notification the (parsed) push notification received
      * @param enrollment the enrollment to whom the notification corresponds
      * @return a request to execute or start
-     * @see #reject(GuardianNotification, GuardianEnrollment, String)
+     * @see #reject(Notification, Enrollment, String)
      */
     @NonNull
-    public GuardianAPIRequest<Void> reject(@NonNull GuardianNotification notification,
-                                           @NonNull GuardianEnrollment enrollment) {
+    public GuardianAPIRequest<Void> reject(@NonNull Notification notification,
+                                           @NonNull Enrollment enrollment) {
         return reject(notification, enrollment, null);
     }
 
-    /**
-     * The low level Guardian API Client
-     *
-     * @return the API client
-     */
-    @NonNull
-    public GuardianAPIClient getAPIClient() {
+    GuardianAPIClient getAPIClient() {
         return client;
     }
 
     /**
-     * Parses the Bundle received from the GCM push notification into a GuardianNotification
+     * Parses the Bundle received from the GCM push notification into a Notification
      *
      * @param pushNotificationPayload the GCM payload Bundle
      * @return the parsed data
@@ -144,11 +138,11 @@ public class Guardian implements Parcelable {
      *                                  notification
      */
     @NonNull
-    public static Notification parseNotification(@NonNull Bundle pushNotificationPayload) {
-        return Notification.parse(pushNotificationPayload);
+    public static ParcelableNotification parseNotification(@NonNull Bundle pushNotificationPayload) {
+        return ParcelableNotification.parse(pushNotificationPayload);
     }
 
-    String getOTPCode(GuardianEnrollment enrollment) {
+    String getOTPCode(Enrollment enrollment) {
         try {
             TOTP totp = new TOTP(
                     enrollment.getAlgorithm(),
@@ -175,6 +169,7 @@ public class Guardian implements Parcelable {
          *
          * @param url the url
          * @return itself
+         * @throws IllegalArgumentException when an url or domain was already set
          */
         public Builder url(@NonNull Uri url) {
             if (this.url != null) {
@@ -190,6 +185,7 @@ public class Guardian implements Parcelable {
          *
          * @param domain the domain name
          * @return itself
+         * @throws IllegalArgumentException when an url or domain was already set
          */
         public Builder domain(@NonNull String domain) {
             if (this.url != null) {
@@ -206,10 +202,11 @@ public class Guardian implements Parcelable {
          * Builds and returns the Guardian instance
          *
          * @return the created instance
+         * @throws IllegalStateException when the builder was not configured correctly
          */
         public Guardian build() {
             if (url == null) {
-                throw new IllegalArgumentException("You need to set either a domain or an url");
+                throw new IllegalStateException("You need to set either a domain or an url");
             }
 
             GuardianAPIClient client = new GuardianAPIClient.Builder()

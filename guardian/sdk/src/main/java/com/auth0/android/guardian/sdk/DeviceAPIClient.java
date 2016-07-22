@@ -67,8 +67,8 @@ public class DeviceAPIClient {
      * Creates a device with the specified name and GCM token
      * The response {@link Device} will have all the final values currently at the Guardian server.
      *
-     * @param name the name of the device, used to display to the user so he can identify it
-     * @param gcmToken the GCM token
+     * @param name the name of the android device that will be displayed to the user in Guardian
+     * @param gcmToken the GCM token used to send notifications to the android device
      * @return a request to execute
      */
     public GuardianAPIRequest<Device> create(@NonNull String name, @NonNull String gcmToken) {
@@ -83,9 +83,9 @@ public class DeviceAPIClient {
      * Any parameter can be null and will not be changed at the server.
      * The response {@link Device} will have all the final values currently at the Guardian server.
      *
-     * @param identifier the local identifier
-     * @param name the name
-     * @param gcmToken the GCM token
+     * @param identifier the local identifier that uniquely identifies the android device
+     * @param name the name of the android device that will be displayed to the user in Guardian
+     * @param gcmToken the GCM token used to send notifications to the android device
      * @return a request to execute
      */
     public GuardianAPIRequest<Device> update(@Nullable String identifier,

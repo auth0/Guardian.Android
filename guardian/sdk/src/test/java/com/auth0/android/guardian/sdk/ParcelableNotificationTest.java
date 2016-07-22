@@ -35,8 +35,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import okhttp3.HttpUrl;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -44,7 +42,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
-public class NotificationTest {
+public class ParcelableNotificationTest {
 
     private static final String HOSTNAME = "example.com";
     private static final String HOSTNAME_HTTPS = "https://example.com/";
@@ -67,7 +65,7 @@ public class NotificationTest {
         Bundle data = createPushNotificationPayload(
                 HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
 
-        Notification notification = Notification.parse(data);
+        ParcelableNotification notification = ParcelableNotification.parse(data);
 
         assertThat(notification.getUrl(), is(equalTo(HOSTNAME_HTTPS)));
         assertThat(notification.getDate(), is(equalTo(currentDate)));
@@ -88,11 +86,11 @@ public class NotificationTest {
         Bundle data = createPushNotificationPayload(
                 HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
 
-        Notification originalNotification = Notification.parse(data);
+        ParcelableNotification originalNotification = ParcelableNotification.parse(data);
 
         Bundle bundle = new Bundle();
         bundle.putParcelable("NOTIFICATION", originalNotification);
-        Notification notification = bundle.getParcelable("NOTIFICATION");
+        ParcelableNotification notification = bundle.getParcelable("NOTIFICATION");
 
         assertThat(notification, is(notNullValue()));
 
@@ -115,9 +113,9 @@ public class NotificationTest {
         Bundle data = createPushNotificationPayload(
                 HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
 
-        Notification notification = Notification.parse(data);
+        ParcelableNotification notification = ParcelableNotification.parse(data);
 
-        Enrollment enrollment = new Enrollment(
+        ParcelableEnrollment enrollment = new ParcelableEnrollment(
                 HOSTNAME_HTTPS, null, null, 6, 30, null, null,
                 DEVICE_ID, null, null, null, null);
 
@@ -131,7 +129,7 @@ public class NotificationTest {
 
         Bundle data = createPushNotificationPayload(null, DEVICE_ID, TRANSACTION_TOKEN, new Date());
 
-        Notification notification = Notification.parse(data);
+        ParcelableNotification notification = ParcelableNotification.parse(data);
     }
 
     @Test
@@ -140,7 +138,7 @@ public class NotificationTest {
 
         Bundle data = createPushNotificationPayload(HOSTNAME, null, TRANSACTION_TOKEN, new Date());
 
-        Notification notification = Notification.parse(data);
+        ParcelableNotification notification = ParcelableNotification.parse(data);
     }
 
     @Test
@@ -149,7 +147,7 @@ public class NotificationTest {
 
         Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, null, new Date());
 
-        Notification notification = Notification.parse(data);
+        ParcelableNotification notification = ParcelableNotification.parse(data);
     }
 
     private Bundle createPushNotificationPayload(String hostname,
