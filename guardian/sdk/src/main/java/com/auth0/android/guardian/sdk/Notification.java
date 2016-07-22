@@ -43,7 +43,7 @@ public class Notification implements GuardianNotification, Parcelable {
     private static final String TAG = Notification.class.getName();
 
     private static final String TRANSACTION_TOKEN_KEY = "txtkn";
-    private static final String DEVICE_ACCOUNT_ID_KEY = "dai";
+    private static final String ENROLLMENT_ID_KEY = "dai";
     private static final String DATE_KEY = "d";
     private static final String SOURCE_KEY = "s";
     private static final String HOSTNAME_KEY = "sh";
@@ -91,13 +91,21 @@ public class Notification implements GuardianNotification, Parcelable {
         this.longitude = longitude;
     }
 
+    /**
+     * Parses the Bundle received from the GCM push notification into a Notification
+     *
+     * @param pushNotificationPayload the GCM payload Bundle
+     * @return the parsed data
+     * @throws IllegalArgumentException when the push notification is not a valid Guardian
+     *                                  notification
+     */
     @NonNull
     public static Notification parse(@NonNull Bundle pushNotificationPayload) {
         String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
-        String deviceAccountId = pushNotificationPayload.getString(DEVICE_ACCOUNT_ID_KEY);
+        String enrollmentId = pushNotificationPayload.getString(ENROLLMENT_ID_KEY);
         String transactionToken = pushNotificationPayload.getString(TRANSACTION_TOKEN_KEY);
 
-        if (hostname == null || deviceAccountId == null || transactionToken == null) {
+        if (hostname == null || enrollmentId == null || transactionToken == null) {
             throw new IllegalArgumentException(
                     "Push notification doesn't seem to be a Guardian authentication request");
         }
@@ -107,7 +115,7 @@ public class Notification implements GuardianNotification, Parcelable {
         Source source = parseSource(pushNotificationPayload);
         Location location = parseLocation(pushNotificationPayload);
 
-        return new Notification(url, deviceAccountId, transactionToken, date,
+        return new Notification(url, enrollmentId, transactionToken, date,
                 source.osName, source.osVersion, source.browserName, source.browserVersion,
                 location.location, location.latitude, location.longitude);
     }
@@ -168,8 +176,10 @@ public class Notification implements GuardianNotification, Parcelable {
     }
 
     private static HttpUrl parseHostname(String hostname) {
-        HttpUrl url = HttpUrl.parse(hostname);
-        if (url == null) {
+        HttpUrl url;
+        if (hostname.toLowerCase().startsWith("http")) {
+            url = HttpUrl.parse(hostname);
+        } else {
             url = new HttpUrl.Builder()
                     .scheme("https")
                     .host(hostname)
@@ -181,8 +191,9 @@ public class Notification implements GuardianNotification, Parcelable {
     private static Date parseDate(Bundle pushNotificationPayload) {
         String dateStr = pushNotificationPayload.getString(DATE_KEY);
 
-        @SuppressLint("SimpleDateFormat") // remove warning about date format non "local"
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        // remove warning about date format non "local"
+        @SuppressLint("SimpleDateFormat")
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         Date date = null;
         try {

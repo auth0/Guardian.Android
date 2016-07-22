@@ -101,6 +101,7 @@ public class Guardian implements Parcelable {
      * @param reason the reject reason
      * @return a request to execute or start
      * @see #reject(GuardianNotification, GuardianEnrollment)
+     * @throws IllegalArgumentException when the enrollment's TOTP data is not valid
      */
     @NonNull
     public GuardianAPIRequest<Void> reject(@NonNull GuardianNotification notification,
@@ -139,6 +140,8 @@ public class Guardian implements Parcelable {
      *
      * @param pushNotificationPayload the GCM payload Bundle
      * @return the parsed data
+     * @throws IllegalArgumentException when the push notification is not a valid Guardian
+     *                                  notification
      */
     @NonNull
     public static Notification parseNotification(@NonNull Bundle pushNotificationPayload) {
@@ -154,19 +157,21 @@ public class Guardian implements Parcelable {
                     enrollment.getPeriod());
             return totp.generate();
         } catch (Base32.DecodingException e) {
-            throw new GuardianException("Unable to generate OTP: could not decode secret", e);
+            throw new IllegalArgumentException(
+                    "Enrollment's secret is not a valid Base32 encoded TOTP secret", e);
         }
     }
 
     /**
-     * A Guardian Builder
+     * A {@link Guardian} Builder
      */
     public static class Builder {
 
         private Uri url;
 
         /**
-         * Set the URL of the Guardian server. For example {@code http://tenant.guardian.auth0.com/}
+         * Set the URL of the Guardian server.
+         * For example {@code https://tenant.guardian.auth0.com/}
          *
          * @param url the url
          * @return itself
@@ -180,7 +185,8 @@ public class Guardian implements Parcelable {
         }
 
         /**
-         * Set the domain of the Guardian server. For example {@code tenant.guardian.auth0.com}
+         * Set the domain of the Guardian server.
+         * For example {@code tenant.guardian.auth0.com}
          *
          * @param domain the domain name
          * @return itself

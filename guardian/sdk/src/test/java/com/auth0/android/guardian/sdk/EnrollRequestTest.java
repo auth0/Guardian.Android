@@ -102,13 +102,13 @@ public class EnrollRequestTest {
     public void setUp() throws Exception {
         initMocks(this);
 
-        when(device.getId())
+        when(device.getEnrollmentId())
                 .thenReturn(DEVICE_ID);
-        when(device.getName())
+        when(device.getDeviceName())
                 .thenReturn(DEVICE_NAME);
         when(device.getGCMToken())
                 .thenReturn(GCM_TOKEN);
-        when(device.getLocalIdentifier())
+        when(device.getDeviceIdentifier())
                 .thenReturn(DEVICE_IDENTIFIER);
 
         when(apiClient.getUrl())

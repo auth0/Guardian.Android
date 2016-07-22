@@ -29,29 +29,58 @@ import java.util.Map;
 public class Device {
 
     @SerializedName("id")
-    private String id;
+    private String enrollmentId;
 
     @SerializedName("identifier")
-    private String localIdentifier;
+    private String deviceIdentifier;
 
     @SerializedName("name")
-    private String name;
+    private String deviceName;
 
     @SerializedName("push_credentials")
     private Map<String, String> pushCredentials;
 
-    public String getId() {
-        return id;
+    /**
+     * The Guardian enrollment enrollmentId
+     *
+     * @return the enrollment enrollmentId
+     * @see GuardianEnrollment#getId()
+     */
+    public String getEnrollmentId() {
+        return enrollmentId;
     }
 
-    public String getLocalIdentifier() {
-        return localIdentifier;
+    /**
+     * The identifier of the physical device, for debug/tracking purposes.
+     * Usually will be {@link android.provider.Settings.Secure#ANDROID_ID}
+     *
+     * @return a unique identifier
+     * @see GuardianEnrollment#getDeviceIdentifier()
+     */
+    public String getDeviceIdentifier() {
+        return deviceIdentifier;
     }
 
-    public String getName() {
-        return name;
+    /**
+     * The deviceName to display whenever it is necessary to identify this specific enrollment.
+     * For example when the user has to choose where to send the push notification, or at the admin
+     * interface if the user wants to delete an enrollment from there
+     *
+     * @return the deviceName
+     * @see GuardianEnrollment#getDeviceName()
+     */
+    public String getDeviceName() {
+        return deviceName;
     }
 
+    /**
+     * The GCM token for this physical device, required to check against the current token and
+     * update the server in case it's not the same.
+     * Needs to be up-to-data for the push notifications to work.
+     *
+     * @return the GCM token
+     * @see GuardianEnrollment#getGCMToken()
+     */
     public String getGCMToken() {
         return pushCredentials.get("token");
     }

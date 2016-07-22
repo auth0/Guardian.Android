@@ -57,8 +57,7 @@ public class DeviceAPIClient {
      * @return a request to execute
      */
     public GuardianAPIRequest<Void> delete() {
-        Type type = new TypeToken<Void>() {
-        }.getType();
+        Type type = new TypeToken<Void>() {}.getType();
         return requestFactory
                 .<Void>newRequest("DELETE", url, type)
                 .setBearer(token);
@@ -66,6 +65,7 @@ public class DeviceAPIClient {
 
     /**
      * Creates a device with the specified name and GCM token
+     * The response {@link Device} will have all the final values currently at the Guardian server.
      *
      * @param name the name of the device, used to display to the user so he can identify it
      * @param gcmToken the GCM token
@@ -75,24 +75,26 @@ public class DeviceAPIClient {
         return newEmptyUpdateRequest()
                 .setParameter("identifier", Settings.Secure.ANDROID_ID)
                 .setParameter("name", name)
-                .setParameter("push_credentials", getPushCredentials(gcmToken));
+                .setParameter("push_credentials", createPushCredentials(gcmToken));
     }
 
     /**
-     * Updates identifier, name and GCM token of the device
+     * Updates identifier, name and GCM token of the device.
+     * Any parameter can be null and will not be changed at the server.
+     * The response {@link Device} will have all the final values currently at the Guardian server.
      *
      * @param identifier the local identifier
      * @param name the name
      * @param gcmToken the GCM token
      * @return a request to execute
      */
-    public GuardianAPIRequest<Device> update(@NonNull String identifier,
-                                             @NonNull String name,
-                                             @NonNull String gcmToken) {
+    public GuardianAPIRequest<Device> update(@Nullable String identifier,
+                                             @Nullable String name,
+                                             @Nullable String gcmToken) {
         return newEmptyUpdateRequest()
                 .setParameter("identifier", identifier)
                 .setParameter("name", name)
-                .setParameter("push_credentials", getPushCredentials(gcmToken));
+                .setParameter("push_credentials", createPushCredentials(gcmToken));
     }
 
     private Request<Device> newEmptyUpdateRequest() {
@@ -101,7 +103,7 @@ public class DeviceAPIClient {
                 .setBearer(token);
     }
 
-    private static Map<String, String> getPushCredentials(@Nullable String gcmToken) {
+    private static Map<String, String> createPushCredentials(@Nullable String gcmToken) {
         if (gcmToken == null) {
             return null;
         }
