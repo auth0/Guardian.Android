@@ -22,32 +22,62 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.support.annotation.NonNull;
+import java.util.Date;
 
-import com.auth0.android.guardian.sdk.networking.Callback;
-
-import java.io.IOException;
-
-/**
- * A Guardian request that could be executed synchronously or in a background thread.
- * @param <T> the type of the expected response
- */
-public interface GuardianAPIRequest<T> {
+public interface Notification {
 
     /**
-     * Executes the request synchronously, blocking the current thread until the request finishes
-     *
-     * @return the response
-     * @throws IOException when there's a connection problem
-     * @throws GuardianException when something else went wrong
+     * The id of the enrollment
      */
-    T execute() throws IOException, GuardianException;
+    String getEnrollmentId();
 
     /**
-     * Starts to execute the request asynchronously, in a background thread. A successful response
-     * or the fail cause will be notified to the callback
-     *
-     * @param callback the Callback where the response or failure will be received
+     * The transaction token, used to identify the authentication request
      */
-    void start(@NonNull final Callback<T> callback);
+    String getTransactionToken();
+
+    /**
+     * The Guardian server url
+     */
+    String getUrl();
+
+    /**
+     * The date/time when the authentication request was initiated
+     */
+    Date getDate();
+
+    /**
+     * The name of the operating system where the authentication request was initiated
+     */
+    String getOsName();
+
+    /**
+     * The version of the operating system
+     */
+    String getOsVersion();
+
+    /**
+     * The name of the browser where the authentication request was initiated
+     */
+    String getBrowserName();
+
+    /**
+     * The version of the browser
+     */
+    String getBrowserVersion();
+
+    /**
+     * The name of the (approximate) location where the authentication request was initiated
+     */
+    String getLocation();
+
+    /**
+     * The latitude of the (approximate) location
+     */
+    Double getLatitude();
+
+    /**
+     * The longitude of the (approximate) location
+     */
+    Double getLongitude();
 }

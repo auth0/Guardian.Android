@@ -186,9 +186,9 @@ public class Request<T> implements GuardianAPIRequest<T> {
             final Reader reader = response.body().charStream();
             Type type = new TypeToken<Map<String, Object>>() {}.getType();
             Map<String, String> error = converter.parse(type, reader);
-            return new GuardianException(error.get("error"), error.get("errorCode"));
-        } catch (Exception t) {
-            return new GuardianException("Error parsing server error", t);
+            return new GuardianException(error);
+        } catch (Exception e) {
+            return new GuardianException("Error parsing server error response", e);
         }
     }
 }

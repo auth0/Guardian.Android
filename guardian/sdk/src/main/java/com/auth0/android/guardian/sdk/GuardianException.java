@@ -22,17 +22,37 @@
 
 package com.auth0.android.guardian.sdk;
 
+import java.util.Map;
+
 public class GuardianException extends RuntimeException {
+
+    private final Map<String, String> errorResponse;
+    private final String errorCode;
 
     public GuardianException(String detailMessage) {
         super(detailMessage);
+        this.errorCode = null;
+        this.errorResponse = null;
     }
 
     public GuardianException(String detailMessage, Throwable throwable) {
         super(detailMessage, throwable);
+        this.errorCode = null;
+        this.errorResponse = null;
     }
 
-    public GuardianException(String detailMessage, String errorCode) {
-        super(detailMessage);
+    public GuardianException(Map<String, String> errorResponse) {
+        super(errorResponse.get("error"));
+        this.errorCode = errorResponse.get("errorCode");
+        this.errorResponse = errorResponse;
+    }
+
+    @Override
+    public String toString() {
+        if (errorResponse != null) {
+            return "GuardianException{" + errorResponse + '}';
+        } else {
+            return super.toString();
+        }
     }
 }

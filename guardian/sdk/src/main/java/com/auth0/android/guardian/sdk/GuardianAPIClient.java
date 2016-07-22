@@ -47,6 +47,10 @@ public class GuardianAPIClient {
         this.baseUrl = baseUrl;
     }
 
+    String getUrl() {
+        return baseUrl.toString();
+    }
+
     /**
      * Returns the "device_account_token" that can be used to update the push notification settings
      * and also to un-enroll the device account
