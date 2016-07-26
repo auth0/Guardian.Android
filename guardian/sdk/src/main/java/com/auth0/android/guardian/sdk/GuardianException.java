@@ -26,7 +26,11 @@ import java.util.Map;
 
 public class GuardianException extends RuntimeException {
 
-    private final Map<String, String> errorResponse;
+    private static final String ERROR_INVALID_OTP = "invalid_otp";
+    private static final String ERROR_INVALID_TOKEN = "invalid_token";
+    private static final String ERROR_DEVICE_ACCOUNT_NOT_FOUND = "device_account_not_found";
+
+    private final Map<String, Object> errorResponse;
     private final String errorCode;
 
     public GuardianException(String detailMessage) {
@@ -41,10 +45,37 @@ public class GuardianException extends RuntimeException {
         this.errorResponse = null;
     }
 
-    public GuardianException(Map<String, String> errorResponse) {
-        super(errorResponse.get("error"));
-        this.errorCode = errorResponse.get("errorCode");
+    public GuardianException(Map<String, Object> errorResponse) {
+        super((String) errorResponse.get("error"));
+        this.errorCode = (String) errorResponse.get("errorCode");
         this.errorResponse = errorResponse;
+    }
+
+    /**
+     * Whether the error is caused by the use of an invalid OTP code
+     *
+     * @return true if the error is caused by the use of an invalid OTP code
+     */
+    public boolean isInvalidOTP() {
+        return ERROR_INVALID_OTP.equals(errorCode);
+    }
+
+    /**
+     * Whether the error is caused by the use of an invalid token
+     *
+     * @return true if the error is caused by the use of an invalid token
+     */
+    public boolean isInvalidToken() {
+        return ERROR_INVALID_TOKEN.equals(errorCode);
+    }
+
+    /**
+     * Whether the error is caused by the enrollment being invalid or not found on the server
+     *
+     * @return true if the error is caused by the enrollment being invalid or not found
+     */
+    public boolean isEnrollmentNotFound() {
+        return ERROR_DEVICE_ACCOUNT_NOT_FOUND.equals(errorCode);
     }
 
     @Override
