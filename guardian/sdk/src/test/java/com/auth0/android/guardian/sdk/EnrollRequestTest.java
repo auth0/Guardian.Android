@@ -82,7 +82,7 @@ public class EnrollRequestTest {
     GuardianAPIClient apiClient;
 
     @Mock
-    Callback<ParcelableEnrollment> enrollmentCallback;
+    Callback<Enrollment> enrollmentCallback;
 
     @Captor
     ArgumentCaptor<Callback<String>> deviceTokenCallbackCaptor;
@@ -91,7 +91,7 @@ public class EnrollRequestTest {
     ArgumentCaptor<Callback<Device>> deviceCallbackCaptor;
 
     @Captor
-    ArgumentCaptor<ParcelableEnrollment> enrollmentCaptor;
+    ArgumentCaptor<Enrollment> enrollmentCaptor;
 
     @Captor
     ArgumentCaptor<Throwable> throwableCaptor;
@@ -146,7 +146,7 @@ public class EnrollRequestTest {
 
     @Test
     public void shouldEnrollSucessfullySync() throws Exception {
-        ParcelableEnrollment enrollment = enrollRequest
+        Enrollment enrollment = enrollRequest
                 .execute();
 
         assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
@@ -178,7 +178,7 @@ public class EnrollRequestTest {
 
         verify(enrollmentCallback).onSuccess(enrollmentCaptor.capture());
 
-        ParcelableEnrollment enrollment = enrollmentCaptor.getValue();
+        Enrollment enrollment = enrollmentCaptor.getValue();
 
         assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));

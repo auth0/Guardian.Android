@@ -58,7 +58,7 @@ public class Guardian implements Parcelable {
      *                                  uri
      */
     @NonNull
-    public GuardianAPIRequest<ParcelableEnrollment> enroll(@NonNull Uri enrollmentUri,
+    public GuardianAPIRequest<Enrollment> enroll(@NonNull Uri enrollmentUri,
                                                            @NonNull String deviceName,
                                                            @NonNull String gcmToken) {
         EnrollmentData enrollmentData = EnrollmentData.parse(enrollmentUri);
