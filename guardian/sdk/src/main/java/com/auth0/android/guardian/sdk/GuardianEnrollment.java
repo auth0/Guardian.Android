@@ -22,14 +22,11 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-public class ParcelableEnrollment implements Enrollment, Parcelable {
+class GuardianEnrollment implements Enrollment {
 
     private final String id;
     private final String url;
-    private final String tenant;
+    private final String label;
     private final String user;
     private final int period;
     private final int digits;
@@ -40,20 +37,20 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     private final String deviceGCMToken;
     private final String deviceToken;
 
-    ParcelableEnrollment(String url,
-                         String tenant,
-                         String user,
-                         int period,
-                         int digits,
-                         String algorithm,
-                         String secret,
-                         String deviceId,
-                         String deviceIdentifier,
-                         String deviceName,
-                         String deviceGCMToken,
-                         String deviceToken) {
+    GuardianEnrollment(String url,
+                       String label,
+                       String user,
+                       int period,
+                       int digits,
+                       String algorithm,
+                       String secret,
+                       String deviceId,
+                       String deviceIdentifier,
+                       String deviceName,
+                       String deviceGCMToken,
+                       String deviceToken) {
         this.url = url;
-        this.tenant = tenant;
+        this.label = label;
         this.user = user;
         this.period = period;
         this.digits = digits;
@@ -78,7 +75,7 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
 
     @Override
     public String getLabel() {
-        return tenant;
+        return label;
     }
 
     @Override
@@ -125,54 +122,4 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     public String getDeviceToken() {
         return deviceToken;
     }
-
-    // PARCELABLE
-    protected ParcelableEnrollment(Parcel in) {
-        id = in.readString();
-        url = in.readString();
-        tenant = in.readString();
-        user = in.readString();
-        period = in.readInt();
-        digits = in.readInt();
-        algorithm = in.readString();
-        secret = in.readString();
-        deviceIdentifier = in.readString();
-        deviceName = in.readString();
-        deviceGCMToken = in.readString();
-        deviceToken = in.readString();
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(id);
-        dest.writeString(url);
-        dest.writeString(tenant);
-        dest.writeString(user);
-        dest.writeInt(period);
-        dest.writeInt(digits);
-        dest.writeString(algorithm);
-        dest.writeString(secret);
-        dest.writeString(deviceIdentifier);
-        dest.writeString(deviceName);
-        dest.writeString(deviceGCMToken);
-        dest.writeString(deviceToken);
-    }
-
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<ParcelableEnrollment> CREATOR = new Parcelable.Creator<ParcelableEnrollment>() {
-        @Override
-        public ParcelableEnrollment createFromParcel(Parcel in) {
-            return new ParcelableEnrollment(in);
-        }
-
-        @Override
-        public ParcelableEnrollment[] newArray(int size) {
-            return new ParcelableEnrollment[size];
-        }
-    };
 }

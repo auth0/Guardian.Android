@@ -22,21 +22,13 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.os.Bundle;
-
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricGradleTestRunner;
-import org.robolectric.annotation.Config;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 
-@RunWith(RobolectricGradleTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
-public class ParcelableEnrollmentTest {
+public class GuardianEnrollmentTest {
 
     private static final String URL_HTTP_WITH_FINAL_DASH = "http://example.com/";
     private static final String TENANT = "TENANT";
@@ -53,35 +45,9 @@ public class ParcelableEnrollmentTest {
 
     @Test
     public void shouldHaveCorrectData() throws Exception {
-        ParcelableEnrollment enrollment = new ParcelableEnrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
+        Enrollment enrollment = new GuardianEnrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
                 DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
                 DEVICE_GCM_TOKEN, DEVICE_TOKEN);
-        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
-        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
-        assertThat(enrollment.getUser(), is(equalTo(USER)));
-        assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
-        assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
-        assertThat(enrollment.getAlgorithm(), is(equalTo(ALGORITHM)));
-        assertThat(enrollment.getSecret(), is(equalTo(SECRET_BASE32)));
-        assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
-        assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_LOCAL_IDENTIFIER)));
-        assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
-        assertThat(enrollment.getGCMToken(), is(equalTo(DEVICE_GCM_TOKEN)));
-        assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
-    }
-
-    @Test
-    public void shouldHaveCorrectDataAfterParcel() throws Exception {
-        ParcelableEnrollment originalEnrollment = new ParcelableEnrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
-                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
-                DEVICE_GCM_TOKEN, DEVICE_TOKEN);
-
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("ENROLLMENT", originalEnrollment);
-        ParcelableEnrollment enrollment = bundle.getParcelable("ENROLLMENT");
-
-        assertThat(enrollment, is(notNullValue()));
-
         assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUser(), is(equalTo(USER)));

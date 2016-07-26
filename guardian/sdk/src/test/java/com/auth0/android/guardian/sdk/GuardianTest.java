@@ -89,7 +89,7 @@ public class GuardianTest {
         when(notification.getTransactionToken())
                 .thenReturn(TRANSACTION_TOKEN);
 
-        enrollment = new ParcelableEnrollment(
+        enrollment = new GuardianEnrollment(
                 GUARDIAN_URL, TENANT, USER, PERIOD, DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID,
                 DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, DEVICE_TOKEN);
 
@@ -102,7 +102,7 @@ public class GuardianTest {
     @Test
     public void shouldReturnEnrollRequest() throws Exception {
         Uri enrollmentUri = createEnrollmentUri();
-        GuardianAPIRequest<ParcelableEnrollment> request = guardian
+        GuardianAPIRequest<Enrollment> request = guardian
                 .enroll(enrollmentUri, DEVICE_NAME, GCM_TOKEN);
 
         assertThat(request, is(instanceOf(EnrollRequest.class)));

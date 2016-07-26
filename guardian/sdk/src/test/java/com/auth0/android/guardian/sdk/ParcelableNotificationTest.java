@@ -115,7 +115,7 @@ public class ParcelableNotificationTest {
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
 
-        ParcelableEnrollment enrollment = new ParcelableEnrollment(
+        Enrollment enrollment = new GuardianEnrollment(
                 HOSTNAME_HTTPS, null, null, 6, 30, null, null,
                 DEVICE_ID, null, null, null, null);
 
