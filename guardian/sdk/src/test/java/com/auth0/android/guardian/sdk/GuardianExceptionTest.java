@@ -40,6 +40,7 @@ public class GuardianExceptionTest {
         assertThat(exception.isInvalidOTP(), is(equalTo(false)));
         assertThat(exception.isInvalidToken(), is(equalTo(false)));
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
     }
 
     @Test
@@ -49,6 +50,7 @@ public class GuardianExceptionTest {
         assertThat(exception.isInvalidOTP(), is(equalTo(true)));
         assertThat(exception.isInvalidToken(), is(equalTo(false)));
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
     }
 
     @Test
@@ -58,6 +60,7 @@ public class GuardianExceptionTest {
         assertThat(exception.isInvalidOTP(), is(equalTo(false)));
         assertThat(exception.isInvalidToken(), is(equalTo(true)));
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
     }
 
     @Test
@@ -67,6 +70,17 @@ public class GuardianExceptionTest {
         assertThat(exception.isInvalidOTP(), is(equalTo(false)));
         assertThat(exception.isInvalidToken(), is(equalTo(false)));
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(true)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+    }
+
+    @Test
+    public void testIsEnrollmentTransactionNotFound() throws Exception {
+        GuardianException exception = new GuardianException(createErrorMap("enrollment_transaction_not_found"));
+
+        assertThat(exception.isInvalidOTP(), is(equalTo(false)));
+        assertThat(exception.isInvalidToken(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(true)));
     }
 
     private Map<String, Object> createErrorMap(String errorCode) {

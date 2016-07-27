@@ -29,6 +29,7 @@ public class GuardianException extends RuntimeException {
     private static final String ERROR_INVALID_OTP = "invalid_otp";
     private static final String ERROR_INVALID_TOKEN = "invalid_token";
     private static final String ERROR_DEVICE_ACCOUNT_NOT_FOUND = "device_account_not_found";
+    private static final String ERROR_ENROLLMENT_TRANSACTION_NOT_FOUND = "enrollment_transaction_not_found";
 
     private final Map<String, Object> errorResponse;
     private final String errorCode;
@@ -76,6 +77,15 @@ public class GuardianException extends RuntimeException {
      */
     public boolean isEnrollmentNotFound() {
         return ERROR_DEVICE_ACCOUNT_NOT_FOUND.equals(errorCode);
+    }
+
+    /**
+     * Whether the error is caused by the enrollment transaction being invalid or not found
+     *
+     * @return true if error is caused by the enrollment transaction being invalid or not found
+     */
+    public boolean isEnrollmentTransactionNotFound() {
+        return ERROR_ENROLLMENT_TRANSACTION_NOT_FOUND.equals(errorCode);
     }
 
     @Override
