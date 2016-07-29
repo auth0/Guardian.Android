@@ -23,7 +23,7 @@
 package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
-import android.os.Bundle;
+import android.os.Parcel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -184,10 +184,10 @@ public class GuardianTest {
                 .domain("example.guardian.auth0.com")
                 .build();
 
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("GUARDIAN", originalGuardian);
-
-        Guardian guardian = bundle.getParcelable("GUARDIAN");
+        Parcel parcel = Parcel.obtain();
+        originalGuardian.writeToParcel(parcel, 0);
+        parcel.setDataPosition(0);
+        Guardian guardian = Guardian.CREATOR.createFromParcel(parcel);
 
         assertThat(guardian, is(notNullValue()));
         assertThat(guardian.getAPIClient().getUrl(),
