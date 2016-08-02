@@ -22,6 +22,7 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -31,11 +32,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Map;
 
 import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
 
 public class GuardianAPIClient {
 
@@ -90,7 +94,7 @@ public class GuardianAPIClient {
      *
      * @param txToken the auth transaction token
      * @param otpCode the one time password
-     * @param reason the reject reason
+     * @param reason  the reject reason
      * @return a request to execute
      * @see #reject(String, String)
      * @see #allow(String, String)
@@ -122,7 +126,7 @@ public class GuardianAPIClient {
     /**
      * Returns an API client to create, update or delete a device
      *
-     * @param id the device id
+     * @param id    the device id
      * @param token the device token
      * @return an API client for the device
      */
@@ -160,7 +164,24 @@ public class GuardianAPIClient {
             }
 
             if (client == null) {
-                client = new OkHttpClient();
+                final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+                builder.addInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        okhttp3.Request originalRequest = chain.request();
+                        okhttp3.Request requestWithUserAgent = originalRequest.newBuilder()
+                                .header("User-Agent",
+                                        String.format("GuardianSDK/%s(%s) Android %s",
+                                                BuildConfig.VERSION_NAME,
+                                                BuildConfig.VERSION_CODE,
+                                                Build.VERSION.RELEASE))
+                                .build();
+                        return chain.proceed(requestWithUserAgent);
+                    }
+                });
+
+                client = builder.build();
             }
 
             if (gson == null) {

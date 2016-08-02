@@ -22,6 +22,8 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.os.Build;
+
 import com.auth0.android.guardian.sdk.utils.CallbackMatcher;
 import com.auth0.android.guardian.sdk.utils.MockCallback;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
@@ -76,6 +78,23 @@ public class GuardianAPIClientTest {
     @After
     public void tearDown() throws Exception {
         mockAPI.shutdown();
+    }
+
+    @Test
+    public void shouldHaveCustomUserAgentHeader() throws Exception {
+        mockAPI.willReturnEnrollmentInfo(DEVICE_ACCOUNT_TOKEN);
+
+        final MockCallback<String> callback = new MockCallback<>();
+
+        apiClient.getDeviceToken(ENROLLMENT_TX_ID)
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
+        assertThat(request.getHeader("User-Agent"), is(equalTo(
+                String.format("GuardianSDK/%s(%s) Android %s",
+                        BuildConfig.VERSION_NAME,
+                        BuildConfig.VERSION_CODE,
+                        Build.VERSION.RELEASE))));
     }
 
     @Test
