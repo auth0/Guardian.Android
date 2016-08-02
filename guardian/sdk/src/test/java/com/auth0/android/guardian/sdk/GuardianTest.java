@@ -103,7 +103,7 @@ public class GuardianTest {
     public void shouldReturnEnrollRequest() throws Exception {
         Uri enrollmentUri = createEnrollmentUri();
         GuardianAPIRequest<Enrollment> request = guardian
-                .enroll(enrollmentUri, DEVICE_NAME, GCM_TOKEN);
+                .enroll(enrollmentUri, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN);
 
         assertThat(request, is(instanceOf(EnrollRequest.class)));
         EnrollRequest enrollRequest = (EnrollRequest) request;

@@ -51,6 +51,7 @@ public class Guardian implements Parcelable {
      * This device will now be available as a Guardian second factor.
      *
      * @param enrollmentUri the URI obtained from a Guardian QR code
+     * @param deviceIdentifier the local identifier that uniquely identifies the android device
      * @param deviceName this device's name
      * @param gcmToken the GCM token required to send push notifications to this device
      * @return a request to execute or start
@@ -59,10 +60,11 @@ public class Guardian implements Parcelable {
      */
     @NonNull
     public GuardianAPIRequest<Enrollment> enroll(@NonNull Uri enrollmentUri,
-                                                           @NonNull String deviceName,
-                                                           @NonNull String gcmToken) {
+                                                 @NonNull String deviceIdentifier,
+                                                 @NonNull String deviceName,
+                                                 @NonNull String gcmToken) {
         EnrollmentData enrollmentData = EnrollmentData.parse(enrollmentUri);
-        return new EnrollRequest(client, enrollmentData, deviceName, gcmToken);
+        return new EnrollRequest(client, enrollmentData, deviceIdentifier, deviceName, gcmToken);
     }
 
     /**

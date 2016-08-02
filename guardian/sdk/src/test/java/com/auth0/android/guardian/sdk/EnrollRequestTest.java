@@ -121,7 +121,7 @@ public class EnrollRequestTest {
 
         when(createDeviceRequest.execute())
                 .thenReturn(device);
-        when(deviceApiClient.create(DEVICE_NAME, GCM_TOKEN))
+        when(deviceApiClient.create(DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN))
                 .thenReturn(createDeviceRequest);
         when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
                 .thenReturn(deviceApiClient);
@@ -141,7 +141,7 @@ public class EnrollRequestTest {
 
         EnrollmentData enrollmentData = EnrollmentData.parse(enrollmentUri);
 
-        enrollRequest = new EnrollRequest(apiClient, enrollmentData, DEVICE_NAME, GCM_TOKEN);
+        enrollRequest = new EnrollRequest(apiClient, enrollmentData, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN);
     }
 
     @Test
