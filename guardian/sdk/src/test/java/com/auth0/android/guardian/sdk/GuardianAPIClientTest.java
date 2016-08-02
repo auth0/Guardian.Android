@@ -38,6 +38,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.util.Locale;
 import java.util.Map;
 
 import okhttp3.mockwebserver.RecordedRequest;
@@ -81,7 +82,7 @@ public class GuardianAPIClientTest {
     }
 
     @Test
-    public void shouldHaveCustomUserAgentHeader() throws Exception {
+    public void shouldHaveCustomUserAgentAndLanguageHeader() throws Exception {
         mockAPI.willReturnEnrollmentInfo(DEVICE_ACCOUNT_TOKEN);
 
         final MockCallback<String> callback = new MockCallback<>();
@@ -90,11 +91,15 @@ public class GuardianAPIClientTest {
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getHeader("User-Agent"), is(equalTo(
-                String.format("GuardianSDK/%s(%s) Android %s",
-                        BuildConfig.VERSION_NAME,
-                        BuildConfig.VERSION_CODE,
-                        Build.VERSION.RELEASE))));
+        assertThat(request.getHeader("User-Agent"),
+                is(equalTo(
+                        String.format("GuardianSDK/%s(%s) Android %s",
+                                BuildConfig.VERSION_NAME,
+                                BuildConfig.VERSION_CODE,
+                                Build.VERSION.RELEASE))));
+
+        assertThat(request.getHeader("Accept-Language"),
+                is(equalTo(Locale.getDefault().toString())));
     }
 
     @Test

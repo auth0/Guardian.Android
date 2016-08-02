@@ -34,6 +34,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Locale;
 import java.util.Map;
 
 import okhttp3.HttpUrl;
@@ -171,6 +172,8 @@ public class GuardianAPIClient {
                     public Response intercept(Chain chain) throws IOException {
                         okhttp3.Request originalRequest = chain.request();
                         okhttp3.Request requestWithUserAgent = originalRequest.newBuilder()
+                                .header("Accept-Language",
+                                        Locale.getDefault().toString())
                                 .header("User-Agent",
                                         String.format("GuardianSDK/%s(%s) Android %s",
                                                 BuildConfig.VERSION_NAME,
