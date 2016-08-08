@@ -14,7 +14,9 @@ install:
 - ./gradlew --version # show version and download Gradle Wrapper when is not present in cache
 - ./gradlew clean # clean project and download Android dependencies when are not present in cache
 script:
-- ./gradlew test --continue
+- ./gradlew test jacocoTestReport --continue
+after_success:
+- bash <(curl -s https://codecov.io/bash)
 branches:
   only:
   - master
