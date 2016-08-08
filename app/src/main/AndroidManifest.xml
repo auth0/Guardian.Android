@@ -2,19 +2,98 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.auth0.guardian.sample">
 
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- [START GCM permissions] -->
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+
+    <!--
+    Optionally, the android.permission.WAKE_LOCK permission if the application needs to keep the
+    processor from sleeping when a message is received
+    -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- [END GCM permissions] -->
+
+    <!-- [START GCM permissions for our app] -->
+    <!--
+    Your <application-package-name> + ".permission.C2D_MESSAGE" permission to prevent other Android
+    applications from registering and receiving the Android application's messages. The permission
+    name must exactly match this pattern—otherwise the Android application will not receive the
+    messages.
+    -->
+    <permission
+        android:name="${applicationId}.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
+    <!-- [END GCM permissions for our app] -->
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/title_main">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".EnrollActivity"
+            android:label="@string/title_enroll">
+
+        </activity>
+
+        <activity
+            android:name=".NotificationActivity"
+            android:label="@string/title_notification">
+
+        </activity>
+
+        <!-- [START GCM services] -->
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+
+                <category android:name="${applicationId}" />
+
+                <!--
+                If you want to support pre-4.4 KitKat devices, add the following action to the
+                intent filter declaration for the receiver:
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+                -->
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".gcm.GcmListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".gcm.GcmInstanceIDListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID" />
+            </intent-filter>
+        </service>
+        <!-- [END GCM services] -->
+
     </application>
 
 </manifest>

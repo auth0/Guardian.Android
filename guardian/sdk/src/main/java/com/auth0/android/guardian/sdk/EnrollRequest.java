@@ -32,15 +32,18 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
 
     final GuardianAPIClient client;
     final EnrollmentData enrollmentData;
+    final String deviceIdentifier;
     final String deviceName;
     final String gcmToken;
 
     EnrollRequest(@NonNull GuardianAPIClient client,
                   @NonNull EnrollmentData enrollmentData,
+                  @NonNull String deviceIdentifier,
                   @NonNull String deviceName,
                   @NonNull String gcmToken) {
         this.client = client;
         this.enrollmentData = enrollmentData;
+        this.deviceIdentifier = deviceIdentifier;
         this.deviceName = deviceName;
         this.gcmToken = gcmToken;
     }
@@ -51,7 +54,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
                 .getDeviceToken(enrollmentData.getEnrollmentTransactionId())
                 .execute();
         Device device = client.device(enrollmentData.getDeviceId(), deviceToken)
-                .create(deviceName, gcmToken)
+                .create(deviceIdentifier, deviceName, gcmToken)
                 .execute();
         return createEnrollment(device, deviceToken);
     }
@@ -67,7 +70,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
             @Override
             public void onSuccess(String deviceToken) {
                 client.device(enrollmentData.getDeviceId(), deviceToken)
-                        .create(deviceName, gcmToken)
+                        .create(deviceIdentifier, deviceName, gcmToken)
                         .start(createDeviceCallback(deviceToken, callback));
             }
 

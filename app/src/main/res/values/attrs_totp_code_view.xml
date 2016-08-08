@@ -1,0 +1,6 @@
+<resources>
+    <declare-styleable name="TOTPCodeView">
+        <attr name="aboutToExpireColor" format="color" />
+        <attr name="aboutToExpireTimeMs" format="integer" />
+    </declare-styleable>
+</resources>

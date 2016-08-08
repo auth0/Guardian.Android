@@ -108,7 +108,7 @@ public class DeviceAPIClientTest {
         final MockCallback<Device> callback = new MockCallback<>();
 
         apiClient
-                .create(DEVICE_NAME, PUSH_TOKEN)
+                .create(DEVICE_IDENTIFIER, DEVICE_NAME, PUSH_TOKEN)
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
@@ -117,7 +117,7 @@ public class DeviceAPIClientTest {
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + DEVICE_ACCOUNT_TOKEN)));
 
         Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasEntry("identifier", (Object) "android_id"));
+        assertThat(body, hasEntry("identifier", (Object) DEVICE_IDENTIFIER));
         assertThat(body, hasEntry("name", (Object) DEVICE_NAME));
         assertThat(body, hasKey("push_credentials"));
         assertThat(body.size(), is(equalTo(3)));

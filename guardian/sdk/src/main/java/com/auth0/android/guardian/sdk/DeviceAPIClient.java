@@ -22,7 +22,6 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -67,13 +66,16 @@ public class DeviceAPIClient {
      * Creates a device with the specified name and GCM token
      * The response {@link Device} will have all the final values currently at the Guardian server.
      *
+     * @param identifier the local identifier that uniquely identifies the android device
      * @param name the name of the android device that will be displayed to the user in Guardian
      * @param gcmToken the GCM token used to send notifications to the android device
      * @return a request to execute
      */
-    public GuardianAPIRequest<Device> create(@NonNull String name, @NonNull String gcmToken) {
+    public GuardianAPIRequest<Device> create(@NonNull String identifier,
+                                             @NonNull String name,
+                                             @NonNull String gcmToken) {
         return newEmptyUpdateRequest()
-                .setParameter("identifier", Settings.Secure.ANDROID_ID)
+                .setParameter("identifier", identifier)
                 .setParameter("name", name)
                 .setParameter("push_credentials", createPushCredentials(gcmToken));
     }
