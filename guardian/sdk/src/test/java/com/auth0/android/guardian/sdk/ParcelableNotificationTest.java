@@ -23,6 +23,8 @@
 package com.auth0.android.guardian.sdk;
 
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,10 +37,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import okhttp3.HttpUrl;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 18, manifest = Config.NONE)
@@ -88,9 +93,10 @@ public class ParcelableNotificationTest {
 
         ParcelableNotification originalNotification = ParcelableNotification.parse(data);
 
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("NOTIFICATION", originalNotification);
-        ParcelableNotification notification = bundle.getParcelable("NOTIFICATION");
+        Parcel parcel = Parcel.obtain();
+        originalNotification.writeToParcel(parcel, Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+        parcel.setDataPosition(0);
+        ParcelableNotification notification = ParcelableNotification.CREATOR.createFromParcel(parcel);
 
         assertThat(notification, is(notNullValue()));
 
@@ -105,6 +111,32 @@ public class ParcelableNotificationTest {
         assertThat(notification.getLocation(), is(equalTo(LOCATION)));
         assertThat(notification.getLatitude(), is(equalTo(LATITUDE)));
         assertThat(notification.getLongitude(), is(equalTo(LONGITUDE)));
+    }
+
+    @Test
+    public void shouldHaveCorrectDataAfterParcelWithNulls() throws Exception {
+        ParcelableNotification originalNotification = new ParcelableNotification(
+                HttpUrl.parse(HOSTNAME_HTTPS), DEVICE_ID, TRANSACTION_TOKEN, null,
+                OS_NAME, OS_VERSION, BROWSER_NAME, BROWSER_VERSION, LOCATION, null, null);
+
+        Parcel parcel = Parcel.obtain();
+        originalNotification.writeToParcel(parcel, 0);
+        parcel.setDataPosition(0);
+        ParcelableNotification notification = ParcelableNotification.CREATOR.createFromParcel(parcel);
+
+        assertThat(notification, is(notNullValue()));
+
+        assertThat(notification.getUrl(), is(equalTo(HOSTNAME_HTTPS)));
+        assertThat(notification.getDate(), is(nullValue()));
+        assertThat(notification.getBrowserName(), is(equalTo(BROWSER_NAME)));
+        assertThat(notification.getBrowserVersion(), is(equalTo(BROWSER_VERSION)));
+        assertThat(notification.getOsName(), is(equalTo(OS_NAME)));
+        assertThat(notification.getOsVersion(), is(equalTo(OS_VERSION)));
+        assertThat(notification.getEnrollmentId(), is(equalTo(DEVICE_ID)));
+        assertThat(notification.getTransactionToken(), is(equalTo(TRANSACTION_TOKEN)));
+        assertThat(notification.getLocation(), is(equalTo(LOCATION)));
+        assertThat(notification.getLatitude(), is(nullValue()));
+        assertThat(notification.getLongitude(), is(nullValue()));
     }
 
     @Test
@@ -154,15 +186,24 @@ public class ParcelableNotificationTest {
                                                  String deviceId,
                                                  String transactionToken,
                                                  Date date) {
+        return createPushNotificationPayload(hostname, deviceId, transactionToken, date, LATITUDE, LONGITUDE);
+    }
+
+    private Bundle createPushNotificationPayload(String hostname,
+                                                 String deviceId,
+                                                 String transactionToken,
+                                                 Date date,
+                                                 Double latitude,
+                                                 Double longitude) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         Bundle data = new Bundle();
-        data.putString("d", simpleDateFormat.format(date));
+        data.putString("d", date != null ? simpleDateFormat.format(date) : null);
         data.putString("s", "{\"b\":{\"v\":\""+BROWSER_VERSION+"\",\"n\":\""+BROWSER_NAME+"\"}," +
                 "\"os\":{\"v\":\""+OS_VERSION+"\",\"n\":\""+OS_NAME+"\"}}");
-        data.putString("l", "{\"n\":\""+LOCATION+"\",\"lat\":\""+LATITUDE+"\"," +
-                "\"long\":\""+LONGITUDE+"\"}");
+        data.putString("l", "{\"n\":\""+LOCATION+"\",\"lat\":\""+latitude+"\"," +
+                "\"long\":\""+longitude+"\"}");
         data.putString("sh", hostname);
         data.putString("txtkn", transactionToken);
         data.putString("dai", deviceId);
