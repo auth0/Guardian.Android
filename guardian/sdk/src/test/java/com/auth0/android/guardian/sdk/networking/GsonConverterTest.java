@@ -28,9 +28,7 @@ import com.google.gson.reflect.TypeToken;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
-import java.io.Reader;
 import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -39,24 +37,16 @@ import java.util.Map;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+
+import static org.junit.Assert.assertThat;
 
 public class GsonConverterTest {
-
-    @Mock
-    Reader reader;
-
-    Gson gson;
 
     GsonConverter converter;
 
     @Before
     public void setUp() throws Exception {
-        initMocks(this);
-
-        gson = new GsonBuilder().create();
-
+        Gson gson = new GsonBuilder().create();
         converter = new GsonConverter(gson);
     }
 
@@ -77,8 +67,7 @@ public class GsonConverterTest {
 
     @Test
     public void shouldParseClass() throws Exception {
-        Type type = new TypeToken<DummyObject>() {
-        }.getType();
+        Type type = new TypeToken<DummyObject>() {}.getType();
         DummyObject parsed = converter.parse(type, new StringReader("{\"someString\":\"theStringValue\",\"someInteger\":123}"));
         assertThat(parsed.someString, is(equalTo("theStringValue")));
         assertThat(parsed.someInteger, is(equalTo(123)));
@@ -86,8 +75,7 @@ public class GsonConverterTest {
 
     @Test
     public void shouldParseMap() throws Exception {
-        Type type = new TypeToken<Map<String,Object>>() {
-        }.getType();
+        Type type = new TypeToken<Map<String, Object>>() {}.getType();
         Map<String,Object> parsed = converter.parse(type, new StringReader("{\"someString\":\"theStringValue\",\"someNumber\":123.3}"));
         assertThat(parsed, hasEntry("someString", (Object)"theStringValue"));
         assertThat(parsed, hasEntry("someNumber", (Object)123.3));
