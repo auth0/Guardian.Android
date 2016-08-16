@@ -29,7 +29,7 @@ compile 'com.auth0.android:guardian-sdk:0.1.0'
 tenant/url.
 
 ```java
-Uri url = Uri.parse("tenant.guardian.auth0.com");
+Uri url = Uri.parse("https://tenant.guardian.auth0.com/");
 
 Guardian guardian = new Guardian.Builder()
         .url(url)
