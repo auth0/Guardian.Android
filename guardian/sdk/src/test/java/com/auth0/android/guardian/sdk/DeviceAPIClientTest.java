@@ -59,11 +59,11 @@ public class DeviceAPIClientTest {
     private static final String PUSH_SERVICE = "PUSH_SERVICE";
     private static final String PUSH_TOKEN = "PUSH_TOKEN";
 
-    MockWebService mockAPI;
+    private MockWebService mockAPI;
 
-    DeviceAPIClient apiClient;
+    private DeviceAPIClient apiClient;
 
-    Gson gson;
+    private Gson gson;
 
     @Before
     public void setUp() throws Exception {
@@ -122,6 +122,7 @@ public class DeviceAPIClientTest {
         assertThat(body, hasKey("push_credentials"));
         assertThat(body.size(), is(equalTo(3)));
 
+        @SuppressWarnings("unchecked")
         Map<String, Object> pushCredentials = (Map<String, Object>) body.get("push_credentials");
         assertThat(pushCredentials, hasEntry("service", (Object) "GCM"));
         assertThat(pushCredentials, hasEntry("token", (Object) PUSH_TOKEN));
@@ -151,6 +152,7 @@ public class DeviceAPIClientTest {
         assertThat(body, hasKey("push_credentials"));
         assertThat(body.size(), is(equalTo(3)));
 
+        @SuppressWarnings("unchecked")
         Map<String, Object> pushCredentials = (Map<String, Object>) body.get("push_credentials");
         assertThat(pushCredentials, hasEntry("service", (Object) "GCM"));
         assertThat(pushCredentials, hasEntry("token", (Object) PUSH_TOKEN));
@@ -222,6 +224,7 @@ public class DeviceAPIClientTest {
         assertThat(body, hasKey("push_credentials"));
         assertThat(body.size(), is(equalTo(1)));
 
+        @SuppressWarnings("unchecked")
         Map<String, Object> pushCredentials = (Map<String, Object>) body.get("push_credentials");
         assertThat(pushCredentials, hasEntry("service", (Object) "GCM"));
         assertThat(pushCredentials, hasEntry("token", (Object) PUSH_TOKEN));

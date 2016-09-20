@@ -34,6 +34,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
@@ -62,7 +63,8 @@ public class GsonConverterTest {
         map.put("someString", "theString");
         map.put("someInteger", 456);
         String serialized = converter.serialize(map);
-        assertThat(serialized, is(equalTo("{\"someString\":\"theString\",\"someInteger\":456}")));
+        assertThat(serialized, containsString("\"someString\":\"theString\""));
+        assertThat(serialized, containsString("\"someInteger\":456"));
     }
 
     @Test
