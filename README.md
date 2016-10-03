@@ -13,6 +13,12 @@ well as enterprise identity providers such as Active Directory, LDAP, Google App
 
 Android API level 15+ is required in order to use Guardian.
 
+## Before getting started
+
+This SDK allows you to integrate Auth0's Guardian multifactor service in your own app, transforming it in the second factor itself.
+
+For this to work you have to configure your tenant's Guardian service with your push notification settings, otherwise you would not receive any push notifications. Please read the [docs](https://auth0.com/docs/multifactor-authentication/guardian) about how you can accomplish that.
+
 ##Install
 
 GuardianSDK is available both in [Maven Central](http://search.maven.org) and
