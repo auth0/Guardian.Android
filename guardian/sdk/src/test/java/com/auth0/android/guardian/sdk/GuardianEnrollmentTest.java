@@ -26,15 +26,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.security.KeyPair;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class GuardianEnrollmentTest {
@@ -56,23 +53,16 @@ public class GuardianEnrollmentTest {
     @Mock
     PrivateKey privateKey;
 
-    @Mock
-    PublicKey publicKey;
-
-    KeyPair keyPair;
-
     @Before
     public void setUp() throws Exception {
         initMocks(this);
-
-        keyPair = new KeyPair(publicKey, privateKey);
     }
 
     @Test
     public void shouldHaveCorrectData() throws Exception {
         Enrollment enrollment = new GuardianEnrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
                 DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
-                DEVICE_GCM_TOKEN, DEVICE_TOKEN, RECOVERY_CODE, keyPair);
+                DEVICE_GCM_TOKEN, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
         assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUser(), is(equalTo(USER)));
@@ -87,6 +77,5 @@ public class GuardianEnrollmentTest {
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
         assertThat(enrollment.getPrivateKey(), is(sameInstance(privateKey)));
-        assertThat(enrollment.getPublicKey(), is(sameInstance(publicKey)));
     }
 }

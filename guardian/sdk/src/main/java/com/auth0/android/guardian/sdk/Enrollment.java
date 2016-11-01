@@ -27,7 +27,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.security.PrivateKey;
-import java.security.PublicKey;
 
 /**
  * The representation of a Guardian Enrollment
@@ -155,13 +154,4 @@ public interface Enrollment {
      */
     @NonNull
     PrivateKey getPrivateKey();
-
-    /**
-     * The public key used by the server to verify the requests signed with the enrollment's private
-     * key
-     *
-     * @return the RSA private key
-     */
-    @NonNull
-    PublicKey getPublicKey();
 }

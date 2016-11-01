@@ -25,9 +25,7 @@ package com.auth0.android.guardian.sdk;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.security.KeyPair;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 
 class GuardianEnrollment implements Enrollment {
 
@@ -45,7 +43,6 @@ class GuardianEnrollment implements Enrollment {
     private final String deviceToken;
     private final String recoveryCode;
     private final PrivateKey privateKey;
-    private final PublicKey publicKey;
 
     GuardianEnrollment(@NonNull String url,
                        @NonNull String label,
@@ -60,7 +57,7 @@ class GuardianEnrollment implements Enrollment {
                        @NonNull String deviceGCMToken,
                        @NonNull String deviceToken,
                        @Nullable String recoveryCode,
-                       @NonNull KeyPair deviceKeyPair) {
+                       @NonNull PrivateKey privateKey) {
         this.url = url;
         this.label = label;
         this.user = user;
@@ -74,8 +71,7 @@ class GuardianEnrollment implements Enrollment {
         this.deviceGCMToken = deviceGCMToken;
         this.deviceToken = deviceToken;
         this.recoveryCode = recoveryCode;
-        this.privateKey = deviceKeyPair.getPrivate();
-        this.publicKey = deviceKeyPair.getPublic();
+        this.privateKey = privateKey;
     }
 
     @NonNull
@@ -160,11 +156,5 @@ class GuardianEnrollment implements Enrollment {
     @Override
     public PrivateKey getPrivateKey() {
         return privateKey;
-    }
-
-    @NonNull
-    @Override
-    public PublicKey getPublicKey() {
-        return publicKey;
     }
 }

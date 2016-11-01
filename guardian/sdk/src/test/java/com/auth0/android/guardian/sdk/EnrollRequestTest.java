@@ -37,7 +37,6 @@ import org.robolectric.annotation.Config;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -127,7 +126,6 @@ public class EnrollRequestTest {
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
         assertThat(enrollment.getPrivateKey(), is(sameInstance(privateKey)));
-        assertThat(enrollment.getPublicKey(), is(sameInstance((PublicKey)publicKey)));
     }
 
     @Test
@@ -160,7 +158,6 @@ public class EnrollRequestTest {
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
         assertThat(enrollment.getPrivateKey(), is(sameInstance(privateKey)));
-        assertThat(enrollment.getPublicKey(), is(sameInstance((PublicKey)publicKey)));
     }
 
     @Test
@@ -187,7 +184,6 @@ public class EnrollRequestTest {
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(nullValue()));
         assertThat(enrollment.getPrivateKey(), is(sameInstance(privateKey)));
-        assertThat(enrollment.getPublicKey(), is(sameInstance((PublicKey)publicKey)));
     }
 
     @Test
@@ -214,7 +210,6 @@ public class EnrollRequestTest {
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(RECOVERY_CODE));
         assertThat(enrollment.getPrivateKey(), is(sameInstance(privateKey)));
-        assertThat(enrollment.getPublicKey(), is(sameInstance((PublicKey)publicKey)));
     }
 
     @Test

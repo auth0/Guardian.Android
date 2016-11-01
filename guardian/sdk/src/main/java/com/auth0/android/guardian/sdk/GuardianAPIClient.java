@@ -80,10 +80,7 @@ public class GuardianAPIClient {
                                                           @NonNull String deviceIdentifier,
                                                           @NonNull String deviceName,
                                                           @NonNull String gcmToken,
-                                                          @NonNull PublicKey publicKey) {
-        if (!(publicKey instanceof RSAPublicKey)) {
-            throw new IllegalArgumentException("The public key MUST be an RSA public key");
-        }
+                                                          @NonNull byte[] publicKey) {
         Type type = new TypeToken<Map<String, Object>>() {}.getType();
         return requestFactory
                 .<Map<String, Object>>newRequest("POST", baseUrl.resolve("api/enroll"), type)
@@ -94,11 +91,11 @@ public class GuardianAPIClient {
                 .setParameter("public_key", createJWK(publicKey));
     }
 
-    private static Map<String, String> createJWK(@NonNull PublicKey publicKey) {
+    private static Map<String, String> createJWK(@NonNull byte[] publicKey) {
         Map<String, String> jwk = new HashMap<>(3);
         jwk.put("kty", "RSA");
         jwk.put("e", "AQAB");
-        jwk.put("n", Base64.encodeToString(publicKey.getEncoded(), Base64.DEFAULT));
+        jwk.put("n", Base64.encodeToString(publicKey, Base64.DEFAULT));
         return jwk;
     }
 

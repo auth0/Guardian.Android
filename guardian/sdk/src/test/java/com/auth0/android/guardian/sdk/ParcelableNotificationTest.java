@@ -35,10 +35,7 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.security.KeyPair;
 import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.interfaces.RSAPublicKey;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -50,7 +47,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(RobolectricTestRunner.class)
@@ -76,16 +72,9 @@ public class ParcelableNotificationTest {
     @Mock
     PrivateKey privateKey;
 
-    @Mock
-    PublicKey publicKey;
-
-    KeyPair keyPair;
-
     @Before
     public void setUp() throws Exception {
         initMocks(this);
-
-        keyPair = new KeyPair(publicKey, privateKey);
     }
 
     @Test
@@ -173,7 +162,7 @@ public class ParcelableNotificationTest {
 
         Enrollment enrollment = new GuardianEnrollment(
                 HOSTNAME_HTTPS, null, null, 6, 30, null, null,
-                DEVICE_ID, null, null, null, null, null, keyPair);
+                DEVICE_ID, null, null, null, null, null, privateKey);
 
         assertThat(notification.getEnrollmentId(), is(equalTo(enrollment.getId())));
         assertThat(notification.getUrl(), is(equalTo(enrollment.getUrl())));

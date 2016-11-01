@@ -38,15 +38,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.security.PublicKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Locale;
 import java.util.Map;
 
@@ -58,7 +55,6 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(RobolectricTestRunner.class)
@@ -86,12 +82,6 @@ public class GuardianAPIClientTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    @Mock
-    RSAPublicKey rsaPublicKey;
-
-    @Mock
-    PublicKey publicKey;
-
     MockWebService mockAPI;
     GuardianAPIClient apiClient;
     Gson gson;
@@ -99,9 +89,6 @@ public class GuardianAPIClientTest {
     @Before
     public void setUp() throws Exception {
         initMocks(this);
-
-        when(rsaPublicKey.getEncoded())
-                .thenReturn(PUBLIC_KEY);
 
         mockAPI = new MockWebService();
         final String domain = mockAPI.getDomain();
@@ -148,7 +135,7 @@ public class GuardianAPIClientTest {
 
         final MockCallback<Map<String,Object>> callback = new MockCallback<>();
 
-        apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, rsaPublicKey)
+        apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, PUBLIC_KEY)
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
@@ -175,19 +162,6 @@ public class GuardianAPIClientTest {
         assertThat(publicKey, hasEntry("e", (Object) "AQAB"));
         assertThat(publicKey, hasEntry("n", (Object) Base64.encodeToString(PUBLIC_KEY, Base64.DEFAULT)));
         assertThat(publicKey.size(), is(equalTo(3)));
-    }
-
-    @Test
-    public void shouldFailEnrollIfNotRSA() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-
-        mockAPI.willReturnEnrollment(ENROLLMENT_ID, ENROLLMENT_URL, ENROLLMENT_ISSUER, ENROLLMENT_USER,
-                DEVICE_ACCOUNT_TOKEN, RECOVERY_CODE, TOTP_SECRET, TOTP_ALGORITHM, TOTP_DIGITS, TOTP_PERIOD);
-
-        final MockCallback<Map<String,Object>> callback = new MockCallback<>();
-
-        apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
-                .start(callback);
     }
 
     @Test

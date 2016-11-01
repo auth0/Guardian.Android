@@ -77,7 +77,8 @@ public class Guardian implements Parcelable {
             ticket = enrollmentData;
         }
         final GuardianAPIRequest<Map<String, Object>> request = client
-                .enroll(ticket, deviceIdentifier, deviceName, gcmToken, deviceKeyPair.getPublic());
+                .enroll(ticket, deviceIdentifier, deviceName, gcmToken,
+                        deviceKeyPair.getPublic().getEncoded());
         return new EnrollRequest(request, deviceIdentifier, deviceName, gcmToken, deviceKeyPair);
     }
 

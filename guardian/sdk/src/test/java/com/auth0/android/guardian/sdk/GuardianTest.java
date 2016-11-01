@@ -67,6 +67,7 @@ public class GuardianTest {
     private static final String RECOVERY_CODE = "RECOVERY_CODE";
     private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
     private static final String TRANSACTION_TOKEN = "TRANSACTION_TOKEN";
+    private static final byte[] PUBLIC_KEY = new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     @Mock
     GuardianAPIRequest<Map<String, Object>> mockEnrollRequest;
@@ -106,11 +107,14 @@ public class GuardianTest {
         when(notification.getTransactionToken())
                 .thenReturn(TRANSACTION_TOKEN);
 
+        when(publicKey.getEncoded())
+                .thenReturn(PUBLIC_KEY);
+
         keyPair = new KeyPair(publicKey, privateKey);
 
         enrollment = new GuardianEnrollment(GUARDIAN_URL, TENANT, USER, PERIOD,
                 DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_IDENTIFIER, DEVICE_NAME,
-                GCM_TOKEN, DEVICE_TOKEN, RECOVERY_CODE, keyPair);
+                GCM_TOKEN, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
 
         when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
                 .thenReturn(deviceApiClient);
@@ -122,7 +126,7 @@ public class GuardianTest {
     public void shouldReturnEnrollRequestUsingFullEnrollmentUri() throws Exception {
         String enrollmentUri = createEnrollmentUri();
 
-        when(apiClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(publicKey)))
+        when(apiClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(PUBLIC_KEY)))
                 .thenReturn(mockEnrollRequest);
 
         GuardianAPIRequest<Enrollment> request = guardian
@@ -140,7 +144,7 @@ public class GuardianTest {
 
     @Test
     public void shouldReturnEnrollRequestUsingOnlyEnrollmentTicket() throws Exception {
-        when(apiClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(publicKey)))
+        when(apiClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(PUBLIC_KEY)))
                 .thenReturn(mockEnrollRequest);
 
         GuardianAPIRequest<Enrollment> request = guardian
