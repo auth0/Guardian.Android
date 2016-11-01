@@ -23,6 +23,11 @@
 package com.auth0.android.guardian.sdk;
 
 import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 /**
  * The representation of a Guardian Enrollment
@@ -34,6 +39,7 @@ public interface Enrollment {
      *
      * @return the id
      */
+    @NonNull
     String getId();
 
     /**
@@ -41,15 +47,17 @@ public interface Enrollment {
      *
      * @return the url
      */
+    @NonNull
     String getUrl();
 
     /**
      * A label for the enrollment. This will be pre-filled with the Guardian tenant, but since it's
-     * only used to display to the user, this could be overriden to return whatever the developer
+     * only used to display to the user, this could be overridden to return whatever the developer
      * wants.
      *
      * @return the label
      */
+    @NonNull
     String getLabel();
 
     /**
@@ -57,6 +65,7 @@ public interface Enrollment {
      *
      * @return the user name or email
      */
+    @NonNull
     String getUser();
 
     /**
@@ -64,27 +73,31 @@ public interface Enrollment {
      *
      * @return the period, in seconds
      */
-    int getPeriod();
+    @Nullable
+    Integer getPeriod();
 
     /**
      * The TOTP digits, i.e. the code length
      *
      * @return the amount of digits of the code
      */
-    int getDigits();
+    @Nullable
+    Integer getDigits();
 
     /**
      * The TOTP algorithm
      *
      * @return the algorithm name
      */
-    String getAlgorithm(); // maybe we can leave this out if we will always use the default
+    @Nullable
+    String getAlgorithm();
 
     /**
      * The TOTP secret, Base32 encoded
      *
      * @return the encoded secret
      */
+    @Nullable
     String getSecret();
 
     /**
@@ -93,6 +106,7 @@ public interface Enrollment {
      *
      * @return a unique device identifier
      */
+    @NonNull
     String getDeviceIdentifier();
 
     /**
@@ -102,6 +116,7 @@ public interface Enrollment {
      *
      * @return the name
      */
+    @NonNull
     String getDeviceName();
 
     /**
@@ -111,6 +126,7 @@ public interface Enrollment {
      *
      * @return the GCM token
      */
+    @NonNull
     String getGCMToken();
 
     /**
@@ -118,5 +134,34 @@ public interface Enrollment {
      *
      * @return the Guardian token
      */
+    @NonNull
     String getDeviceToken();
+
+    /**
+     * The recovery code that the user should keep in case he needs to log in without the device.
+     * Might be null if the user already had a recovery code.
+     * Remember that the recovery code is only one per user, not per enrollment, and that it can be
+     * used only once. You should get a new one after a successful login it.
+     *
+     * @return the Guardian recovery code, if present
+     */
+    @Nullable
+    String getRecoveryCode();
+
+    /**
+     * The private key used to sign the requests to allow/reject an authentication request
+     *
+     * @return the RSA private key
+     */
+    @NonNull
+    PrivateKey getPrivateKey();
+
+    /**
+     * The public key used by the server to verify the requests signed with the enrollment's private
+     * key
+     *
+     * @return the RSA private key
+     */
+    @NonNull
+    PublicKey getPublicKey();
 }

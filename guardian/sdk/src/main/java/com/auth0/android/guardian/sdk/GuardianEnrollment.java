@@ -22,33 +22,45 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
 class GuardianEnrollment implements Enrollment {
 
     private final String id;
     private final String url;
     private final String label;
     private final String user;
-    private final int period;
-    private final int digits;
+    private final Integer period;
+    private final Integer digits;
     private final String algorithm;
     private final String secret;
     private final String deviceIdentifier;
     private final String deviceName;
     private final String deviceGCMToken;
     private final String deviceToken;
+    private final String recoveryCode;
+    private final PrivateKey privateKey;
+    private final PublicKey publicKey;
 
-    GuardianEnrollment(String url,
-                       String label,
-                       String user,
-                       int period,
-                       int digits,
-                       String algorithm,
-                       String secret,
-                       String deviceId,
-                       String deviceIdentifier,
-                       String deviceName,
-                       String deviceGCMToken,
-                       String deviceToken) {
+    GuardianEnrollment(@NonNull String url,
+                       @NonNull String label,
+                       @NonNull String user,
+                       @Nullable Integer period,
+                       @Nullable Integer digits,
+                       @Nullable String algorithm,
+                       @Nullable String secret,
+                       @NonNull String deviceId,
+                       @NonNull String deviceIdentifier,
+                       @NonNull String deviceName,
+                       @NonNull String deviceGCMToken,
+                       @NonNull String deviceToken,
+                       @Nullable String recoveryCode,
+                       @NonNull KeyPair deviceKeyPair) {
         this.url = url;
         this.label = label;
         this.user = user;
@@ -61,65 +73,98 @@ class GuardianEnrollment implements Enrollment {
         this.deviceName = deviceName;
         this.deviceGCMToken = deviceGCMToken;
         this.deviceToken = deviceToken;
+        this.recoveryCode = recoveryCode;
+        this.privateKey = deviceKeyPair.getPrivate();
+        this.publicKey = deviceKeyPair.getPublic();
     }
 
+    @NonNull
     @Override
     public String getId() {
         return id;
     }
 
+    @NonNull
     @Override
     public String getUrl() {
         return url;
     }
 
+    @NonNull
     @Override
     public String getLabel() {
         return label;
     }
 
+    @NonNull
     @Override
     public String getUser() {
         return user;
     }
 
+    @Nullable
     @Override
-    public int getPeriod() {
+    public Integer getPeriod() {
         return period;
     }
 
+    @Nullable
     @Override
-    public int getDigits() {
+    public Integer getDigits() {
         return digits;
     }
 
+    @Nullable
     @Override
     public String getAlgorithm() {
         return algorithm;
     }
 
+    @Nullable
     @Override
     public String getSecret() {
         return secret;
     }
 
+    @NonNull
     @Override
     public String getDeviceIdentifier() {
         return deviceIdentifier;
     }
 
+    @NonNull
     @Override
     public String getDeviceName() {
         return deviceName;
     }
 
+    @NonNull
     @Override
     public String getGCMToken() {
         return deviceGCMToken;
     }
 
+    @NonNull
     @Override
     public String getDeviceToken() {
         return deviceToken;
+    }
+
+    @Nullable
+    @Override
+    public String getRecoveryCode() {
+        return recoveryCode;
+    }
+
+    @NonNull
+    @Override
+    public PrivateKey getPrivateKey() {
+        return privateKey;
+    }
+
+    @NonNull
+    @Override
+    public PublicKey getPublicKey() {
+        return publicKey;
     }
 }
