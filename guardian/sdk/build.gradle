@@ -25,6 +25,9 @@ dependencies {
     // Annotations (@NonNull etc)
     compile 'com.android.support:support-annotations:23.4.0'
 
+    // JWT
+    compile 'com.auth0:java-jwt:2.2.1'
+
     //Gson
     compile 'com.google.code.gson:gson:2.6.2'
 

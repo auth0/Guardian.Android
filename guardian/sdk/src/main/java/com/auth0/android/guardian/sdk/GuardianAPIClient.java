@@ -29,14 +29,18 @@ import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.networking.Request;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
+import com.auth0.jwt.Algorithm;
+import com.auth0.jwt.JWTSigner;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.security.PublicKey;
-import java.security.interfaces.RSAPublicKey;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.security.PrivateKey;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -47,6 +51,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
 public class GuardianAPIClient {
+
+    private static final int JWT_EXP_SECS = 5 * 60; // 5 mins
 
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
@@ -131,6 +137,91 @@ public class GuardianAPIClient {
                 .<Map<String, String>>newRequest("POST", baseUrl.resolve("api/enrollment-info"), type)
                 .setParameter("enrollment_tx_id", enrollmentTransactionId);
         return new DeviceTokenRequest(request);
+    }
+
+    /**
+     * Allows an authentication request using the enrollment's private key
+     *
+     * @param txToken the auth transaction token
+     * @param deviceIdentifier the local device identifier
+     * @param challenge the one time password
+     * @param privateKey the private key used to sign the payload
+     * @return a request to execute
+     */
+    public GuardianAPIRequest<Void> allow(@NonNull String txToken,
+                                          @NonNull String deviceIdentifier,
+                                          @NonNull String challenge,
+                                          @NonNull PrivateKey privateKey) {
+        String jwt = createJWT(privateKey, deviceIdentifier, challenge, true, null);
+        Type type = new TypeToken<Void>() {}.getType();
+        return requestFactory
+                .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), type)
+                .setBearer(txToken)
+                .setParameter("challengeResponse", jwt);
+    }
+
+    /**
+     * Rejects an authentication request using the enrollment's private key, indicating a reason
+     *
+     * @param txToken the auth transaction token
+     * @param deviceIdentifier the local device identifier
+     * @param challenge the one time password
+     * @param privateKey the private key used to sign the payload
+     * @param reason the reject reason
+     * @return a request to execute
+     */
+    public GuardianAPIRequest<Void> reject(@NonNull String txToken,
+                                           @NonNull String deviceIdentifier,
+                                           @NonNull String challenge,
+                                           @NonNull PrivateKey privateKey,
+                                           @Nullable String reason) {
+        String jwt = createJWT(privateKey, deviceIdentifier, challenge, false, reason);
+        Type type = new TypeToken<Void>() {}.getType();
+        return requestFactory
+                .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), type)
+                .setBearer(txToken)
+                .setParameter("challengeResponse", jwt);
+    }
+
+    /**
+     * Rejects an authentication request using the enrollment's private key
+     *
+     * @param txToken the auth transaction token
+     * @param deviceIdentifier the local device identifier
+     * @param challenge the one time password
+     * @param privateKey the private key used to sign the payload
+     * @return a request to execute
+     */
+    public GuardianAPIRequest<Void> reject(@NonNull String txToken,
+                                           @NonNull String deviceIdentifier,
+                                           @NonNull String challenge,
+                                           @NonNull PrivateKey privateKey) {
+        return reject(txToken, deviceIdentifier, challenge, privateKey, null);
+    }
+
+    private String createJWT(@NonNull PrivateKey privateKey,
+                             @NonNull String deviceIdentifier,
+                             @NonNull String challenge,
+                             boolean accepted,
+                             @Nullable String reason) {
+        JWTSigner.Options options = new JWTSigner.Options();
+        options.setAlgorithm(Algorithm.RS256);
+        options.setIssuedAt(true);
+        options.setExpirySeconds(JWT_EXP_SECS);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("aud", getUrl());
+        claims.put("iss", deviceIdentifier);
+        claims.put("sub", challenge);
+        claims.put("auth0.guardian.type", "push_notification");
+        claims.put("auth0.guardian.accepted", accepted);
+        byte[] nonce = new byte[32];
+        new SecureRandom().nextBytes(nonce);
+        claims.put("jti", Base64.encodeToString(nonce, Base64.DEFAULT));
+        if (reason != null) {
+            claims.put("auth0.guardian.reason", reason);
+        }
+        JWTSigner jwtSigner = new JWTSigner(privateKey);
+        return jwtSigner.sign(claims, options);
     }
 
     /**

@@ -106,8 +106,14 @@ public class Guardian implements Parcelable {
     @NonNull
     public GuardianAPIRequest<Void> allow(@NonNull Notification notification,
                                           @NonNull Enrollment enrollment) {
-        return client
-                .allow(notification.getTransactionToken(), getOTPCode(enrollment));
+        if (notification.getChallenge() != null) {
+            return client
+                    .allow(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
+                            notification.getChallenge(), enrollment.getPrivateKey());
+        } else {
+            return client
+                    .allow(notification.getTransactionToken(), getOTPCode(enrollment));
+        }
     }
 
     /**
@@ -124,8 +130,14 @@ public class Guardian implements Parcelable {
     public GuardianAPIRequest<Void> reject(@NonNull Notification notification,
                                            @NonNull Enrollment enrollment,
                                            @Nullable String reason) {
-        return client
-                .reject(notification.getTransactionToken(), getOTPCode(enrollment), reason);
+        if (notification.getChallenge() != null) {
+            return client
+                    .reject(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
+                            notification.getChallenge(), enrollment.getPrivateKey(), reason);
+        } else {
+            return client
+                    .reject(notification.getTransactionToken(), getOTPCode(enrollment), reason);
+        }
     }
 
     /**
