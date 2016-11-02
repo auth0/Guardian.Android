@@ -62,6 +62,7 @@ public class Guardian implements Parcelable {
      * @param gcmToken the GCM token required to send push notifications to this device
      * @param deviceKeyPair the RSA key pair to associate with the enrollment
      * @return a request to execute or start
+     * @throws IllegalArgumentException when the key pair in not an RSA key pair
      */
     @NonNull
     public GuardianAPIRequest<Enrollment> enroll(@NonNull String enrollmentData,
@@ -77,8 +78,7 @@ public class Guardian implements Parcelable {
             ticket = enrollmentData;
         }
         final GuardianAPIRequest<Map<String, Object>> request = client
-                .enroll(ticket, deviceIdentifier, deviceName, gcmToken,
-                        deviceKeyPair.getPublic().getEncoded());
+                .enroll(ticket, deviceIdentifier, deviceName, gcmToken, deviceKeyPair.getPublic());
         return new EnrollRequest(request, deviceIdentifier, deviceName, gcmToken, deviceKeyPair);
     }
 

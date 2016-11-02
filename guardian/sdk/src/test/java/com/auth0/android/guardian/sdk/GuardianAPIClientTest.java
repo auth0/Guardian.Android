@@ -38,12 +38,16 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.math.BigInteger;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Locale;
 import java.util.Map;
 
@@ -55,6 +59,8 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(RobolectricTestRunner.class)
@@ -77,10 +83,24 @@ public class GuardianAPIClientTest {
     private static final String DEVICE_IDENTIFIER = "DEVICE_IDENTIFIER";
     private static final String DEVICE_NAME = "DEVICE_NAME";
     private static final String GCM_TOKEN = "GCM_TOKEN";
-    private static final byte[] PUBLIC_KEY = new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    private static final byte[] PUBLIC_KEY_MODULUS = new byte[]{
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 0
+    };
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
+    @Mock
+    RSAPublicKey publicKey;
 
     MockWebService mockAPI;
     GuardianAPIClient apiClient;
@@ -89,6 +109,9 @@ public class GuardianAPIClientTest {
     @Before
     public void setUp() throws Exception {
         initMocks(this);
+
+        when(publicKey.getModulus())
+                .thenReturn(new BigInteger(PUBLIC_KEY_MODULUS));
 
         mockAPI = new MockWebService();
         final String domain = mockAPI.getDomain();
@@ -135,7 +158,7 @@ public class GuardianAPIClientTest {
 
         final MockCallback<Map<String,Object>> callback = new MockCallback<>();
 
-        apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, PUBLIC_KEY)
+        apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
@@ -159,9 +182,21 @@ public class GuardianAPIClientTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> publicKey = (Map<String, Object>) body.get("public_key");
         assertThat(publicKey, hasEntry("kty", (Object) "RSA"));
+        assertThat(publicKey, hasEntry("alg", (Object) "RS256"));
+        assertThat(publicKey, hasEntry("use", (Object) "sig"));
         assertThat(publicKey, hasEntry("e", (Object) "AQAB"));
-        assertThat(publicKey, hasEntry("n", (Object) Base64.encodeToString(PUBLIC_KEY, Base64.DEFAULT)));
-        assertThat(publicKey.size(), is(equalTo(3)));
+        assertThat(publicKey, hasEntry("n", (Object) "AQIDBAUGBwgJAAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAA"));
+        assertThat(publicKey.size(), is(equalTo(5)));
+    }
+
+    @Test
+    public void shouldFailEnrollIfNotRSA() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        final MockCallback<Map<String,Object>> callback = new MockCallback<>();
+
+        apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, mock(PublicKey.class))
+                .start(callback);
     }
 
     @Test
