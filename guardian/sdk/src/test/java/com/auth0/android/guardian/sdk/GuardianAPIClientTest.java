@@ -23,7 +23,6 @@
 package com.auth0.android.guardian.sdk;
 
 import android.os.Build;
-import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.utils.CallbackMatcher;
 import com.auth0.android.guardian.sdk.utils.MockCallback;
@@ -48,13 +47,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
-import java.security.PublicKey;
-import java.security.interfaces.RSAPublicKey;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SignatureException;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -413,6 +412,6 @@ public class GuardianAPIClientTest {
         int currentTime = (int)(new Date().getTime() / 1000L);
         assertThat(iat, is(lessThanOrEqualTo(currentTime)));
         assertThat(exp, is(greaterThan(currentTime)));
-        assertThat(exp - iat, is(equalTo(5*60)));
+        assertThat(exp - iat, is(equalTo(30)));
     }
 }

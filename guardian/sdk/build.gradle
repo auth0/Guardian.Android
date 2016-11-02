@@ -25,9 +25,6 @@ dependencies {
     // Annotations (@NonNull etc)
     compile 'com.android.support:support-annotations:23.4.0'
 
-    // JWT
-    compile 'com.auth0:java-jwt:2.2.1'
-
     //Gson
     compile 'com.google.code.gson:gson:2.6.2'
 
@@ -48,6 +45,9 @@ dependencies {
 
     //Robolectric
     testCompile 'org.robolectric:robolectric:3.1.2'
+
+    // JWT verification
+    testCompile 'com.auth0:java-jwt:2.2.1'
 
     testCompile 'junit:junit:4.12'
 }

@@ -29,18 +29,22 @@ import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.networking.Request;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
-import com.auth0.jwt.Algorithm;
-import com.auth0.jwt.JWTSigner;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -52,7 +56,8 @@ import okhttp3.Response;
 
 public class GuardianAPIClient {
 
-    private static final int JWT_EXP_SECS = 5 * 60; // 5 mins
+    private static final int JWT_EXP_SECS = 30;
+    private static final int JWT_BASE64_FLAGS = Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING;
 
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
@@ -79,7 +84,6 @@ public class GuardianAPIClient {
      * @param gcmToken the GCM token required to send push notifications to this device
      * @param publicKey the RSA public key to associate with the enrollment
      * @return a request to execute or start
-     * @throws IllegalArgumentException when the public key is not an RSA public key
      */
     @NonNull
     public GuardianAPIRequest<Map<String, Object>> enroll(@NonNull String enrollmentTicket,
@@ -147,6 +151,7 @@ public class GuardianAPIClient {
      * @param challenge the one time password
      * @param privateKey the private key used to sign the payload
      * @return a request to execute
+     * @throws GuardianException when signing with private key fails
      */
     public GuardianAPIRequest<Void> allow(@NonNull String txToken,
                                           @NonNull String deviceIdentifier,
@@ -169,6 +174,7 @@ public class GuardianAPIClient {
      * @param privateKey the private key used to sign the payload
      * @param reason the reject reason
      * @return a request to execute
+     * @throws GuardianException when signing with private key fails
      */
     public GuardianAPIRequest<Void> reject(@NonNull String txToken,
                                            @NonNull String deviceIdentifier,
@@ -191,6 +197,7 @@ public class GuardianAPIClient {
      * @param challenge the one time password
      * @param privateKey the private key used to sign the payload
      * @return a request to execute
+     * @throws GuardianException when signing with private key fails
      */
     public GuardianAPIRequest<Void> reject(@NonNull String txToken,
                                            @NonNull String deviceIdentifier,
@@ -204,24 +211,38 @@ public class GuardianAPIClient {
                              @NonNull String challenge,
                              boolean accepted,
                              @Nullable String reason) {
-        JWTSigner.Options options = new JWTSigner.Options();
-        options.setAlgorithm(Algorithm.RS256);
-        options.setIssuedAt(true);
-        options.setExpirySeconds(JWT_EXP_SECS);
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("aud", getUrl());
-        claims.put("iss", deviceIdentifier);
-        claims.put("sub", challenge);
-        claims.put("auth0.guardian.type", "push_notification");
-        claims.put("auth0.guardian.accepted", accepted);
-        byte[] nonce = new byte[32];
-        new SecureRandom().nextBytes(nonce);
-        claims.put("jti", Base64.encodeToString(nonce, Base64.DEFAULT));
-        if (reason != null) {
-            claims.put("auth0.guardian.reason", reason);
+        try {
+            Map<String, Object> headers = new HashMap<>();
+            headers.put("alg", "RS256");
+            headers.put("typ", "JWT");
+            long currentTime = new Date().getTime() / 1000L;
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("iat", currentTime);
+            claims.put("exp", currentTime + JWT_EXP_SECS);
+            claims.put("aud", getUrl());
+            claims.put("iss", deviceIdentifier);
+            claims.put("sub", challenge);
+            byte[] nonce = new byte[16];
+            new SecureRandom().nextBytes(nonce);
+            claims.put("jti", Base64.encodeToString(nonce, JWT_BASE64_FLAGS));
+            claims.put("auth0.guardian.type", "push_notification");
+            claims.put("auth0.guardian.accepted", accepted);
+            if (reason != null) {
+                claims.put("auth0.guardian.reason", reason);
+            }
+            Gson gson = new GsonBuilder().create();
+            String headerAndPayload =
+                    Base64.encodeToString(gson.toJson(headers).getBytes(), JWT_BASE64_FLAGS) + "."
+                            + Base64.encodeToString(gson.toJson(claims).getBytes(), JWT_BASE64_FLAGS);
+            final byte[] messageBytes = headerAndPayload.getBytes();
+            final Signature signer = Signature.getInstance("SHA256withRSA", "BC");
+            signer.initSign(privateKey);
+            signer.update(messageBytes);
+            byte[] signature = signer.sign();
+            return headerAndPayload + "." + Base64.encodeToString(signature, JWT_BASE64_FLAGS);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
+            throw new GuardianException("Unable to generate the signed JWT", e);
         }
-        JWTSigner jwtSigner = new JWTSigner(privateKey);
-        return jwtSigner.sign(claims, options);
     }
 
     /**
