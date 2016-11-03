@@ -396,7 +396,7 @@ public class GuardianAPIClientTest {
         assertThat(payload, hasEntry("sub", (Object) CHALLENGE));
         assertThat(payload, hasEntry("iss", (Object) DEVICE_IDENTIFIER));
         assertThat(payload, hasEntry("auth0.guardian.accepted", (Object) accepted));
-        assertThat(payload, hasEntry("auth0.guardian.type", (Object) "push_notification"));
+        assertThat(payload, hasEntry("auth0.guardian.method", (Object) "push"));
         if (!accepted && rejectReason != null) {
             assertThat(payload, hasEntry("auth0.guardian.reason", (Object) rejectReason));
         } else {

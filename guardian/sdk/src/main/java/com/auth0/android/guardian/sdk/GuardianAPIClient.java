@@ -225,7 +225,7 @@ public class GuardianAPIClient {
             byte[] nonce = new byte[16];
             new SecureRandom().nextBytes(nonce);
             claims.put("jti", Base64.encodeToString(nonce, JWT_BASE64_FLAGS));
-            claims.put("auth0.guardian.type", "push_notification");
+            claims.put("auth0.guardian.method", "push");
             claims.put("auth0.guardian.accepted", accepted);
             if (reason != null) {
                 claims.put("auth0.guardian.reason", reason);
