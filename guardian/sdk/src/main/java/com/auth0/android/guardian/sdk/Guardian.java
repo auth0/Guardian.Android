@@ -34,6 +34,9 @@ import android.support.annotation.Nullable;
 import com.auth0.android.guardian.sdk.otp.TOTP;
 import com.auth0.android.guardian.sdk.otp.utils.Base32;
 
+import java.security.KeyPair;
+import java.util.Map;
+
 /**
  * Guardian is the core of the Guardian SDK.
  * This class allows to create and delete enrollments, parse the push notifications and allow or
@@ -52,21 +55,31 @@ public class Guardian implements Parcelable {
      * reject authentication requests.
      * This device will now be available as a Guardian second factor.
      *
-     * @param enrollmentUri the URI obtained from a Guardian QR code
+     * @param enrollmentData the enrollment URI or ticket obtained from a Guardian QR code or
+     *                       enrollment email
      * @param deviceIdentifier the local identifier that uniquely identifies the android device
      * @param deviceName this device's name
      * @param gcmToken the GCM token required to send push notifications to this device
+     * @param deviceKeyPair the RSA key pair to associate with the enrollment
      * @return a request to execute or start
-     * @throws IllegalArgumentException when the enrollmentUri is not a valid Guardian enrollment
-     *                                  uri
+     * @throws IllegalArgumentException when the key pair in not an RSA key pair
      */
     @NonNull
-    public GuardianAPIRequest<Enrollment> enroll(@NonNull Uri enrollmentUri,
+    public GuardianAPIRequest<Enrollment> enroll(@NonNull String enrollmentData,
                                                  @NonNull String deviceIdentifier,
                                                  @NonNull String deviceName,
-                                                 @NonNull String gcmToken) {
-        EnrollmentData enrollmentData = EnrollmentData.parse(enrollmentUri);
-        return new EnrollRequest(client, enrollmentData, deviceIdentifier, deviceName, gcmToken);
+                                                 @NonNull String gcmToken,
+                                                 @NonNull KeyPair deviceKeyPair) {
+        final String ticket;
+        final Uri uri = Uri.parse(enrollmentData);
+        if (uri != null && uri.getQueryParameterNames().contains("enrollment_tx_id")) {
+            ticket = uri.getQueryParameter("enrollment_tx_id");
+        } else {
+            ticket = enrollmentData;
+        }
+        final GuardianAPIRequest<Map<String, Object>> request = client
+                .enroll(ticket, deviceIdentifier, deviceName, gcmToken, deviceKeyPair.getPublic());
+        return new EnrollRequest(request, deviceIdentifier, deviceName, gcmToken, deviceKeyPair);
     }
 
     /**

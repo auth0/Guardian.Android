@@ -99,6 +99,31 @@ public class MockWebService {
         return this;
     }
 
+    public MockWebService willReturnEnrollment(String id, String url, String issuer, String user,
+                                               String token, String recoveryCode,
+                                               String totpSecret, String totpAlgorithm,
+                                               Integer totpPeriod, Integer totpDigits) {
+        String json = "" +
+                "{" +
+                "   \"id\": \""+id+"\"," +
+                "   \"url\": \""+url+"\"," +
+                "   \"issuer\": \""+issuer+"\"," +
+                "   \"user\": \""+user+"\"," +
+                "   \"token\": \""+token+"\"," +
+                (recoveryCode == null ? "" :
+                "   \"recovery_code\": \""+recoveryCode+"\",") +
+                (totpSecret == null && totpAlgorithm == null && totpPeriod == null && totpDigits == null ? "" :
+                "   \"totp\": {" +
+                "       \"secret\": \""+totpSecret+"\"," +
+                "       \"algorithm\": \""+totpAlgorithm+"," +
+                "       \"period\": "+totpPeriod+"," +
+                "       \"digits\": "+totpDigits+"," +
+                "   }") +
+                "}";
+        server.enqueue(responseWithJSON(json, 200));
+        return this;
+    }
+
     public MockWebService willReturnServerError(int statusCode, String errorCode, String error, String message) {
         String json = "" +
                 "{" +

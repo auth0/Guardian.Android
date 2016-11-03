@@ -26,13 +26,16 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.security.PrivateKey;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -44,6 +47,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 23, manifest = Config.NONE)
@@ -53,6 +57,7 @@ public class ParcelableNotificationTest {
     private static final String HOSTNAME_HTTPS = "https://example.com/";
     private static final String DEVICE_ID = "DEVICE_ID";
     private static final String TRANSACTION_TOKEN = "TRANSACTION_TOKEN";
+    private static final String CHALLENGE = "CHALLENGE";
     private static final String BROWSER_NAME = "BROWSER_NAME";
     private static final String BROWSER_VERSION = "BROWSER_VERSION";
     private static final String OS_NAME = "OS_NAME";
@@ -63,6 +68,14 @@ public class ParcelableNotificationTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
+    @Mock
+    PrivateKey privateKey;
+
+    @Before
+    public void setUp() throws Exception {
+        initMocks(this);
+    }
 
     @Test
     public void shouldHaveCorrectDataAfterParse() throws Exception {
@@ -117,7 +130,7 @@ public class ParcelableNotificationTest {
     public void shouldHaveCorrectDataAfterParcelWithNulls() throws Exception {
         ParcelableNotification originalNotification = new ParcelableNotification(
                 HttpUrl.parse(HOSTNAME_HTTPS), DEVICE_ID, TRANSACTION_TOKEN, null,
-                OS_NAME, OS_VERSION, BROWSER_NAME, BROWSER_VERSION, LOCATION, null, null);
+                OS_NAME, OS_VERSION, BROWSER_NAME, BROWSER_VERSION, LOCATION, null, null, null);
 
         Parcel parcel = Parcel.obtain();
         originalNotification.writeToParcel(parcel, 0);
@@ -149,7 +162,7 @@ public class ParcelableNotificationTest {
 
         Enrollment enrollment = new GuardianEnrollment(
                 HOSTNAME_HTTPS, null, null, 6, 30, null, null,
-                DEVICE_ID, null, null, null, null);
+                DEVICE_ID, null, null, null, null, null, privateKey);
 
         assertThat(notification.getEnrollmentId(), is(equalTo(enrollment.getId())));
         assertThat(notification.getUrl(), is(equalTo(enrollment.getUrl())));
@@ -182,17 +195,27 @@ public class ParcelableNotificationTest {
         ParcelableNotification notification = ParcelableNotification.parse(data);
     }
 
+    @Test
+    public void shouldFailIfThereIsNoDate() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, null);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+    }
+
     private Bundle createPushNotificationPayload(String hostname,
                                                  String deviceId,
                                                  String transactionToken,
                                                  Date date) {
-        return createPushNotificationPayload(hostname, deviceId, transactionToken, date, LATITUDE, LONGITUDE);
+        return createPushNotificationPayload(hostname, deviceId, transactionToken, date, CHALLENGE, LATITUDE, LONGITUDE);
     }
 
     private Bundle createPushNotificationPayload(String hostname,
                                                  String deviceId,
                                                  String transactionToken,
                                                  Date date,
+                                                 String challenge,
                                                  Double latitude,
                                                  Double longitude) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -207,6 +230,7 @@ public class ParcelableNotificationTest {
         data.putString("sh", hostname);
         data.putString("txtkn", transactionToken);
         data.putString("dai", deviceId);
+        data.putString("c", challenge);
 
         return data;
     }

@@ -32,12 +32,18 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.Map;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -58,8 +64,12 @@ public class GuardianTest {
     private static final String GCM_TOKEN = "GCM_TOKEN";
     private static final String DEVICE_TOKEN = "DEVICE_TOKEN";
     private static final String GUARDIAN_URL = "http://example.guardian.auth0.com/";
+    private static final String RECOVERY_CODE = "RECOVERY_CODE";
     private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
     private static final String TRANSACTION_TOKEN = "TRANSACTION_TOKEN";
+
+    @Mock
+    GuardianAPIRequest<Map<String, Object>> mockEnrollRequest;
 
     @Mock
     Device device;
@@ -79,8 +89,15 @@ public class GuardianTest {
     @Mock
     Notification notification;
 
+    @Mock
+    PrivateKey privateKey;
+
+    @Mock
+    PublicKey publicKey;
+
     Enrollment enrollment;
     Guardian guardian;
+    KeyPair keyPair;
 
     @Before
     public void setUp() throws Exception {
@@ -89,9 +106,11 @@ public class GuardianTest {
         when(notification.getTransactionToken())
                 .thenReturn(TRANSACTION_TOKEN);
 
-        enrollment = new GuardianEnrollment(
-                GUARDIAN_URL, TENANT, USER, PERIOD, DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID,
-                DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, DEVICE_TOKEN);
+        keyPair = new KeyPair(publicKey, privateKey);
+
+        enrollment = new GuardianEnrollment(GUARDIAN_URL, TENANT, USER, PERIOD,
+                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_IDENTIFIER, DEVICE_NAME,
+                GCM_TOKEN, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
 
         when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
                 .thenReturn(deviceApiClient);
@@ -100,30 +119,41 @@ public class GuardianTest {
     }
 
     @Test
-    public void shouldReturnEnrollRequest() throws Exception {
-        Uri enrollmentUri = createEnrollmentUri();
+    public void shouldReturnEnrollRequestUsingFullEnrollmentUri() throws Exception {
+        String enrollmentUri = createEnrollmentUri();
+
+        when(apiClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(publicKey)))
+                .thenReturn(mockEnrollRequest);
+
         GuardianAPIRequest<Enrollment> request = guardian
-                .enroll(enrollmentUri, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN);
+                .enroll(enrollmentUri, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, keyPair);
 
         assertThat(request, is(instanceOf(EnrollRequest.class)));
         EnrollRequest enrollRequest = (EnrollRequest) request;
 
-        assertThat(enrollRequest.client, is(sameInstance(apiClient)));
+        assertThat(enrollRequest.request, is(sameInstance(mockEnrollRequest)));
         assertThat(enrollRequest.deviceName, is(equalTo(DEVICE_NAME)));
         assertThat(enrollRequest.gcmToken, is(equalTo(GCM_TOKEN)));
+        assertThat(enrollRequest.deviceIdentifier, is(equalTo(DEVICE_IDENTIFIER)));
+        assertThat(enrollRequest.deviceKeyPair, is(sameInstance(keyPair)));
+    }
 
-        EnrollmentData enrollmentData = EnrollmentData.parse(enrollmentUri);
-        EnrollmentData data = enrollRequest.enrollmentData;
+    @Test
+    public void shouldReturnEnrollRequestUsingOnlyEnrollmentTicket() throws Exception {
+        when(apiClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(publicKey)))
+                .thenReturn(mockEnrollRequest);
 
-        assertThat(data.getUser(), is(equalTo(enrollmentData.getUser())));
-        assertThat(data.getSecret(), is(equalTo(enrollmentData.getSecret())));
-        assertThat(data.getIssuer(), is(equalTo(enrollmentData.getIssuer())));
-        assertThat(data.getEnrollmentTransactionId(), is(equalTo(enrollmentData.getEnrollmentTransactionId())));
-        assertThat(data.getDeviceId(), is(equalTo(enrollmentData.getDeviceId())));
-        assertThat(data.getAlgorithm(), is(equalTo(enrollmentData.getAlgorithm())));
-        assertThat(data.getDigits(), is(equalTo(enrollmentData.getDigits())));
-        assertThat(data.getPeriod(), is(equalTo(enrollmentData.getPeriod())));
-        assertThat(data.getUrl(), is(equalTo(enrollmentData.getUrl())));
+        GuardianAPIRequest<Enrollment> request = guardian
+                .enroll(ENROLLMENT_TX_ID, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, keyPair);
+
+        assertThat(request, is(instanceOf(EnrollRequest.class)));
+        EnrollRequest enrollRequest = (EnrollRequest) request;
+
+        assertThat(enrollRequest.request, is(sameInstance(mockEnrollRequest)));
+        assertThat(enrollRequest.deviceName, is(equalTo(DEVICE_NAME)));
+        assertThat(enrollRequest.gcmToken, is(equalTo(GCM_TOKEN)));
+        assertThat(enrollRequest.deviceIdentifier, is(equalTo(DEVICE_IDENTIFIER)));
+        assertThat(enrollRequest.deviceKeyPair, is(sameInstance(keyPair)));
     }
 
     @Test
@@ -194,7 +224,7 @@ public class GuardianTest {
                 is(equalTo("https://example.guardian.auth0.com/")));
     }
 
-    private Uri createEnrollmentUri() {
+    private String createEnrollmentUri() {
         return Uri.parse(
                 "otpauth://totp/" +
                         TENANT + ":" + USER +
@@ -206,6 +236,6 @@ public class GuardianTest {
                         "&digits=" + DIGITS +
                         "&period=" + PERIOD +
                         "&base_url=" + GUARDIAN_URL
-        );
+        ).toString();
     }
 }

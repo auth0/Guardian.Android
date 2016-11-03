@@ -41,6 +41,10 @@ import com.auth0.android.guardian.sdk.Guardian;
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.guardian.sample.scanner.CaptureView;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+
 public class EnrollActivity extends AppCompatActivity implements CaptureView.Listener {
 
     private static final String TAG = EnrollActivity.class.getName();
@@ -129,8 +133,8 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     @Override
     public void onCodeScanned(String enrollmentData) {
         try {
-            Uri enrollmentUri = Uri.parse(enrollmentData);
-            guardian.enroll(enrollmentUri, Guardian.getDefaultDeviceIdentifier(this), deviceName, gcmToken)
+            KeyPair keyPair = generateKeyPair();
+            guardian.enroll(enrollmentData, Guardian.getDefaultDeviceIdentifier(this), deviceName, gcmToken, keyPair)
                     .start(new GuardianCallback<>(this,
                             R.string.progress_title_please_wait,
                             R.string.progress_message_enroll,
@@ -257,5 +261,18 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
                         .show();
             }
         });
+    }
+
+    private KeyPair generateKeyPair() {
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(2048);
+            KeyPair keyPair = keyPairGenerator.generateKeyPair();
+            return keyPair;
+        } catch (NoSuchAlgorithmException e) {
+            Log.e(TAG, "Error generating keys", e);
+        }
+
+        return null;
     }
 }

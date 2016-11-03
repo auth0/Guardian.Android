@@ -27,80 +27,94 @@ import android.support.annotation.NonNull;
 import com.auth0.android.guardian.sdk.networking.Callback;
 
 import java.io.IOException;
+import java.security.KeyPair;
+import java.util.Map;
 
 class EnrollRequest implements GuardianAPIRequest<Enrollment> {
 
-    final GuardianAPIClient client;
-    final EnrollmentData enrollmentData;
+    private final static String KEY_ID = "id";
+    private final static String KEY_URL = "url";
+    private final static String KEY_ISSUER = "issuer";
+    private final static String KEY_USER = "user";
+    private final static String KEY_TOKEN = "token";
+    private final static String KEY_RECOVERY_CODE = "recovery_code";
+    private final static String KEY_TOTP = "totp";
+    private final static String KEY_SECRET = "secret";
+    private final static String KEY_ALGORITHM = "algorithm";
+    private final static String KEY_PERIOD = "period";
+    private final static String KEY_DIGITS = "digits";
+
+    final GuardianAPIRequest<Map<String, Object>> request;
     final String deviceIdentifier;
     final String deviceName;
     final String gcmToken;
+    final KeyPair deviceKeyPair;
 
-    EnrollRequest(@NonNull GuardianAPIClient client,
-                  @NonNull EnrollmentData enrollmentData,
+    EnrollRequest(@NonNull GuardianAPIRequest<Map<String, Object>> request,
                   @NonNull String deviceIdentifier,
                   @NonNull String deviceName,
-                  @NonNull String gcmToken) {
-        this.client = client;
-        this.enrollmentData = enrollmentData;
+                  @NonNull String gcmToken,
+                  @NonNull KeyPair deviceKeyPair) {
+        this.request = request;
         this.deviceIdentifier = deviceIdentifier;
         this.deviceName = deviceName;
         this.gcmToken = gcmToken;
+        this.deviceKeyPair = deviceKeyPair;
     }
 
     @Override
     public Enrollment execute() throws IOException, GuardianException {
-        String deviceToken = client
-                .getDeviceToken(enrollmentData.getEnrollmentTransactionId())
-                .execute();
-        Device device = client.device(enrollmentData.getDeviceId(), deviceToken)
-                .create(deviceIdentifier, deviceName, gcmToken)
-                .execute();
-        return createEnrollment(device, deviceToken);
+        return createEnrollment(request.execute());
     }
 
     @Override
     public void start(@NonNull final Callback<Enrollment> callback) {
-        client.getDeviceToken(enrollmentData.getEnrollmentTransactionId())
-                .start(deviceTokenCallback(callback));
-    }
-
-    private Callback<String> deviceTokenCallback(@NonNull final Callback<Enrollment> callback) {
-        return new Callback<String>() {
+        request.start(new Callback<Map<String, Object>>() {
             @Override
-            public void onSuccess(String deviceToken) {
-                client.device(enrollmentData.getDeviceId(), deviceToken)
-                        .create(deviceIdentifier, deviceName, gcmToken)
-                        .start(createDeviceCallback(deviceToken, callback));
+            public void onSuccess(Map<String, Object> response) {
+                try {
+                    Enrollment enrollment = createEnrollment(response);
+                    callback.onSuccess(enrollment);
+                } catch (GuardianException e) {
+                    callback.onFailure(e);
+                }
             }
 
             @Override
             public void onFailure(Throwable exception) {
                 callback.onFailure(exception);
             }
-        };
+        });
     }
 
-    private Callback<Device> createDeviceCallback(@NonNull final String deviceToken,
-                                                  @NonNull final Callback<Enrollment> callback) {
-        return new Callback<Device>() {
-            @Override
-            public void onSuccess(Device device) {
-                Enrollment enrollment = createEnrollment(device, deviceToken);
-                callback.onSuccess(enrollment);
-            }
+    private Enrollment createEnrollment(@NonNull Map<String, Object> result) {
 
-            @Override
-            public void onFailure(Throwable exception) {
-                callback.onFailure(exception);
-            }
-        };
-    }
+        if (!result.containsKey(KEY_ID)
+                || !result.containsKey(KEY_URL)
+                || !result.containsKey(KEY_ISSUER)
+                || !result.containsKey(KEY_USER)
+                || !result.containsKey(KEY_TOKEN)) {
+            throw new GuardianException("Invalid response, missing required fields " + result);
+        }
 
-    private Enrollment createEnrollment(@NonNull Device device, @NonNull String deviceToken) {
-        return new GuardianEnrollment(client.getUrl(), enrollmentData.getIssuer(),
-                enrollmentData.getUser(), enrollmentData.getPeriod(), enrollmentData.getDigits(),
-                enrollmentData.getAlgorithm(), enrollmentData.getSecret(), device.getEnrollmentId(),
-                device.getDeviceIdentifier(), device.getDeviceName(), device.getGCMToken(), deviceToken);
+        String enrollmentId = (String) result.get(KEY_ID);
+        String url = (String) result.get(KEY_URL);
+        String issuer = (String) result.get(KEY_ISSUER);
+        String user = (String) result.get(KEY_USER);
+        String deviceToken = (String) result.get(KEY_TOKEN);
+        String recoveryCode = (String) result.get(KEY_RECOVERY_CODE);
+        String totpAlgorithm = null, totpSecret = null;
+        Integer totpPeriod = null, totpDigits = null;
+        if (result.containsKey(KEY_TOTP)) {
+            Map<String, Object> totpData = (Map<String, Object>) result.get(KEY_TOTP);
+            totpAlgorithm = (String) totpData.get(KEY_ALGORITHM);
+            totpSecret = (String) totpData.get(KEY_SECRET);
+            totpDigits = ((Double) totpData.get(KEY_DIGITS)).intValue();
+            totpPeriod = ((Double) totpData.get(KEY_PERIOD)).intValue();
+        }
+
+        return new GuardianEnrollment(url, issuer, user, totpPeriod, totpDigits, totpAlgorithm,
+                totpSecret, enrollmentId, deviceIdentifier, deviceName, gcmToken, deviceToken,
+                recoveryCode, deviceKeyPair.getPrivate());
     }
 }

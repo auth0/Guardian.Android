@@ -27,6 +27,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -54,6 +55,7 @@ public class ParcelableNotification implements Notification, Parcelable {
     private static final String OS_KEY = "os";
     private static final String NAME_KEY = "n";
     private static final String VERSION_KEY = "v";
+    private static final String CHALLENGE_KEY = "c";
 
     private final String url;
     private final String enrollmentId;
@@ -66,18 +68,20 @@ public class ParcelableNotification implements Notification, Parcelable {
     private final String location;
     private final Double latitude;
     private final Double longitude;
+    private final String challenge;
 
-    ParcelableNotification(HttpUrl url,
-                           String deviceId,
-                           String transactionToken,
-                           Date date,
-                           String osName,
-                           String osVersion,
-                           String browserName,
-                           String browserVersion,
-                           String location,
-                           Double latitude,
-                           Double longitude) {
+    ParcelableNotification(@NonNull HttpUrl url,
+                           @NonNull String deviceId,
+                           @NonNull String transactionToken,
+                           @NonNull Date date,
+                           @Nullable String osName,
+                           @Nullable String osVersion,
+                           @Nullable String browserName,
+                           @Nullable String browserVersion,
+                           @Nullable String location,
+                           @Nullable Double latitude,
+                           @Nullable Double longitude,
+                           @Nullable String challenge) {
         this.url = url.toString();
         this.enrollmentId = deviceId;
         this.transactionToken = transactionToken;
@@ -89,6 +93,7 @@ public class ParcelableNotification implements Notification, Parcelable {
         this.location = location;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.challenge = challenge;
     }
 
     /**
@@ -104,75 +109,93 @@ public class ParcelableNotification implements Notification, Parcelable {
         String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
         String enrollmentId = pushNotificationPayload.getString(ENROLLMENT_ID_KEY);
         String transactionToken = pushNotificationPayload.getString(TRANSACTION_TOKEN_KEY);
+        Date date = parseDate(pushNotificationPayload);
 
-        if (hostname == null || enrollmentId == null || transactionToken == null) {
+        if (hostname == null || enrollmentId == null || transactionToken == null || date == null) {
             throw new IllegalArgumentException(
                     "Push notification doesn't seem to be a Guardian authentication request");
         }
 
         HttpUrl url = parseHostname(hostname);
-        Date date = parseDate(pushNotificationPayload);
         Source source = parseSource(pushNotificationPayload);
         Location location = parseLocation(pushNotificationPayload);
+        String challenge = pushNotificationPayload.getString(CHALLENGE_KEY);
 
         return new ParcelableNotification(url, enrollmentId, transactionToken, date,
                 source.osName, source.osVersion, source.browserName, source.browserVersion,
-                location.location, location.latitude, location.longitude);
+                location.location, location.latitude, location.longitude, challenge);
     }
 
+    @NonNull
     @Override
     public String getEnrollmentId() {
         return enrollmentId;
     }
 
+    @NonNull
     @Override
     public String getTransactionToken() {
         return transactionToken;
     }
 
+    @NonNull
     @Override
     public String getUrl() {
         return url;
     }
 
+    @NonNull
     @Override
     public Date getDate() {
         return date;
     }
 
+    @Nullable
     @Override
     public String getOsName() {
         return osName;
     }
 
+    @Nullable
     @Override
     public String getOsVersion() {
         return osVersion;
     }
 
+    @Nullable
     @Override
     public String getBrowserName() {
         return browserName;
     }
 
+    @Nullable
     @Override
     public String getBrowserVersion() {
         return browserVersion;
     }
 
+    @Nullable
     @Override
     public String getLocation() {
         return location;
     }
 
+    @Nullable
     @Override
     public Double getLatitude() {
         return latitude;
     }
 
+    @Nullable
     @Override
     public Double getLongitude() {
         return longitude;
+    }
+
+    @Nullable
+    @Override
+    public String getChallenge() {
+        return challenge;
     }
 
     private static HttpUrl parseHostname(String hostname) {
@@ -190,6 +213,9 @@ public class ParcelableNotification implements Notification, Parcelable {
 
     private static Date parseDate(Bundle pushNotificationPayload) {
         String dateStr = pushNotificationPayload.getString(DATE_KEY);
+        if (dateStr == null) {
+            return null;
+        }
 
         // remove warning about date format non "local"
         @SuppressLint("SimpleDateFormat")
@@ -295,6 +321,7 @@ public class ParcelableNotification implements Notification, Parcelable {
         location = in.readString();
         latitude = in.readByte() == 0x00 ? null : in.readDouble();
         longitude = in.readByte() == 0x00 ? null : in.readDouble();
+        challenge = in.readString();
     }
 
     @Override
@@ -325,6 +352,7 @@ public class ParcelableNotification implements Notification, Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeDouble(longitude);
         }
+        dest.writeString(challenge);
     }
 
     @SuppressWarnings("unused")

@@ -24,11 +24,19 @@ package com.auth0.guardian.sample;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.Enrollment;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
+
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 public class MyEnrollment implements Enrollment, Parcelable {
 
@@ -45,10 +53,10 @@ public class MyEnrollment implements Enrollment, Parcelable {
     private final String user;
 
     @SerializedName("period")
-    private final int period;
+    private final Integer period;
 
     @SerializedName("digits")
-    private final int digits;
+    private final Integer digits;
 
     @SerializedName("algorithm")
     private final String algorithm;
@@ -68,6 +76,12 @@ public class MyEnrollment implements Enrollment, Parcelable {
     @SerializedName("deviceToken")
     private final String deviceToken;
 
+    @SerializedName("recoveryCode")
+    private final String recoveryCode;
+
+    @SerializedName("privateKey")
+    private final String privateKey;
+
     public MyEnrollment(Enrollment enrollment) {
         this.url = enrollment.getUrl();
         this.label = enrollment.getLabel();
@@ -81,35 +95,41 @@ public class MyEnrollment implements Enrollment, Parcelable {
         this.deviceName = enrollment.getDeviceName();
         this.deviceGCMToken = enrollment.getGCMToken();
         this.deviceToken = enrollment.getDeviceToken();
+        this.recoveryCode = enrollment.getRecoveryCode();
+        this.privateKey = Base64.encodeToString(enrollment.getSigningKey().getEncoded(), Base64.DEFAULT);
     }
 
+    @NonNull
     @Override
     public String getId() {
         return id;
     }
 
+    @NonNull
     @Override
     public String getUrl() {
         return url;
     }
 
+    @NonNull
     @Override
     public String getLabel() {
         return label;
     }
 
+    @NonNull
     @Override
     public String getUser() {
         return user;
     }
 
     @Override
-    public int getPeriod() {
+    public Integer getPeriod() {
         return period;
     }
 
     @Override
-    public int getDigits() {
+    public Integer getDigits() {
         return digits;
     }
 
@@ -123,24 +143,46 @@ public class MyEnrollment implements Enrollment, Parcelable {
         return secret;
     }
 
+    @NonNull
     @Override
     public String getDeviceIdentifier() {
         return deviceIdentifier;
     }
 
+    @NonNull
     @Override
     public String getDeviceName() {
         return deviceName;
     }
 
+    @NonNull
     @Override
     public String getGCMToken() {
         return deviceGCMToken;
     }
 
+    @NonNull
     @Override
     public String getDeviceToken() {
         return deviceToken;
+    }
+
+    @Override
+    public String getRecoveryCode() {
+        return recoveryCode;
+    }
+
+    @NonNull
+    @Override
+    public PrivateKey getSigningKey() {
+        try {
+            byte[] key = Base64.decode(privateKey, Base64.DEFAULT);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(key);
+            return keyFactory.generatePrivate(keySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new IllegalStateException("Invalid private key!");
+        }
     }
 
     // PARCELABLE
@@ -157,6 +199,8 @@ public class MyEnrollment implements Enrollment, Parcelable {
         deviceName = in.readString();
         deviceGCMToken = in.readString();
         deviceToken = in.readString();
+        recoveryCode = in.readString();
+        privateKey = in.readString();
     }
 
     @Override
@@ -178,6 +222,8 @@ public class MyEnrollment implements Enrollment, Parcelable {
         dest.writeString(deviceName);
         dest.writeString(deviceGCMToken);
         dest.writeString(deviceToken);
+        dest.writeString(recoveryCode);
+        dest.writeString(privateKey);
     }
 
     @SuppressWarnings("unused")

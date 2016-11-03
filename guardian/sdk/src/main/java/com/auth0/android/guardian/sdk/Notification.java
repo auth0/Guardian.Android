@@ -22,6 +22,9 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.Date;
 
 public interface Notification {
@@ -29,55 +32,73 @@ public interface Notification {
     /**
      * The id of the enrollment
      */
+    @NonNull
     String getEnrollmentId();
 
     /**
      * The transaction token, used to identify the authentication request
      */
+    @NonNull
     String getTransactionToken();
 
     /**
      * The Guardian server url
      */
+    @NonNull
     String getUrl();
 
     /**
      * The date/time when the authentication request was initiated
      */
+    @NonNull
     Date getDate();
 
     /**
      * The name of the operating system where the authentication request was initiated
      */
+    @Nullable
     String getOsName();
 
     /**
      * The version of the operating system
      */
+    @Nullable
     String getOsVersion();
 
     /**
      * The name of the browser where the authentication request was initiated
      */
+    @Nullable
     String getBrowserName();
 
     /**
      * The version of the browser
      */
+    @Nullable
     String getBrowserVersion();
 
     /**
      * The name of the (approximate) location where the authentication request was initiated
      */
+    @Nullable
     String getLocation();
 
     /**
      * The latitude of the (approximate) location
      */
+    @Nullable
     Double getLatitude();
 
     /**
      * The longitude of the (approximate) location
      */
+    @Nullable
     Double getLongitude();
+
+    /**
+     * The challenge sent by the server. The same challenge should be sent back when trying to
+     * allow or reject an authentication request
+     */
+    @Nullable
+    String getChallenge();
 }

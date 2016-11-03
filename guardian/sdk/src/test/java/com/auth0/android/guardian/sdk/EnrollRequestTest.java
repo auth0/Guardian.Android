@@ -22,8 +22,6 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.net.Uri;
-
 import com.auth0.android.guardian.sdk.networking.Callback;
 
 import org.junit.Before;
@@ -37,8 +35,16 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -58,94 +64,51 @@ public class EnrollRequestTest {
     private static final String DEVICE_ID = "DEVICE_ID";
     private static final String DEVICE_NAME = "DEVICE_NAME";
     private static final String DEVICE_IDENTIFIER = "DEVICE_IDENTIFIER";
+    private static final String RECOVERY_CODE = "RECOVERY_CODE";
     private static final String GCM_TOKEN = "GCM_TOKEN";
     private static final String DEVICE_TOKEN = "DEVICE_TOKEN";
     private static final String GUARDIAN_URL = "http://example.guardian.auth0.com/";
-    private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Mock
-    Device device;
+    GuardianAPIRequest<Map<String, Object>> request;
 
     @Mock
-    GuardianAPIRequest<String> deviceTokenRequest;
+    Callback<Enrollment> callback;
 
     @Mock
-    GuardianAPIRequest<Device> createDeviceRequest;
+    PrivateKey privateKey;
 
     @Mock
-    DeviceAPIClient deviceApiClient;
-
-    @Mock
-    GuardianAPIClient apiClient;
-
-    @Mock
-    Callback<Enrollment> enrollmentCallback;
+    RSAPublicKey publicKey;
 
     @Captor
-    ArgumentCaptor<Callback<String>> deviceTokenCallbackCaptor;
-
-    @Captor
-    ArgumentCaptor<Callback<Device>> deviceCallbackCaptor;
+    ArgumentCaptor<Callback<Map<String, Object>>> callbackCaptor;
 
     @Captor
     ArgumentCaptor<Enrollment> enrollmentCaptor;
 
-    @Captor
-    ArgumentCaptor<Throwable> throwableCaptor;
-
     EnrollRequest enrollRequest;
+    KeyPair keyPair;
 
     @Before
     public void setUp() throws Exception {
         initMocks(this);
 
-        when(device.getEnrollmentId())
-                .thenReturn(DEVICE_ID);
-        when(device.getDeviceName())
-                .thenReturn(DEVICE_NAME);
-        when(device.getGCMToken())
-                .thenReturn(GCM_TOKEN);
-        when(device.getDeviceIdentifier())
-                .thenReturn(DEVICE_IDENTIFIER);
+        keyPair = new KeyPair(publicKey, privateKey);
 
-        when(apiClient.getUrl())
-                .thenReturn(GUARDIAN_URL);
-
-        when(deviceTokenRequest.execute())
-                .thenReturn(DEVICE_TOKEN);
-        when(apiClient.getDeviceToken(ENROLLMENT_TX_ID))
-                .thenReturn(deviceTokenRequest);
-
-        when(createDeviceRequest.execute())
-                .thenReturn(device);
-        when(deviceApiClient.create(DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN))
-                .thenReturn(createDeviceRequest);
-        when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
-                .thenReturn(deviceApiClient);
-
-        Uri enrollmentUri = Uri.parse(
-                "otpauth://totp/" +
-                        TENANT + ":" + USER +
-                        "?secret=" + SECRET_BASE32 +
-                        "&issuer=" + TENANT +
-                        "&enrollment_tx_id=" + ENROLLMENT_TX_ID +
-                        "&id=" + DEVICE_ID +
-                        "&algorithm=" + ALGORITHM +
-                        "&digits=" + DIGITS +
-                        "&period=" + PERIOD +
-                        "&base_url=" + GUARDIAN_URL
-        );
-
-        EnrollmentData enrollmentData = EnrollmentData.parse(enrollmentUri);
-
-        enrollRequest = new EnrollRequest(apiClient, enrollmentData, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN);
+        enrollRequest = new EnrollRequest(request, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, keyPair);
     }
 
     @Test
     public void shouldEnrollSucessfullySync() throws Exception {
+        Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
+                TENANT, USER, DEVICE_TOKEN, RECOVERY_CODE, SECRET_BASE32, ALGORITHM, PERIOD, DIGITS);
+        when(request.execute())
+                .thenReturn(enrollmentResponse);
+
         Enrollment enrollment = enrollRequest
                 .execute();
 
@@ -161,22 +124,23 @@ public class EnrollRequestTest {
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
         assertThat(enrollment.getGCMToken(), is(equalTo(GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
+        assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
+        assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
     }
 
     @Test
     public void shouldEnrollSuccessfullyAsync() throws Exception {
+        Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
+                TENANT, USER, DEVICE_TOKEN, RECOVERY_CODE, SECRET_BASE32, ALGORITHM, PERIOD, DIGITS);
+
         enrollRequest
-                .start(enrollmentCallback);
+                .start(callback);
 
-        verify(deviceTokenRequest).start(deviceTokenCallbackCaptor.capture());
-        deviceTokenCallbackCaptor.getValue()
-                .onSuccess(DEVICE_TOKEN);
+        verify(request).start(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onSuccess(enrollmentResponse);
 
-        verify(createDeviceRequest).start(deviceCallbackCaptor.capture());
-        deviceCallbackCaptor.getValue()
-                .onSuccess(device);
-
-        verify(enrollmentCallback).onSuccess(enrollmentCaptor.capture());
+        verify(callback).onSuccess(enrollmentCaptor.capture());
 
         Enrollment enrollment = enrollmentCaptor.getValue();
 
@@ -192,13 +156,67 @@ public class EnrollRequestTest {
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
         assertThat(enrollment.getGCMToken(), is(equalTo(GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
+        assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
+        assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
     }
 
     @Test
-    public void shouldFailEnrollWhenDeviceTokenFailsSync() throws Exception {
+    public void shouldEnrollSucessfullySyncWithNullRecovey() throws Exception {
+        Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
+                TENANT, USER, DEVICE_TOKEN, null, SECRET_BASE32, ALGORITHM, PERIOD, DIGITS);
+        when(request.execute())
+                .thenReturn(enrollmentResponse);
+
+        Enrollment enrollment = enrollRequest
+                .execute();
+
+        assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
+        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
+        assertThat(enrollment.getUser(), is(equalTo(USER)));
+        assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
+        assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
+        assertThat(enrollment.getAlgorithm(), is(equalTo(ALGORITHM)));
+        assertThat(enrollment.getSecret(), is(equalTo(SECRET_BASE32)));
+        assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
+        assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_IDENTIFIER)));
+        assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
+        assertThat(enrollment.getGCMToken(), is(equalTo(GCM_TOKEN)));
+        assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
+        assertThat(enrollment.getRecoveryCode(), is(nullValue()));
+        assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
+    }
+
+    @Test
+    public void shouldEnrollSucessfullySyncWithNullTOTP() throws Exception {
+        Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
+                TENANT, USER, DEVICE_TOKEN, RECOVERY_CODE, null, null, null, null);
+        when(request.execute())
+                .thenReturn(enrollmentResponse);
+
+        Enrollment enrollment = enrollRequest
+                .execute();
+
+        assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
+        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
+        assertThat(enrollment.getUser(), is(equalTo(USER)));
+        assertThat(enrollment.getPeriod(), is(nullValue()));
+        assertThat(enrollment.getDigits(), is(nullValue()));
+        assertThat(enrollment.getAlgorithm(), is(nullValue()));
+        assertThat(enrollment.getSecret(), is(nullValue()));
+        assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
+        assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_IDENTIFIER)));
+        assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
+        assertThat(enrollment.getGCMToken(), is(equalTo(GCM_TOKEN)));
+        assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
+        assertThat(enrollment.getRecoveryCode(), is(RECOVERY_CODE));
+        assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
+    }
+
+    @Test
+    public void shouldFailEnrollWhenRequestFailsSync() throws Exception {
         thrown.expect(Throwable.class);
 
-        when(deviceTokenRequest.execute())
+        when(request.execute())
                 .thenThrow(new RuntimeException("Error"));
 
         enrollRequest
@@ -206,41 +224,39 @@ public class EnrollRequestTest {
     }
 
     @Test
-    public void shouldFailEnrollUpdateDeviceFailsSync() throws Exception {
-        thrown.expect(Throwable.class);
-
-        when(createDeviceRequest.execute())
-                .thenThrow(new RuntimeException("Error"));
-
+    public void shouldFailEnrollWhenRequestFailsAsync() throws Exception {
         enrollRequest
-                .execute();
-    }
+                .start(callback);
 
-    @Test
-    public void shouldFailEnrollWhenDeviceTokenFailsAsync() throws Exception {
-        enrollRequest
-                .start(enrollmentCallback);
-
-        verify(deviceTokenRequest).start(deviceTokenCallbackCaptor.capture());
-        deviceTokenCallbackCaptor.getValue()
+        verify(request).start(callbackCaptor.capture());
+        callbackCaptor.getValue()
                 .onFailure(new RuntimeException("Error"));
 
-        verify(enrollmentCallback).onFailure(any(Throwable.class));
+        verify(callback).onFailure(any(Throwable.class));
     }
 
-    @Test
-    public void shouldFailEnrollWhenUpdateDeviceFailsAsync() throws Exception {
-        enrollRequest
-                .start(enrollmentCallback);
-
-        verify(deviceTokenRequest).start(deviceTokenCallbackCaptor.capture());
-        deviceTokenCallbackCaptor.getValue()
-                .onSuccess(DEVICE_TOKEN);
-
-        verify(createDeviceRequest).start(deviceCallbackCaptor.capture());
-        deviceCallbackCaptor.getValue()
-                .onFailure(new RuntimeException("Error"));
-
-        verify(enrollmentCallback).onFailure(any(Throwable.class));
+    private Map<String, Object> createEnrollmentResponse(String id, String url, String issuer,
+                                                         String user, String token,
+                                                         String recoveryCode,
+                                                         String totpSecret, String totpAlgorithm,
+                                                         Integer totpPeriod, Integer totpDigits) {
+        Map<String, Object> enrollmentResponse = new HashMap<>();
+        enrollmentResponse.put("id", id);
+        enrollmentResponse.put("url", url);
+        enrollmentResponse.put("issuer", issuer);
+        enrollmentResponse.put("user", user);
+        enrollmentResponse.put("token", token);
+        if (recoveryCode != null) {
+            enrollmentResponse.put("recovery_code", recoveryCode);
+        }
+        if (totpSecret != null || totpAlgorithm != null || totpPeriod != null || totpDigits != null) {
+            Map<String, Object> totp = new HashMap<>();
+            totp.put("secret", totpSecret);
+            totp.put("algorithm", totpAlgorithm);
+            totp.put("digits", totpDigits.doubleValue());
+            totp.put("period", totpPeriod.doubleValue());
+            enrollmentResponse.put("totp", totp);
+        }
+        return enrollmentResponse;
     }
 }
