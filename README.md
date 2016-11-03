@@ -58,17 +58,28 @@ That's all you need to setup your own instance of `Guardian`
 
 An enrollment is a link between the second factor and an Auth0 account. When an account is enrolled
 you'll need the enrollment data to provide the second factor required to verify the
-identity.
+identity. You can create an enrolment using the guardian instance you just created.
 
-You can create an enrolment using the guardian instance you just created.
-First you'll need to obtain the enrollment info by scanning the Guardian QR code, and then you use
-the `enroll` method like this:
+First you'll need to obtain the enrollment info by scanning a Guardian QR code or obtaining an
+enrollment ticket by email for example.
+
+Next you'll have to create a new pair of RSA keys for the new enrollment. The private key will be
+used to sign the requests to allow or reject a login. The public key will be sent during the enroll
+process so the server can later verify the request's signature.
 
 ```java
-Uri enrollmentUriFromQr = ...; // the URI obtained from a Guardian QR code
+KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+keyPairGenerator.initialize(2048); // you should use at least 2048 bit keys
+KeyPair keyPair = keyPairGenerator.generateKeyPair();
+```
+
+Then you just use the `enroll` method like this:
+
+```java
+String enrollmentDataFromQrOrTicket = ...; // the data from a Guardian QR code or enrollment ticket
 
 Enrollment enrollment = guardian
-        .enroll(enrollmentUriFromQr, "deviceName", "gcmToken")
+        .enroll(enrollmentDataFromQrOrTicket, "deviceName", "gcmToken", keyPair)
         .execute();
 ```
 
@@ -76,7 +87,7 @@ or you can also execute the request in a background thread
 
 ```java
 guardian
-        .enroll(enrollmentUriFromQr, "deviceName", "gcmToken")
+        .enroll(enrollmentUriFromQr, "deviceName", "gcmToken", keyPair)
         .start(new Callback<Enrollment> {
             @Override
             void onSuccess(Enrollment enrollment) {
@@ -120,6 +131,9 @@ instance ready to be used.
 // at the GCM listener you receive a Bundle
 Notification notification = Guardian.parseNotification(bundle);
 ```
+
+> If the `Bundle` you receive is not a Guardian notification this method will return null, so you
+> should check before using it.
 
 Once you have the notification instance, you can easily allow the authentication request by using
 the `allow` method. You'll also need the enrollment that you obtained previously.

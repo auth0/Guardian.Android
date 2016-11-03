@@ -106,8 +106,14 @@ public class Guardian implements Parcelable {
     @NonNull
     public GuardianAPIRequest<Void> allow(@NonNull Notification notification,
                                           @NonNull Enrollment enrollment) {
-        return client
-                .allow(notification.getTransactionToken(), getOTPCode(enrollment));
+        if (notification.getChallenge() != null) {
+            return client
+                    .allow(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
+                            notification.getChallenge(), enrollment.getSigningKey());
+        } else {
+            return client
+                    .allow(notification.getTransactionToken(), getOTPCode(enrollment));
+        }
     }
 
     /**
@@ -124,8 +130,14 @@ public class Guardian implements Parcelable {
     public GuardianAPIRequest<Void> reject(@NonNull Notification notification,
                                            @NonNull Enrollment enrollment,
                                            @Nullable String reason) {
-        return client
-                .reject(notification.getTransactionToken(), getOTPCode(enrollment), reason);
+        if (notification.getChallenge() != null) {
+            return client
+                    .reject(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
+                            notification.getChallenge(), enrollment.getSigningKey(), reason);
+        } else {
+            return client
+                    .reject(notification.getTransactionToken(), getOTPCode(enrollment), reason);
+        }
     }
 
     /**
@@ -150,11 +162,10 @@ public class Guardian implements Parcelable {
      * Parses the Bundle received from the GCM push notification into a Notification
      *
      * @param pushNotificationPayload the GCM payload Bundle
-     * @return the parsed data
-     * @throws IllegalArgumentException when the push notification is not a valid Guardian
-     *                                  notification
+     * @return the parsed data, or null if the push notification is not a valid Guardian
+     * notification
      */
-    @NonNull
+    @Nullable
     public static ParcelableNotification parseNotification(@NonNull Bundle pushNotificationPayload) {
         return ParcelableNotification.parse(pushNotificationPayload);
     }

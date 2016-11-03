@@ -46,6 +46,9 @@ dependencies {
     //Robolectric
     testCompile 'org.robolectric:robolectric:3.1.2'
 
+    // JWT verification
+    testCompile 'com.auth0:java-jwt:2.2.1'
+
     testCompile 'junit:junit:4.12'
 }
 
