@@ -100,11 +100,10 @@ public class ParcelableNotification implements Notification, Parcelable {
      * Parses the Bundle received from the GCM push notification into a ParcelableNotification
      *
      * @param pushNotificationPayload the GCM payload Bundle
-     * @return the parsed data
-     * @throws IllegalArgumentException when the push notification is not a valid Guardian
-     *                                  notification
+     * @return the parsed data, or null if the push notification is not a valid Guardian
+     * notification
      */
-    @NonNull
+    @Nullable
     public static ParcelableNotification parse(@NonNull Bundle pushNotificationPayload) {
         String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
         String enrollmentId = pushNotificationPayload.getString(ENROLLMENT_ID_KEY);
@@ -112,8 +111,7 @@ public class ParcelableNotification implements Notification, Parcelable {
         Date date = parseDate(pushNotificationPayload);
 
         if (hostname == null || enrollmentId == null || transactionToken == null || date == null) {
-            throw new IllegalArgumentException(
-                    "Push notification doesn't seem to be a Guardian authentication request");
+            return null;
         }
 
         HttpUrl url = parseHostname(hostname);

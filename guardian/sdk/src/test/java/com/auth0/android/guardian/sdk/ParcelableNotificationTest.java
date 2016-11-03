@@ -27,9 +27,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
@@ -66,9 +64,6 @@ public class ParcelableNotificationTest {
     private static final Double LATITUDE = 56.87;
     private static final Double LONGITUDE = 34.34;
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Mock
     PrivateKey privateKey;
 
@@ -96,6 +91,7 @@ public class ParcelableNotificationTest {
         assertThat(notification.getLocation(), is(equalTo(LOCATION)));
         assertThat(notification.getLatitude(), is(equalTo(LATITUDE)));
         assertThat(notification.getLongitude(), is(equalTo(LONGITUDE)));
+        assertThat(notification.getChallenge(), is(equalTo(CHALLENGE)));
     }
 
     @Test
@@ -124,6 +120,7 @@ public class ParcelableNotificationTest {
         assertThat(notification.getLocation(), is(equalTo(LOCATION)));
         assertThat(notification.getLatitude(), is(equalTo(LATITUDE)));
         assertThat(notification.getLongitude(), is(equalTo(LONGITUDE)));
+        assertThat(notification.getChallenge(), is(equalTo(CHALLENGE)));
     }
 
     @Test
@@ -150,6 +147,7 @@ public class ParcelableNotificationTest {
         assertThat(notification.getLocation(), is(equalTo(LOCATION)));
         assertThat(notification.getLatitude(), is(nullValue()));
         assertThat(notification.getLongitude(), is(nullValue()));
+        assertThat(notification.getChallenge(), is(nullValue()));
     }
 
     @Test
@@ -169,39 +167,39 @@ public class ParcelableNotificationTest {
     }
 
     @Test
-    public void shouldFailIfThereIsNoHostname() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-
+    public void shouldReturnNullIfThereIsNoHostname() throws Exception {
         Bundle data = createPushNotificationPayload(null, DEVICE_ID, TRANSACTION_TOKEN, new Date());
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(nullValue()));
     }
 
     @Test
-    public void shouldFailIfThereIsNoDeviceId() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-
+    public void shouldReturnNullIfThereIsNoDeviceId() throws Exception {
         Bundle data = createPushNotificationPayload(HOSTNAME, null, TRANSACTION_TOKEN, new Date());
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(nullValue()));
     }
 
     @Test
-    public void shouldFailIfThereIsNoTransactionToken() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-
+    public void shouldReturnNullIfThereIsNoTransactionToken() throws Exception {
         Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, null, new Date());
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(nullValue()));
     }
 
     @Test
-    public void shouldFailIfThereIsNoDate() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-
+    public void shouldReturnNullIfThereIsNoDate() throws Exception {
         Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, null);
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(nullValue()));
     }
 
     private Bundle createPushNotificationPayload(String hostname,
