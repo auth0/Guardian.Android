@@ -81,10 +81,6 @@ public class GuardianAPIClient {
                                                           @NonNull String deviceName,
                                                           @NonNull String gcmToken,
                                                           @NonNull PublicKey publicKey) {
-        if (!(publicKey instanceof RSAPublicKey)) {
-            throw new IllegalArgumentException("Only RSA keys are supported");
-        }
-        RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
         Type type = new TypeToken<Map<String, Object>>() {}.getType();
         return requestFactory
                 .<Map<String, Object>>newRequest("POST", baseUrl.resolve("api/enroll"), type)
@@ -92,10 +88,14 @@ public class GuardianAPIClient {
                 .setParameter("identifier", deviceIdentifier)
                 .setParameter("name", deviceName)
                 .setParameter("push_credentials", createPushCredentials(gcmToken))
-                .setParameter("public_key", createJWK(rsaPublicKey));
+                .setParameter("public_key", createJWK(publicKey));
     }
 
-    private static Map<String, String> createJWK(@NonNull RSAPublicKey rsaPublicKey) {
+    private static Map<String, String> createJWK(@NonNull PublicKey publicKey) {
+        if (!(publicKey instanceof RSAPublicKey)) {
+            throw new IllegalArgumentException("Only RSA keys are supported");
+        }
+        RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
         Map<String, String> jwk = new HashMap<>(5);
         jwk.put("kty", "RSA");
         jwk.put("alg", "RS256");

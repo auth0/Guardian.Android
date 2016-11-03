@@ -154,7 +154,7 @@ class GuardianEnrollment implements Enrollment {
 
     @NonNull
     @Override
-    public PrivateKey getPrivateKey() {
+    public PrivateKey getSigningKey() {
         return privateKey;
     }
 }

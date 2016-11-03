@@ -96,7 +96,7 @@ public class MyEnrollment implements Enrollment, Parcelable {
         this.deviceGCMToken = enrollment.getGCMToken();
         this.deviceToken = enrollment.getDeviceToken();
         this.recoveryCode = enrollment.getRecoveryCode();
-        this.privateKey = Base64.encodeToString(enrollment.getPrivateKey().getEncoded(), Base64.DEFAULT);
+        this.privateKey = Base64.encodeToString(enrollment.getSigningKey().getEncoded(), Base64.DEFAULT);
     }
 
     @NonNull
@@ -174,7 +174,7 @@ public class MyEnrollment implements Enrollment, Parcelable {
 
     @NonNull
     @Override
-    public PrivateKey getPrivateKey() {
+    public PrivateKey getSigningKey() {
         try {
             byte[] key = Base64.decode(privateKey, Base64.DEFAULT);
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");

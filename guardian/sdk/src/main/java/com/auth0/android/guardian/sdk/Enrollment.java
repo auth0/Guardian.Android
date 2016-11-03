@@ -153,5 +153,5 @@ public interface Enrollment {
      * @return the RSA private key
      */
     @NonNull
-    PrivateKey getPrivateKey();
+    PrivateKey getSigningKey();
 }

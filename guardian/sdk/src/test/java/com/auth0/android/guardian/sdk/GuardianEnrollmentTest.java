@@ -76,6 +76,6 @@ public class GuardianEnrollmentTest {
         assertThat(enrollment.getGCMToken(), is(equalTo(DEVICE_GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
-        assertThat(enrollment.getPrivateKey(), is(sameInstance(privateKey)));
+        assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
     }
 }
