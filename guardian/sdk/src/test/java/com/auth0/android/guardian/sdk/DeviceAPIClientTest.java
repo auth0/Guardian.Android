@@ -43,12 +43,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.RecordedRequest;
 
 import static com.auth0.android.guardian.sdk.utils.CallbackMatcher.hasNoError;
-import static com.auth0.android.guardian.sdk.utils.CallbackMatcher.hasPayloadOfType;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class DeviceAPIClientTest {
 
@@ -102,40 +101,10 @@ public class DeviceAPIClientTest {
     }
 
     @Test
-    public void shouldCreateDevice() throws Exception {
-        mockAPI.willReturnDeviceAccount(DEVICE_ID, DEVICE_IDENTIFIER, DEVICE_NAME, PUSH_SERVICE, PUSH_TOKEN);
-
-        final MockCallback<Device> callback = new MockCallback<>();
-
-        apiClient
-                .create(DEVICE_IDENTIFIER, DEVICE_NAME, PUSH_TOKEN)
-                .start(callback);
-
-        RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo(String.format("/api/device-accounts/%s", DEVICE_ID))));
-        assertThat(request.getMethod(), is(equalTo("PATCH")));
-        assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + DEVICE_ACCOUNT_TOKEN)));
-
-        Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasEntry("identifier", (Object) DEVICE_IDENTIFIER));
-        assertThat(body, hasEntry("name", (Object) DEVICE_NAME));
-        assertThat(body, hasKey("push_credentials"));
-        assertThat(body.size(), is(equalTo(3)));
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> pushCredentials = (Map<String, Object>) body.get("push_credentials");
-        assertThat(pushCredentials, hasEntry("service", (Object) "GCM"));
-        assertThat(pushCredentials, hasEntry("token", (Object) PUSH_TOKEN));
-        assertThat(pushCredentials.size(), is(equalTo(2)));
-
-        assertThat(callback, hasPayloadOfType(Device.class));
-    }
-
-    @Test
     public void shouldUpdateDevice() throws Exception {
         mockAPI.willReturnDeviceAccount(DEVICE_ID, DEVICE_IDENTIFIER, DEVICE_NAME, PUSH_SERVICE, PUSH_TOKEN);
 
-        final MockCallback<Device> callback = new MockCallback<>();
+        final MockCallback<Map<String, Object>> callback = new MockCallback<>();
 
         apiClient
                 .update(DEVICE_IDENTIFIER, DEVICE_NAME, PUSH_TOKEN)
@@ -157,15 +126,13 @@ public class DeviceAPIClientTest {
         assertThat(pushCredentials, hasEntry("service", (Object) "GCM"));
         assertThat(pushCredentials, hasEntry("token", (Object) PUSH_TOKEN));
         assertThat(pushCredentials.size(), is(equalTo(2)));
-
-        assertThat(callback, hasPayloadOfType(Device.class));
     }
 
     @Test
     public void shouldUpdateIdentifier() throws Exception {
         mockAPI.willReturnDeviceAccount(DEVICE_ID, DEVICE_IDENTIFIER, DEVICE_NAME, PUSH_SERVICE, PUSH_TOKEN);
 
-        final MockCallback<Device> callback = new MockCallback<>();
+        final MockCallback<Map<String, Object>> callback = new MockCallback<>();
 
         apiClient
                 .update(DEVICE_IDENTIFIER, null, null)
@@ -179,15 +146,13 @@ public class DeviceAPIClientTest {
         Map<String, Object> body = bodyFromRequest(request);
         assertThat(body, hasEntry("identifier", (Object) DEVICE_IDENTIFIER));
         assertThat(body.size(), is(equalTo(1)));
-
-        assertThat(callback, hasPayloadOfType(Device.class));
     }
 
     @Test
     public void shouldUpdateName() throws Exception {
         mockAPI.willReturnDeviceAccount(DEVICE_ID, DEVICE_IDENTIFIER, DEVICE_NAME, PUSH_SERVICE, PUSH_TOKEN);
 
-        final MockCallback<Device> callback = new MockCallback<>();
+        final MockCallback<Map<String, Object>> callback = new MockCallback<>();
 
         apiClient
                 .update(null, DEVICE_NAME, null)
@@ -201,15 +166,13 @@ public class DeviceAPIClientTest {
         Map<String, Object> body = bodyFromRequest(request);
         assertThat(body, hasEntry("name", (Object) DEVICE_NAME));
         assertThat(body.size(), is(equalTo(1)));
-
-        assertThat(callback, hasPayloadOfType(Device.class));
     }
 
     @Test
     public void shouldUpdateGCMToken() throws Exception {
         mockAPI.willReturnDeviceAccount(DEVICE_ID, DEVICE_IDENTIFIER, DEVICE_NAME, PUSH_SERVICE, PUSH_TOKEN);
 
-        final MockCallback<Device> callback = new MockCallback<>();
+        final MockCallback<Map<String, Object>> callback = new MockCallback<>();
 
         apiClient
                 .update(null, null, PUSH_TOKEN)
@@ -229,8 +192,6 @@ public class DeviceAPIClientTest {
         assertThat(pushCredentials, hasEntry("service", (Object) "GCM"));
         assertThat(pushCredentials, hasEntry("token", (Object) PUSH_TOKEN));
         assertThat(pushCredentials.size(), is(equalTo(2)));
-
-        assertThat(callback, hasPayloadOfType(Device.class));
     }
 
     private Map<String, Object> bodyFromRequest(RecordedRequest request) throws IOException {

@@ -74,15 +74,6 @@ public class GuardianTest {
     GuardianAPIRequest<Map<String, Object>> mockEnrollRequest;
 
     @Mock
-    Device device;
-
-    @Mock
-    GuardianAPIRequest<String> stringRequest;
-
-    @Mock
-    GuardianAPIRequest<Device> deviceRequest;
-
-    @Mock
     DeviceAPIClient deviceApiClient;
 
     @Mock
@@ -174,23 +165,6 @@ public class GuardianTest {
     }
 
     @Test
-    public void shouldCallAllow() throws Exception {
-        String otpCode = guardian.getOTPCode(enrollment);
-
-        @SuppressWarnings("unchecked")
-        GuardianAPIRequest<Void> mockRequest = mock(GuardianAPIRequest.class);
-        when(apiClient.allow(TRANSACTION_TOKEN, otpCode))
-                .thenReturn(mockRequest);
-
-        GuardianAPIRequest<Void> request = guardian.allow(notification, enrollment);
-
-        verify(apiClient)
-                .allow(TRANSACTION_TOKEN, otpCode);
-
-        assertThat(request, is(sameInstance(mockRequest)));
-    }
-
-    @Test
     public void shouldCallAllowWithPrivateKey() throws Exception {
         when(notification.getChallenge())
                 .thenReturn(CHALLENGE);
@@ -209,23 +183,6 @@ public class GuardianTest {
     }
 
     @Test
-    public void shouldCallReject() throws Exception {
-        String otpCode = guardian.getOTPCode(enrollment);
-
-        @SuppressWarnings("unchecked")
-        GuardianAPIRequest<Void> mockRequest = mock(GuardianAPIRequest.class);
-        when(apiClient.reject(TRANSACTION_TOKEN, otpCode, null))
-                .thenReturn(mockRequest);
-
-        GuardianAPIRequest<Void> request = guardian.reject(notification, enrollment);
-
-        verify(apiClient)
-                .reject(TRANSACTION_TOKEN, otpCode, null);
-
-        assertThat(request, is(sameInstance(mockRequest)));
-    }
-
-    @Test
     public void shouldCallRejectWithPrivateKey() throws Exception {
         when(notification.getChallenge())
                 .thenReturn(CHALLENGE);
@@ -239,23 +196,6 @@ public class GuardianTest {
 
         verify(apiClient)
                 .reject(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey,  null);
-
-        assertThat(request, is(sameInstance(mockRequest)));
-    }
-
-    @Test
-    public void shouldCallRejectWithReason() throws Exception {
-        String otpCode = guardian.getOTPCode(enrollment);
-
-        @SuppressWarnings("unchecked")
-        GuardianAPIRequest<Void> mockRequest = mock(GuardianAPIRequest.class);
-        when(apiClient.reject(TRANSACTION_TOKEN, otpCode, "reason"))
-                .thenReturn(mockRequest);
-
-        GuardianAPIRequest<Void> request = guardian.reject(notification, enrollment, "reason");
-
-        verify(apiClient)
-                .reject(TRANSACTION_TOKEN, otpCode, "reason");
 
         assertThat(request, is(sameInstance(mockRequest)));
     }

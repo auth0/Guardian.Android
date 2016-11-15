@@ -99,6 +99,6 @@ public interface Notification {
      * The challenge sent by the server. The same challenge should be sent back when trying to
      * allow or reject an authentication request
      */
-    @Nullable
+    @NonNull
     String getChallenge();
 }

@@ -27,7 +27,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
 
-import com.auth0.android.guardian.sdk.networking.Request;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -116,7 +115,7 @@ public class GuardianAPIClient {
         return jwk;
     }
 
-    private static Map<String, String> createPushCredentials(@Nullable String gcmToken) {
+    static Map<String, String> createPushCredentials(@Nullable String gcmToken) {
         if (gcmToken == null) {
             return null;
         }
@@ -125,22 +124,6 @@ public class GuardianAPIClient {
         pushCredentials.put("service", "GCM");
         pushCredentials.put("token", gcmToken);
         return pushCredentials;
-    }
-
-    /**
-     * Returns the "device_account_token" that can be used to update the push notification settings
-     * and also to un-enroll the device account
-     * This endpoint should only be called once (when starting the enroll)
-     *
-     * @param enrollmentTransactionId the enrollment transaction id
-     * @return a request to execute
-     */
-    public GuardianAPIRequest<String> getDeviceToken(@NonNull String enrollmentTransactionId) {
-        Type type = new TypeToken<Map<String, String>>() {}.getType();
-        Request<Map<String, String>> request = requestFactory
-                .<Map<String, String>>newRequest("POST", baseUrl.resolve("api/enrollment-info"), type)
-                .setParameter("enrollment_tx_id", enrollmentTransactionId);
-        return new DeviceTokenRequest(request);
     }
 
     /**
@@ -243,58 +226,6 @@ public class GuardianAPIClient {
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
             throw new GuardianException("Unable to generate the signed JWT", e);
         }
-    }
-
-    /**
-     * Allows an authentication request
-     *
-     * @param txToken the auth transaction token
-     * @param otpCode the one time password
-     * @return a request to execute
-     * @see #reject(String, String)
-     * @see #reject(String, String, String)
-     */
-    public GuardianAPIRequest<Void> allow(@NonNull String txToken, @NonNull String otpCode) {
-        Type type = new TypeToken<Void>() {}.getType();
-        return requestFactory
-                .<Void>newRequest("POST", baseUrl.resolve("api/verify-otp"), type)
-                .setBearer(txToken)
-                .setParameter("type", "push_notification")
-                .setParameter("code", otpCode);
-    }
-
-    /**
-     * Rejects an authentication request indicating a reason
-     *
-     * @param txToken the auth transaction token
-     * @param otpCode the one time password
-     * @param reason  the reject reason
-     * @return a request to execute
-     * @see #reject(String, String)
-     * @see #allow(String, String)
-     */
-    public GuardianAPIRequest<Void> reject(@NonNull String txToken,
-                                           @NonNull String otpCode,
-                                           @Nullable String reason) {
-        Type type = new TypeToken<Void>() {}.getType();
-        return requestFactory
-                .<Void>newRequest("POST", baseUrl.resolve("api/reject-login"), type)
-                .setBearer(txToken)
-                .setParameter("code", otpCode)
-                .setParameter("reason", reason);
-    }
-
-    /**
-     * Rejects an authentication request
-     *
-     * @param txToken the auth transaction token
-     * @param otpCode the one time password
-     * @return a request to execute
-     * @see #reject(String, String, String)
-     * @see #allow(String, String)
-     */
-    public GuardianAPIRequest<Void> reject(@NonNull String txToken, @NonNull String otpCode) {
-        return reject(txToken, otpCode, null);
     }
 
     /**

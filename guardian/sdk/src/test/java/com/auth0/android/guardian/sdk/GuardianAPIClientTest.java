@@ -24,7 +24,6 @@ package com.auth0.android.guardian.sdk;
 
 import android.os.Build;
 
-import com.auth0.android.guardian.sdk.utils.CallbackMatcher;
 import com.auth0.android.guardian.sdk.utils.MockCallback;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
 import com.auth0.jwt.JWTVerifier;
@@ -77,7 +76,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class GuardianAPIClientTest {
 
     private static final String ENROLLMENT_TICKET = "ENROLLMENT_TICKET";
-    private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
     private static final String ENROLLMENT_ID = "ENROLLMENT_ID";
     private static final String DEVICE_ACCOUNT_TOKEN = "DEVICE_ACCOUNT_TOKEN";
     private static final String TX_TOKEN = "TX_TOKEN";
@@ -147,11 +145,12 @@ public class GuardianAPIClientTest {
 
     @Test
     public void shouldHaveCustomUserAgentAndLanguageHeader() throws Exception {
-        mockAPI.willReturnEnrollmentInfo(DEVICE_ACCOUNT_TOKEN);
+        mockAPI.willReturnEnrollment(ENROLLMENT_ID, ENROLLMENT_URL, ENROLLMENT_ISSUER, ENROLLMENT_USER,
+                DEVICE_ACCOUNT_TOKEN, RECOVERY_CODE, TOTP_SECRET, TOTP_ALGORITHM, TOTP_DIGITS, TOTP_PERIOD);
 
-        final MockCallback<String> callback = new MockCallback<>();
+        final MockCallback<Map<String,Object>> callback = new MockCallback<>();
 
-        apiClient.getDeviceToken(ENROLLMENT_TX_ID)
+        apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
@@ -215,48 +214,6 @@ public class GuardianAPIClientTest {
     }
 
     @Test
-    public void shouldGetDeviceToken() throws Exception {
-        mockAPI.willReturnEnrollmentInfo(DEVICE_ACCOUNT_TOKEN);
-
-        final MockCallback<String> callback = new MockCallback<>();
-
-        apiClient.getDeviceToken(ENROLLMENT_TX_ID)
-                .start(callback);
-
-        RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo("/api/enrollment-info")));
-        assertThat(request.getMethod(), is(equalTo("POST")));
-
-        Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasEntry("enrollment_tx_id", (Object) ENROLLMENT_TX_ID));
-
-        assertThat(callback, CallbackMatcher.hasPayloadOfType(String.class));
-        String deviceToken = callback.payload().call();
-        assertThat(deviceToken, is(equalTo(DEVICE_ACCOUNT_TOKEN)));
-    }
-
-    @Test
-    public void shouldAllowLogin() throws Exception {
-        mockAPI.willReturnSuccess(204);
-
-        final MockCallback<Void> callback = new MockCallback<>();
-
-        apiClient.allow(TX_TOKEN, "123456")
-                .start(callback);
-
-        RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo("/api/verify-otp")));
-        assertThat(request.getMethod(), is(equalTo("POST")));
-        assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
-
-        Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasEntry("type", (Object) "push_notification"));
-        assertThat(body, hasEntry("code", (Object) "123456"));
-
-        assertThat(callback, hasNoError());
-    }
-
-    @Test
     public void shouldAllowLoginWithPrivateKey() throws Exception {
         mockAPI.willReturnSuccess(204);
 
@@ -280,27 +237,6 @@ public class GuardianAPIClientTest {
     }
 
     @Test
-    public void shouldRejectLogin() throws Exception {
-        mockAPI.willReturnSuccess(204);
-
-        final MockCallback<Void> callback = new MockCallback<>();
-
-        apiClient.reject(TX_TOKEN, "123456", "hack")
-                .start(callback);
-
-        RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo("/api/reject-login")));
-        assertThat(request.getMethod(), is(equalTo("POST")));
-        assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
-
-        Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasEntry("code", (Object) "123456"));
-        assertThat(body, hasEntry("reason", (Object) "hack"));
-
-        assertThat(callback, hasNoError());
-    }
-
-    @Test
     public void shouldRejectLoginWithPrivateKey() throws Exception {
         mockAPI.willReturnSuccess(204);
 
@@ -319,26 +255,6 @@ public class GuardianAPIClientTest {
 
         String jwt = (String) body.get("challengeResponse");
         verifyJWT(jwt, false, "hack");
-
-        assertThat(callback, hasNoError());
-    }
-
-    @Test
-    public void shouldRejectLoginWithoutReason() throws Exception {
-        mockAPI.willReturnSuccess(204);
-
-        final MockCallback<Void> callback = new MockCallback<>();
-
-        apiClient.reject(TX_TOKEN, "123456")
-                .start(callback);
-
-        RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo("/api/reject-login")));
-        assertThat(request.getMethod(), is(equalTo("POST")));
-        assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
-
-        Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasEntry("code", (Object) "123456"));
 
         assertThat(callback, hasNoError());
     }

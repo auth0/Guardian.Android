@@ -22,15 +22,12 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.auth0.android.guardian.sdk.networking.Request;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.Map;
 
 import okhttp3.HttpUrl;
@@ -63,56 +60,23 @@ public class DeviceAPIClient {
     }
 
     /**
-     * Creates a device with the specified name and GCM token
-     * The response {@link Device} will have all the final values currently at the Guardian server.
-     *
-     * @param identifier the local identifier that uniquely identifies the android device
-     * @param name the name of the android device that will be displayed to the user in Guardian
-     * @param gcmToken the GCM token used to send notifications to the android device
-     * @return a request to execute
-     */
-    public GuardianAPIRequest<Device> create(@NonNull String identifier,
-                                             @NonNull String name,
-                                             @NonNull String gcmToken) {
-        return newEmptyUpdateRequest()
-                .setParameter("identifier", identifier)
-                .setParameter("name", name)
-                .setParameter("push_credentials", createPushCredentials(gcmToken));
-    }
-
-    /**
      * Updates identifier, name and GCM token of the device.
      * Any parameter can be null and will not be changed at the server.
-     * The response {@link Device} will have all the final values currently at the Guardian server.
+     * The response will have all the final values currently at the Guardian server.
      *
      * @param identifier the local identifier that uniquely identifies the android device
      * @param name the name of the android device that will be displayed to the user in Guardian
      * @param gcmToken the GCM token used to send notifications to the android device
      * @return a request to execute
      */
-    public GuardianAPIRequest<Device> update(@Nullable String identifier,
-                                             @Nullable String name,
-                                             @Nullable String gcmToken) {
-        return newEmptyUpdateRequest()
+    public GuardianAPIRequest<Map<String, Object>> update(@Nullable String identifier,
+                                                          @Nullable String name,
+                                                          @Nullable String gcmToken) {
+        Type type = new TypeToken<Map<String, Object>>() {}.getType();
+        return requestFactory.<Map<String, Object>>newRequest("PATCH", url, type)
+                .setBearer(token)
                 .setParameter("identifier", identifier)
                 .setParameter("name", name)
-                .setParameter("push_credentials", createPushCredentials(gcmToken));
-    }
-
-    private Request<Device> newEmptyUpdateRequest() {
-        Type type = new TypeToken<Device>() {}.getType();
-        return requestFactory.<Device>newRequest("PATCH", url, type)
-                .setBearer(token);
-    }
-
-    private static Map<String, String> createPushCredentials(@Nullable String gcmToken) {
-        if (gcmToken == null) {
-            return null;
-        }
-
-        Map<String, String> pushCredentials = new HashMap<>(2);
-        pushCredentials.put("service", "GCM");
-        pushCredentials.put("token", gcmToken);
-        return pushCredentials;
+                .setParameter("push_credentials", GuardianAPIClient.createPushCredentials(gcmToken));
     }
 }

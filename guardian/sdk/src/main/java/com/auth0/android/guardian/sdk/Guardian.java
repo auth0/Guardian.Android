@@ -106,14 +106,9 @@ public class Guardian implements Parcelable {
     @NonNull
     public GuardianAPIRequest<Void> allow(@NonNull Notification notification,
                                           @NonNull Enrollment enrollment) {
-        if (notification.getChallenge() != null) {
-            return client
-                    .allow(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
-                            notification.getChallenge(), enrollment.getSigningKey());
-        } else {
-            return client
-                    .allow(notification.getTransactionToken(), getOTPCode(enrollment));
-        }
+        return client
+                .allow(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
+                        notification.getChallenge(), enrollment.getSigningKey());
     }
 
     /**
@@ -130,14 +125,9 @@ public class Guardian implements Parcelable {
     public GuardianAPIRequest<Void> reject(@NonNull Notification notification,
                                            @NonNull Enrollment enrollment,
                                            @Nullable String reason) {
-        if (notification.getChallenge() != null) {
-            return client
-                    .reject(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
-                            notification.getChallenge(), enrollment.getSigningKey(), reason);
-        } else {
-            return client
-                    .reject(notification.getTransactionToken(), getOTPCode(enrollment), reason);
-        }
+        return client
+                .reject(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
+                        notification.getChallenge(), enrollment.getSigningKey(), reason);
     }
 
     /**
@@ -184,7 +174,21 @@ public class Guardian implements Parcelable {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
-    String getOTPCode(Enrollment enrollment) {
+    /**
+     * Returns the current OTP code for the {@link Enrollment}. This can be used for manual input,
+     * when there's no internet connection or the push notification is not received.
+     *
+     * @param enrollment the enrollment for which to generate the OTP
+     * @return the OTP code, or null if the enrollment doesn't include OTP data
+     */
+    @Nullable
+    public static String getOTPCode(Enrollment enrollment) {
+        if (enrollment.getSecret() == null
+                || enrollment.getAlgorithm() == null
+                || enrollment.getDigits() == null
+                || enrollment.getPeriod() == null) {
+            return null;
+        }
         try {
             TOTP totp = new TOTP(
                     enrollment.getAlgorithm(),
