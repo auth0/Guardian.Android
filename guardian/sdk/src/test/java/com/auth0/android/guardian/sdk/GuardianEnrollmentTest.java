@@ -60,9 +60,10 @@ public class GuardianEnrollmentTest {
 
     @Test
     public void shouldHaveCorrectData() throws Exception {
+        CurrentDevice device = new CurrentDevice(DEVICE_GCM_TOKEN, DEVICE_NAME, DEVICE_LOCAL_IDENTIFIER);
+
         Enrollment enrollment = new GuardianEnrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
-                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_LOCAL_IDENTIFIER, DEVICE_NAME,
-                DEVICE_GCM_TOKEN, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
+                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, device, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
         assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUser(), is(equalTo(USER)));
@@ -73,7 +74,7 @@ public class GuardianEnrollmentTest {
         assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
         assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_LOCAL_IDENTIFIER)));
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
-        assertThat(enrollment.getGCMToken(), is(equalTo(DEVICE_GCM_TOKEN)));
+        assertThat(enrollment.getNotificationToken(), is(equalTo(DEVICE_GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
         assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));

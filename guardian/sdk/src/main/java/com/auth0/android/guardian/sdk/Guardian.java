@@ -22,12 +22,10 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -53,22 +51,19 @@ public class Guardian implements Parcelable {
     /**
      * Creates an enroll. When successful, returns a new Enrollment that is required to allow or
      * reject authentication requests.
+     *
      * This device will now be available as a Guardian second factor.
      *
      * @param enrollmentData the enrollment URI or ticket obtained from a Guardian QR code or
      *                       enrollment email
-     * @param deviceIdentifier the local identifier that uniquely identifies the android device
-     * @param deviceName this device's name
-     * @param gcmToken the GCM token required to send push notifications to this device
-     * @param deviceKeyPair the RSA key pair to associate with the enrollment
+     * @param device         the data of the device to enroll
+     * @param deviceKeyPair  the RSA key pair to associate with the enrollment
      * @return a request to execute or start
      * @throws IllegalArgumentException when the key pair in not an RSA key pair
      */
     @NonNull
     public GuardianAPIRequest<Enrollment> enroll(@NonNull String enrollmentData,
-                                                 @NonNull String deviceIdentifier,
-                                                 @NonNull String deviceName,
-                                                 @NonNull String gcmToken,
+                                                 @NonNull CurrentDevice device,
                                                  @NonNull KeyPair deviceKeyPair) {
         final String ticket;
         final Uri uri = Uri.parse(enrollmentData);
@@ -78,8 +73,9 @@ public class Guardian implements Parcelable {
             ticket = enrollmentData;
         }
         final GuardianAPIRequest<Map<String, Object>> request = client
-                .enroll(ticket, deviceIdentifier, deviceName, gcmToken, deviceKeyPair.getPublic());
-        return new EnrollRequest(request, deviceIdentifier, deviceName, gcmToken, deviceKeyPair);
+                .enroll(ticket, device.getIdentifier(), device.getName(),
+                        device.getNotificationToken(), deviceKeyPair.getPublic());
+        return new EnrollRequest(request, device, deviceKeyPair);
     }
 
     /**
@@ -100,7 +96,7 @@ public class Guardian implements Parcelable {
      * Allows an authentication request
      *
      * @param notification the (parsed) push notification received
-     * @param enrollment the enrollment to whom the notification corresponds
+     * @param enrollment   the enrollment to whom the notification corresponds
      * @return a request to execute or start
      */
     @NonNull
@@ -115,11 +111,10 @@ public class Guardian implements Parcelable {
      * Rejects an authentication request
      *
      * @param notification the (parsed) push notification received
-     * @param enrollment the enrollment to whom the notification corresponds
-     * @param reason the reject reason
+     * @param enrollment   the enrollment to whom the notification corresponds
+     * @param reason       the reject reason
      * @return a request to execute or start
      * @see #reject(Notification, Enrollment)
-     * @throws IllegalArgumentException when the enrollment's TOTP data is not valid
      */
     @NonNull
     public GuardianAPIRequest<Void> reject(@NonNull Notification notification,
@@ -134,7 +129,7 @@ public class Guardian implements Parcelable {
      * Rejects an authentication request
      *
      * @param notification the (parsed) push notification received
-     * @param enrollment the enrollment to whom the notification corresponds
+     * @param enrollment   the enrollment to whom the notification corresponds
      * @return a request to execute or start
      * @see #reject(Notification, Enrollment, String)
      */
@@ -158,20 +153,6 @@ public class Guardian implements Parcelable {
     @Nullable
     public static ParcelableNotification parseNotification(@NonNull Bundle pushNotificationPayload) {
         return ParcelableNotification.parse(pushNotificationPayload);
-    }
-
-    /**
-     * Returns the value of {@link Settings.Secure#ANDROID_ID}.
-     * The identifier consists of a 64bit number (as a hex string) that is randomly generated when
-     * the user first sets up the device and should remain constant for the lifetime of the user's
-     * device. The value may change if a factory reset is performed on the device.
-     *
-     * @param context an Android context
-     * @return an identifier
-     */
-    @NonNull
-    public static String getDefaultDeviceIdentifier(Context context) {
-        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
     /**

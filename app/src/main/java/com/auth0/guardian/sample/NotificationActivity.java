@@ -51,13 +51,13 @@ public class NotificationActivity extends AppCompatActivity {
     private TextView dateText;
 
     private Guardian guardian;
-    private MyEnrollment enrollment;
+    private ParcelableEnrollment enrollment;
     private ParcelableNotification notification;
 
     static Intent getStartIntent(@NonNull Context context,
                                  @NonNull Guardian guardian,
                                  @NonNull ParcelableNotification notification,
-                                 @NonNull MyEnrollment enrollment) {
+                                 @NonNull ParcelableEnrollment enrollment) {
         if (!enrollment.getId().equals(notification.getEnrollmentId())) {
             final String message = String.format("Notification doesn't match enrollment (%s != %s)",
                     notification.getEnrollmentId(), enrollment.getId());
@@ -131,7 +131,7 @@ public class NotificationActivity extends AppCompatActivity {
     private void rejectRequested() {
         guardian
                 .reject(notification, enrollment)
-                .start(new GuardianCallback<>(this,
+                .start(new DialogCallback<>(this,
                         R.string.progress_title_please_wait,
                         R.string.progress_message_reject,
                         new Callback<Void>() {
@@ -150,7 +150,7 @@ public class NotificationActivity extends AppCompatActivity {
     private void allowRequested() {
         guardian
                 .allow(notification, enrollment)
-                .start(new GuardianCallback<>(this,
+                .start(new DialogCallback<>(this,
                         R.string.progress_title_please_wait,
                         R.string.progress_message_allow,
                         new Callback<Void>() {

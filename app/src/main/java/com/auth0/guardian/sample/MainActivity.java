@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
 
     private EventBus eventBus;
     private Guardian guardian;
-    private MyEnrollment enrollment;
+    private ParcelableEnrollment enrollment;
     private String gcmToken;
 
     public static Intent getStartIntent(@NonNull Context context,
@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
         SharedPreferences sharedPreferences = getSharedPreferences(PREFS_FILE, MODE_PRIVATE);
         String enrollmentJSON = sharedPreferences.getString(ENROLLMENT, null);
         if (enrollmentJSON != null) {
-            enrollment = MyEnrollment.fromJSON(enrollmentJSON);
+            enrollment = ParcelableEnrollment.fromJSON(enrollmentJSON);
             updateUI();
 
             ParcelableNotification notification = getIntent().getParcelableExtra(NOTIFICATION);
@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == ENROLL_REQUEST) {
             if (resultCode == RESULT_OK) {
-                MyEnrollment enrollment = data.getParcelableExtra(GuardianUI.ENROLLMENT);
+                ParcelableEnrollment enrollment = data.getParcelableExtra(Constants.ENROLLMENT);
                 updateEnrollment(enrollment);
             }
         } else {
@@ -180,13 +180,14 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
     }
 
     private void onEnrollRequested() {
-        GuardianUI.from(guardian)
-                .showEnroll(this, deviceNameText.getText().toString(), gcmToken, ENROLL_REQUEST);
+        Intent enrollIntent = EnrollActivity
+                .getStartIntent(this, guardian, deviceNameText.getText().toString(), gcmToken);
+        startActivityForResult(enrollIntent, ENROLL_REQUEST);
     }
 
     private void onUnEnrollRequested() {
         guardian.delete(enrollment)
-                .start(new GuardianCallback<>(this,
+                .start(new DialogCallback<>(this,
                         R.string.progress_title_please_wait,
                         R.string.progress_message_unenroll,
                         new Callback<Void>() {
@@ -208,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
                         }));
     }
 
-    private void updateEnrollment(MyEnrollment enrollment) {
+    private void updateEnrollment(ParcelableEnrollment enrollment) {
         SharedPreferences sharedPreferences = getSharedPreferences(PREFS_FILE, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(ENROLLMENT, enrollment != null ? enrollment.toJSON() : null);
@@ -220,8 +221,9 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
     }
 
     private void onPushNotificationReceived(ParcelableNotification notification) {
-        GuardianUI.from(guardian)
-                .showNotification(this, notification, enrollment);
+        Intent intent = NotificationActivity
+                .getStartIntent(this, guardian, notification, enrollment);
+        startActivity(intent);
     }
 
     @Override

@@ -3,11 +3,15 @@
 [![CI Status](https://travis-ci.com/auth0/GuardianSDK.Android.svg?token=R3xUbi1dnaoneyhnspcr&branch=master)](https://travis-ci.com/auth0/GuardianSDK.Android)
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat)](http://doge.mit-license.org)
 
-[Guardian](https://auth0.com/docs/multifactor-authentication/guardian) is Auth0's multifactor
+[Guardian](https://auth0.com/docs/multifactor-authentication/guardian) is Auth0's multi-factor
 authentication (MFA) service that provides a simple, safe way for you to implement MFA.
 
 [Auth0](https://auth0.com) is an authentication broker that supports social identity providers as
 well as enterprise identity providers such as Active Directory, LDAP, Google Apps and Salesforce.
+
+This SDK allows you to integrate Auth0's Guardian multi-factor service in your own app, transforming
+it in the second factor itself. Your users will get all the benefits of our frictionless
+multi-factor authentication from your app.
 
 ## Requirements
 
@@ -15,9 +19,9 @@ Android API level 15+ is required in order to use Guardian.
 
 ## Before getting started
 
-This SDK allows you to integrate Auth0's Guardian multifactor service in your own app, transforming it in the second factor itself.
-
-For this to work you have to configure your tenant's Guardian service with your push notification settings, otherwise you would not receive any push notifications. Please read the [docs](https://auth0.com/docs/multifactor-authentication/guardian) about how you can accomplish that.
+To use this SDK you have to configure your tenant's Guardian service with your own push notification
+credentials, otherwise you would not receive any push notifications. Please read the
+[docs](https://auth0.com/docs/multifactor-authentication/guardian) about how to accomplish that.
 
 ##Install
 
@@ -57,8 +61,8 @@ That's all you need to setup your own instance of `Guardian`
 ### Enroll
 
 An enrollment is a link between the second factor and an Auth0 account. When an account is enrolled
-you'll need the enrollment data to provide the second factor required to verify the
-identity. You can create an enrolment using the guardian instance you just created.
+you'll need the enrollment data to provide the second factor required to verify the identity. You
+can create an enrolment using the guardian instance you just created.
 
 First you'll need to obtain the enrollment info by scanning a Guardian QR code or obtaining an
 enrollment ticket by email for example.
@@ -76,10 +80,12 @@ KeyPair keyPair = keyPairGenerator.generateKeyPair();
 Then you just use the `enroll` method like this:
 
 ```java
+CurrentDevice device = new CurrentDevice(context, "gcmToken", "deviceName");
+
 String enrollmentDataFromQrOrTicket = ...; // the data from a Guardian QR code or enrollment ticket
 
 Enrollment enrollment = guardian
-        .enroll(enrollmentDataFromQrOrTicket, "deviceName", "gcmToken", keyPair)
+        .enroll(enrollmentDataFromQrOrTicket, device, keyPair)
         .execute();
 ```
 
@@ -101,10 +107,12 @@ guardian
         });
 ```
 
-The `deviceName` and `gcmToken` are data that you must provide. The `deviceName` is the name that
-you want for the enrollment. It will be displayed to the user when the second factor is required.
+The `deviceName` and `gcmToken` are data that you must provide:
 
-The GCM token is the token for Google's GCM push notification service. In case your app is not yet
+- The `deviceName` is the name that you want for the enrollment. It will be displayed to the user
+when the second factor is required.
+
+- The GCM token is the token for Google's GCM push notification service. In case your app is not yet
 using GCM or you're not familiar with it, you should check their
 [docs](https://developers.google.com/cloud-messaging/android/client#sample-register).
 
@@ -129,11 +137,20 @@ instance ready to be used.
 
 ```java
 // at the GCM listener you receive a Bundle
-Notification notification = Guardian.parseNotification(bundle);
+@Override
+public void onMessageReceived(String from, Bundle data) {
+    Notification notification = Guardian.parseNotification(data);
+    if (notification != null) {
+        handleGuardianNotification(notification);
+        return;
+    }
+
+    /* Handle other push notifications you might be using ... */
+}
 ```
 
 > If the `Bundle` you receive is not a Guardian notification this method will return null, so you
-> should check before using it.
+> should always check before using it.
 
 Once you have the notification instance, you can easily allow the authentication request by using
 the `allow` method. You'll also need the enrollment that you obtained previously.

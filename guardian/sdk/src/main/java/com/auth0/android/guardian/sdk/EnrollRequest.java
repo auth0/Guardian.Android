@@ -45,20 +45,14 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
     private final static String KEY_DIGITS = "digits";
 
     final GuardianAPIRequest<Map<String, Object>> request;
-    final String deviceIdentifier;
-    final String deviceName;
-    final String gcmToken;
+    final CurrentDevice device;
     final KeyPair deviceKeyPair;
 
     EnrollRequest(@NonNull GuardianAPIRequest<Map<String, Object>> request,
-                  @NonNull String deviceIdentifier,
-                  @NonNull String deviceName,
-                  @NonNull String gcmToken,
+                  @NonNull CurrentDevice device,
                   @NonNull KeyPair deviceKeyPair) {
         this.request = request;
-        this.deviceIdentifier = deviceIdentifier;
-        this.deviceName = deviceName;
-        this.gcmToken = gcmToken;
+        this.device = device;
         this.deviceKeyPair = deviceKeyPair;
     }
 
@@ -114,7 +108,6 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
         }
 
         return new GuardianEnrollment(url, issuer, user, totpPeriod, totpDigits, totpAlgorithm,
-                totpSecret, enrollmentId, deviceIdentifier, deviceName, gcmToken, deviceToken,
-                recoveryCode, deviceKeyPair.getPrivate());
+                totpSecret, enrollmentId, device, deviceToken, recoveryCode, deviceKeyPair.getPrivate());
     }
 }
