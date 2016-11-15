@@ -90,6 +90,7 @@ public class GuardianAPIClientTest {
     private static final String DEVICE_IDENTIFIER = "DEVICE_IDENTIFIER";
     private static final String DEVICE_NAME = "DEVICE_NAME";
     private static final String GCM_TOKEN = "GCM_TOKEN";
+    private static final byte[] PUBLIC_KEY_EXPONENT = new byte[]{ 0x01, 0x00, 0x01 };
     private static final byte[] PUBLIC_KEY_MODULUS = new byte[]{
             1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
             1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
@@ -121,6 +122,8 @@ public class GuardianAPIClientTest {
 
         when(publicKey.getModulus())
                 .thenReturn(new BigInteger(PUBLIC_KEY_MODULUS));
+        when(publicKey.getPublicExponent())
+                .thenReturn(new BigInteger(PUBLIC_KEY_EXPONENT));
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
@@ -320,7 +323,6 @@ public class GuardianAPIClientTest {
         }
         assertThat(payload, hasKey("iat"));
         assertThat(payload, hasKey("exp"));
-        assertThat(payload, hasKey("jti"));
 
         Integer iat = (Integer) payload.get("iat");
         Integer exp = (Integer) payload.get("exp");

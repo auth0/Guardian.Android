@@ -39,7 +39,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
@@ -56,7 +55,6 @@ import okhttp3.Response;
 public class GuardianAPIClient {
 
     private static final int JWT_EXP_SECS = 30;
-    private static final int JWT_BASE64_FLAGS = Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING;
 
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
@@ -109,10 +107,13 @@ public class GuardianAPIClient {
         jwk.put("kty", "RSA");
         jwk.put("alg", "RS256");
         jwk.put("use", "sig");
-        jwk.put("e", "AQAB");
-        jwk.put("n", Base64.encodeToString(rsaPublicKey.getModulus().toByteArray(),
-                Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP));
+        jwk.put("e", base64UrlSafeEncode(rsaPublicKey.getPublicExponent().toByteArray()));
+        jwk.put("n", base64UrlSafeEncode(rsaPublicKey.getModulus().toByteArray()));
         return jwk;
+    }
+
+    private static String base64UrlSafeEncode(byte[] bytes) {
+        return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
     }
 
     static Map<String, String> createPushCredentials(@Nullable String gcmToken) {
@@ -205,24 +206,20 @@ public class GuardianAPIClient {
             claims.put("aud", getUrl());
             claims.put("iss", deviceIdentifier);
             claims.put("sub", challenge);
-            byte[] nonce = new byte[16];
-            new SecureRandom().nextBytes(nonce);
-            claims.put("jti", Base64.encodeToString(nonce, JWT_BASE64_FLAGS));
             claims.put("auth0.guardian.method", "push");
             claims.put("auth0.guardian.accepted", accepted);
             if (reason != null) {
                 claims.put("auth0.guardian.reason", reason);
             }
             Gson gson = new GsonBuilder().create();
-            String headerAndPayload =
-                    Base64.encodeToString(gson.toJson(headers).getBytes(), JWT_BASE64_FLAGS) + "."
-                            + Base64.encodeToString(gson.toJson(claims).getBytes(), JWT_BASE64_FLAGS);
+            String headerAndPayload = base64UrlSafeEncode(gson.toJson(headers).getBytes())
+                    + "." + base64UrlSafeEncode(gson.toJson(claims).getBytes());
             final byte[] messageBytes = headerAndPayload.getBytes();
             final Signature signer = Signature.getInstance("SHA256withRSA", "BC");
             signer.initSign(privateKey);
             signer.update(messageBytes);
             byte[] signature = signer.sign();
-            return headerAndPayload + "." + Base64.encodeToString(signature, JWT_BASE64_FLAGS);
+            return headerAndPayload + "." + base64UrlSafeEncode(signature);
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
             throw new GuardianException("Unable to generate the signed JWT", e);
         }
