@@ -76,7 +76,7 @@ public class ParcelableNotificationTest {
     public void shouldHaveCorrectDataAfterParse() throws Exception {
         Date currentDate = new Date();
         Bundle data = createPushNotificationPayload(
-                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate, CHALLENGE);
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
 
@@ -98,7 +98,7 @@ public class ParcelableNotificationTest {
     public void shouldHaveCorrectDataAfterParcel() throws Exception {
         Date currentDate = new Date();
         Bundle data = createPushNotificationPayload(
-                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate, CHALLENGE);
 
         ParcelableNotification originalNotification = ParcelableNotification.parse(data);
 
@@ -127,7 +127,7 @@ public class ParcelableNotificationTest {
     public void shouldHaveCorrectDataAfterParcelWithNulls() throws Exception {
         ParcelableNotification originalNotification = new ParcelableNotification(
                 HttpUrl.parse(HOSTNAME_HTTPS), DEVICE_ID, TRANSACTION_TOKEN, null,
-                OS_NAME, OS_VERSION, BROWSER_NAME, BROWSER_VERSION, LOCATION, null, null, null);
+                OS_NAME, OS_VERSION, BROWSER_NAME, BROWSER_VERSION, LOCATION, null, null, CHALLENGE);
 
         Parcel parcel = Parcel.obtain();
         originalNotification.writeToParcel(parcel, 0);
@@ -147,14 +147,14 @@ public class ParcelableNotificationTest {
         assertThat(notification.getLocation(), is(equalTo(LOCATION)));
         assertThat(notification.getLatitude(), is(nullValue()));
         assertThat(notification.getLongitude(), is(nullValue()));
-        assertThat(notification.getChallenge(), is(nullValue()));
+        assertThat(notification.getChallenge(), is(CHALLENGE));
     }
 
     @Test
     public void shouldMatchEnrollment() throws Exception {
         Date currentDate = new Date();
         Bundle data = createPushNotificationPayload(
-                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate);
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate, CHALLENGE);
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
 
@@ -168,7 +168,7 @@ public class ParcelableNotificationTest {
 
     @Test
     public void shouldReturnNullIfThereIsNoHostname() throws Exception {
-        Bundle data = createPushNotificationPayload(null, DEVICE_ID, TRANSACTION_TOKEN, new Date());
+        Bundle data = createPushNotificationPayload(null, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE);
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
 
@@ -177,7 +177,7 @@ public class ParcelableNotificationTest {
 
     @Test
     public void shouldReturnNullIfThereIsNoDeviceId() throws Exception {
-        Bundle data = createPushNotificationPayload(HOSTNAME, null, TRANSACTION_TOKEN, new Date());
+        Bundle data = createPushNotificationPayload(HOSTNAME, null, TRANSACTION_TOKEN, new Date(), CHALLENGE);
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
 
@@ -186,7 +186,7 @@ public class ParcelableNotificationTest {
 
     @Test
     public void shouldReturnNullIfThereIsNoTransactionToken() throws Exception {
-        Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, null, new Date());
+        Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, null, new Date(), CHALLENGE);
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
 
@@ -195,7 +195,16 @@ public class ParcelableNotificationTest {
 
     @Test
     public void shouldReturnNullIfThereIsNoDate() throws Exception {
-        Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, null);
+        Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, null, CHALLENGE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(nullValue()));
+    }
+
+    @Test
+    public void shouldReturnNullIfThereIsNoChallenge() throws Exception {
+        Bundle data = createPushNotificationPayload(HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN,  new Date(), null);
 
         ParcelableNotification notification = ParcelableNotification.parse(data);
 
@@ -205,8 +214,9 @@ public class ParcelableNotificationTest {
     private Bundle createPushNotificationPayload(String hostname,
                                                  String deviceId,
                                                  String transactionToken,
-                                                 Date date) {
-        return createPushNotificationPayload(hostname, deviceId, transactionToken, date, CHALLENGE, LATITUDE, LONGITUDE);
+                                                 Date date,
+                                                 String challenge) {
+        return createPushNotificationPayload(hostname, deviceId, transactionToken, date, challenge, LATITUDE, LONGITUDE);
     }
 
     private Bundle createPushNotificationPayload(String hostname,

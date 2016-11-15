@@ -81,7 +81,7 @@ public class ParcelableNotification implements Notification, Parcelable {
                            @Nullable String location,
                            @Nullable Double latitude,
                            @Nullable Double longitude,
-                           @Nullable String challenge) {
+                           @NonNull String challenge) {
         this.url = url.toString();
         this.enrollmentId = deviceId;
         this.transactionToken = transactionToken;
@@ -108,16 +108,16 @@ public class ParcelableNotification implements Notification, Parcelable {
         String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
         String enrollmentId = pushNotificationPayload.getString(ENROLLMENT_ID_KEY);
         String transactionToken = pushNotificationPayload.getString(TRANSACTION_TOKEN_KEY);
+        String challenge = pushNotificationPayload.getString(CHALLENGE_KEY);
         Date date = parseDate(pushNotificationPayload);
 
-        if (hostname == null || enrollmentId == null || transactionToken == null || date == null) {
+        if (hostname == null || enrollmentId == null || transactionToken == null || challenge == null || date == null) {
             return null;
         }
 
         HttpUrl url = parseHostname(hostname);
         Source source = parseSource(pushNotificationPayload);
         Location location = parseLocation(pushNotificationPayload);
-        String challenge = pushNotificationPayload.getString(CHALLENGE_KEY);
 
         return new ParcelableNotification(url, enrollmentId, transactionToken, date,
                 source.osName, source.osVersion, source.browserName, source.browserVersion,
@@ -190,7 +190,7 @@ public class ParcelableNotification implements Notification, Parcelable {
         return longitude;
     }
 
-    @Nullable
+    @NonNull
     @Override
     public String getChallenge() {
         return challenge;
@@ -284,7 +284,7 @@ public class ParcelableNotification implements Notification, Parcelable {
         private final String osName;
         private final String osVersion;
 
-        public Source(String browserName, String browserVersion, String osName, String osVersion) {
+        Source(String browserName, String browserVersion, String osName, String osVersion) {
             this.browserName = browserName;
             this.browserVersion = browserVersion;
             this.osName = osName;
@@ -298,7 +298,7 @@ public class ParcelableNotification implements Notification, Parcelable {
         private final Double latitude;
         private final Double longitude;
 
-        public Location(String location, Double latitude, Double longitude) {
+        Location(String location, Double latitude, Double longitude) {
             this.location = location;
             this.latitude = latitude;
             this.longitude = longitude;
@@ -306,7 +306,7 @@ public class ParcelableNotification implements Notification, Parcelable {
     }
 
     // PARCELABLE
-    protected ParcelableNotification(Parcel in) {
+    private ParcelableNotification(Parcel in) {
         url = in.readString();
         enrollmentId = in.readString();
         transactionToken = in.readString();
