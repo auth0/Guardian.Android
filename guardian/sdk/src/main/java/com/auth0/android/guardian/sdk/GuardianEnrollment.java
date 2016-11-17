@@ -39,7 +39,7 @@ class GuardianEnrollment implements Enrollment {
     private final String secret;
     private final String deviceIdentifier;
     private final String deviceName;
-    private final String deviceGCMToken;
+    private final String notificationToken;
     private final String deviceToken;
     private final String recoveryCode;
     private final PrivateKey privateKey;
@@ -52,9 +52,7 @@ class GuardianEnrollment implements Enrollment {
                        @Nullable String algorithm,
                        @Nullable String secret,
                        @NonNull String deviceId,
-                       @NonNull String deviceIdentifier,
-                       @NonNull String deviceName,
-                       @NonNull String deviceGCMToken,
+                       @NonNull CurrentDevice device,
                        @NonNull String deviceToken,
                        @Nullable String recoveryCode,
                        @NonNull PrivateKey privateKey) {
@@ -66,9 +64,9 @@ class GuardianEnrollment implements Enrollment {
         this.algorithm = algorithm;
         this.secret = secret;
         this.id = deviceId;
-        this.deviceIdentifier = deviceIdentifier;
-        this.deviceName = deviceName;
-        this.deviceGCMToken = deviceGCMToken;
+        this.deviceIdentifier = device.getIdentifier();
+        this.deviceName = device.getName();
+        this.notificationToken = device.getNotificationToken();
         this.deviceToken = deviceToken;
         this.recoveryCode = recoveryCode;
         this.privateKey = privateKey;
@@ -136,8 +134,8 @@ class GuardianEnrollment implements Enrollment {
 
     @NonNull
     @Override
-    public String getGCMToken() {
-        return deviceGCMToken;
+    public String getNotificationToken() {
+        return notificationToken;
     }
 
     @NonNull

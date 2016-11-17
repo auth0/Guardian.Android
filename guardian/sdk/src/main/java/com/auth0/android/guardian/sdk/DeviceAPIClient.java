@@ -65,8 +65,10 @@ public class DeviceAPIClient {
      * The response will have all the final values currently at the Guardian server.
      *
      * @param identifier the local identifier that uniquely identifies the android device
-     * @param name the name of the android device that will be displayed to the user in Guardian
-     * @param gcmToken the GCM token used to send notifications to the android device
+     * @param name       the name of the android device that will be displayed to the user in
+     *                   Guardian
+     * @param gcmToken   the push notification service's token used to send notifications to the
+     *                   android device
      * @return a request to execute
      */
     public GuardianAPIRequest<Map<String, Object>> update(@Nullable String identifier,

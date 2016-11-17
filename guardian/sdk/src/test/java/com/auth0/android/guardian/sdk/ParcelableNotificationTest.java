@@ -65,6 +65,9 @@ public class ParcelableNotificationTest {
     private static final Double LONGITUDE = 34.34;
 
     @Mock
+    CurrentDevice currentDevice;
+
+    @Mock
     PrivateKey privateKey;
 
     @Before
@@ -160,7 +163,7 @@ public class ParcelableNotificationTest {
 
         Enrollment enrollment = new GuardianEnrollment(
                 HOSTNAME_HTTPS, null, null, 6, 30, null, null,
-                DEVICE_ID, null, null, null, null, null, privateKey);
+                DEVICE_ID, currentDevice, null, null, privateKey);
 
         assertThat(notification.getEnrollmentId(), is(equalTo(enrollment.getId())));
         assertThat(notification.getUrl(), is(equalTo(enrollment.getUrl())));

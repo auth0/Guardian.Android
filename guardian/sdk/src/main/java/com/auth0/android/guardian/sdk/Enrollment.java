@@ -50,9 +50,10 @@ public interface Enrollment {
     String getUrl();
 
     /**
-     * A label for the enrollment. This will be pre-filled with the Guardian tenant, but since it's
-     * only used to display to the user, this could be overridden to return whatever the developer
-     * wants.
+     * A label for the enrollment.
+     *
+     * This will be pre-filled with the Guardian tenant, but since it's only used to display to the
+     * user, this could be overridden to return whatever the developer wants.
      *
      * @return the label
      */
@@ -101,6 +102,7 @@ public interface Enrollment {
 
     /**
      * The identifier of the physical device, for debug/tracking purposes.
+     *
      * Usually will be {@link Settings.Secure#ANDROID_ID}
      *
      * @return a unique device identifier
@@ -110,6 +112,7 @@ public interface Enrollment {
 
     /**
      * The name to display whenever it is necessary to identify this specific enrollment.
+     *
      * For example when the user has to choose where to send the push notification, or at the admin
      * interface if the user wants to delete an enrollment from there
      *
@@ -119,14 +122,15 @@ public interface Enrollment {
     String getDeviceName();
 
     /**
-     * The GCM token for this physical device, required to check against the current token and
-     * update the server in case it's not the same.
+     * The push notification service's token for this physical device, required to check against the
+     * current token and update the server in case it's not the same.
+     *
      * Needs to be up-to-data for the push notifications to work.
      *
-     * @return the GCM token
+     * @return the push notification service's token
      */
     @NonNull
-    String getGCMToken();
+    String getNotificationToken();
 
     /**
      * The token used to authenticate when updating the device data or deleting the enrollment

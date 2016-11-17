@@ -38,7 +38,7 @@ import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 
-public class MyEnrollment implements Enrollment, Parcelable {
+public class ParcelableEnrollment implements Enrollment, Parcelable {
 
     @SerializedName("id")
     private final String id;
@@ -82,7 +82,7 @@ public class MyEnrollment implements Enrollment, Parcelable {
     @SerializedName("privateKey")
     private final String privateKey;
 
-    public MyEnrollment(Enrollment enrollment) {
+    public ParcelableEnrollment(Enrollment enrollment) {
         this.url = enrollment.getUrl();
         this.label = enrollment.getLabel();
         this.user = enrollment.getUser();
@@ -93,7 +93,7 @@ public class MyEnrollment implements Enrollment, Parcelable {
         this.id = enrollment.getId();
         this.deviceIdentifier = enrollment.getDeviceIdentifier();
         this.deviceName = enrollment.getDeviceName();
-        this.deviceGCMToken = enrollment.getGCMToken();
+        this.deviceGCMToken = enrollment.getNotificationToken();
         this.deviceToken = enrollment.getDeviceToken();
         this.recoveryCode = enrollment.getRecoveryCode();
         this.privateKey = Base64.encodeToString(enrollment.getSigningKey().getEncoded(), Base64.DEFAULT);
@@ -157,7 +157,7 @@ public class MyEnrollment implements Enrollment, Parcelable {
 
     @NonNull
     @Override
-    public String getGCMToken() {
+    public String getNotificationToken() {
         return deviceGCMToken;
     }
 
@@ -186,7 +186,7 @@ public class MyEnrollment implements Enrollment, Parcelable {
     }
 
     // PARCELABLE
-    protected MyEnrollment(Parcel in) {
+    protected ParcelableEnrollment(Parcel in) {
         id = in.readString();
         url = in.readString();
         label = in.readString();
@@ -227,15 +227,15 @@ public class MyEnrollment implements Enrollment, Parcelable {
     }
 
     @SuppressWarnings("unused")
-    public static final Parcelable.Creator<MyEnrollment> CREATOR = new Parcelable.Creator<MyEnrollment>() {
+    public static final Parcelable.Creator<ParcelableEnrollment> CREATOR = new Parcelable.Creator<ParcelableEnrollment>() {
         @Override
-        public MyEnrollment createFromParcel(Parcel in) {
-            return new MyEnrollment(in);
+        public ParcelableEnrollment createFromParcel(Parcel in) {
+            return new ParcelableEnrollment(in);
         }
 
         @Override
-        public MyEnrollment[] newArray(int size) {
-            return new MyEnrollment[size];
+        public ParcelableEnrollment[] newArray(int size) {
+            return new ParcelableEnrollment[size];
         }
     };
 
@@ -244,8 +244,8 @@ public class MyEnrollment implements Enrollment, Parcelable {
         return JSON.toJson(this);
     }
 
-    public static MyEnrollment fromJSON(String json) {
-        return JSON.fromJson(json, MyEnrollment.class);
+    public static ParcelableEnrollment fromJSON(String json) {
+        return JSON.fromJson(json, ParcelableEnrollment.class);
     }
 
     private static final Gson JSON = new GsonBuilder().create();

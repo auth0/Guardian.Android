@@ -91,6 +91,7 @@ public class GuardianTest {
     Enrollment enrollment;
     Guardian guardian;
     KeyPair keyPair;
+    CurrentDevice currentDevice;
 
     @Before
     public void setUp() throws Exception {
@@ -101,9 +102,11 @@ public class GuardianTest {
 
         keyPair = new KeyPair(publicKey, privateKey);
 
+        currentDevice = new CurrentDevice(GCM_TOKEN, DEVICE_NAME, DEVICE_IDENTIFIER);
+
         enrollment = new GuardianEnrollment(GUARDIAN_URL, TENANT, USER, PERIOD,
-                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, DEVICE_IDENTIFIER, DEVICE_NAME,
-                GCM_TOKEN, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
+                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, currentDevice, DEVICE_TOKEN,
+                RECOVERY_CODE, privateKey);
 
         when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
                 .thenReturn(deviceApiClient);
@@ -119,15 +122,13 @@ public class GuardianTest {
                 .thenReturn(mockEnrollRequest);
 
         GuardianAPIRequest<Enrollment> request = guardian
-                .enroll(enrollmentUri, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, keyPair);
+                .enroll(enrollmentUri, currentDevice, keyPair);
 
         assertThat(request, is(instanceOf(EnrollRequest.class)));
         EnrollRequest enrollRequest = (EnrollRequest) request;
 
         assertThat(enrollRequest.request, is(sameInstance(mockEnrollRequest)));
-        assertThat(enrollRequest.deviceName, is(equalTo(DEVICE_NAME)));
-        assertThat(enrollRequest.gcmToken, is(equalTo(GCM_TOKEN)));
-        assertThat(enrollRequest.deviceIdentifier, is(equalTo(DEVICE_IDENTIFIER)));
+        assertThat(enrollRequest.device, is(sameInstance(currentDevice)));
         assertThat(enrollRequest.deviceKeyPair, is(sameInstance(keyPair)));
     }
 
@@ -137,15 +138,13 @@ public class GuardianTest {
                 .thenReturn(mockEnrollRequest);
 
         GuardianAPIRequest<Enrollment> request = guardian
-                .enroll(ENROLLMENT_TX_ID, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, keyPair);
+                .enroll(ENROLLMENT_TX_ID, currentDevice, keyPair);
 
         assertThat(request, is(instanceOf(EnrollRequest.class)));
         EnrollRequest enrollRequest = (EnrollRequest) request;
 
         assertThat(enrollRequest.request, is(sameInstance(mockEnrollRequest)));
-        assertThat(enrollRequest.deviceName, is(equalTo(DEVICE_NAME)));
-        assertThat(enrollRequest.gcmToken, is(equalTo(GCM_TOKEN)));
-        assertThat(enrollRequest.deviceIdentifier, is(equalTo(DEVICE_IDENTIFIER)));
+        assertThat(enrollRequest.device, is(sameInstance(currentDevice)));
         assertThat(enrollRequest.deviceKeyPair, is(sameInstance(keyPair)));
     }
 

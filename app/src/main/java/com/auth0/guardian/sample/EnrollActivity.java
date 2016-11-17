@@ -26,7 +26,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -36,6 +35,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.auth0.android.guardian.sdk.CurrentDevice;
 import com.auth0.android.guardian.sdk.Enrollment;
 import com.auth0.android.guardian.sdk.Guardian;
 import com.auth0.android.guardian.sdk.networking.Callback;
@@ -134,8 +134,9 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     public void onCodeScanned(String enrollmentData) {
         try {
             KeyPair keyPair = generateKeyPair();
-            guardian.enroll(enrollmentData, Guardian.getDefaultDeviceIdentifier(this), deviceName, gcmToken, keyPair)
-                    .start(new GuardianCallback<>(this,
+            CurrentDevice device = new CurrentDevice(this, gcmToken, deviceName);
+            guardian.enroll(enrollmentData, device, keyPair)
+                    .start(new DialogCallback<>(this,
                             R.string.progress_title_please_wait,
                             R.string.progress_message_enroll,
                             new Callback<Enrollment>() {
@@ -230,8 +231,8 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
 
     private void onEnrollSucess(Enrollment enrollment) {
         Intent data = new Intent();
-        MyEnrollment myEnrollment = new MyEnrollment(enrollment);
-        data.putExtra(GuardianUI.ENROLLMENT, myEnrollment);
+        ParcelableEnrollment parcelableEnrollment = new ParcelableEnrollment(enrollment);
+        data.putExtra(Constants.ENROLLMENT, parcelableEnrollment);
         setResult(RESULT_OK, data);
         finish();
     }
@@ -266,7 +267,7 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     private KeyPair generateKeyPair() {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(2048);
+            keyPairGenerator.initialize(2048); // at least 2048 bits!
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
             return keyPair;
         } catch (NoSuchAlgorithmException e) {

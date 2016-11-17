@@ -99,7 +99,9 @@ public class EnrollRequestTest {
 
         keyPair = new KeyPair(publicKey, privateKey);
 
-        enrollRequest = new EnrollRequest(request, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, keyPair);
+        CurrentDevice device = new CurrentDevice(GCM_TOKEN, DEVICE_NAME, DEVICE_IDENTIFIER);
+
+        enrollRequest = new EnrollRequest(request, device, keyPair);
     }
 
     @Test
@@ -122,7 +124,7 @@ public class EnrollRequestTest {
         assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
         assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_IDENTIFIER)));
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
-        assertThat(enrollment.getGCMToken(), is(equalTo(GCM_TOKEN)));
+        assertThat(enrollment.getNotificationToken(), is(equalTo(GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
         assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
@@ -154,7 +156,7 @@ public class EnrollRequestTest {
         assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
         assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_IDENTIFIER)));
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
-        assertThat(enrollment.getGCMToken(), is(equalTo(GCM_TOKEN)));
+        assertThat(enrollment.getNotificationToken(), is(equalTo(GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
         assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
@@ -180,7 +182,7 @@ public class EnrollRequestTest {
         assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
         assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_IDENTIFIER)));
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
-        assertThat(enrollment.getGCMToken(), is(equalTo(GCM_TOKEN)));
+        assertThat(enrollment.getNotificationToken(), is(equalTo(GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(nullValue()));
         assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
@@ -206,7 +208,7 @@ public class EnrollRequestTest {
         assertThat(enrollment.getId(), is(equalTo(DEVICE_ID)));
         assertThat(enrollment.getDeviceIdentifier(), is(equalTo(DEVICE_IDENTIFIER)));
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
-        assertThat(enrollment.getGCMToken(), is(equalTo(GCM_TOKEN)));
+        assertThat(enrollment.getNotificationToken(), is(equalTo(GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getRecoveryCode(), is(RECOVERY_CODE));
         assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));

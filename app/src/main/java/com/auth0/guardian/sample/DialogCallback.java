@@ -35,24 +35,24 @@ import android.widget.TextView;
 
 import com.auth0.android.guardian.sdk.networking.Callback;
 
-public class GuardianCallback<T> implements Callback<T> {
+public class DialogCallback<T> implements Callback<T> {
 
-    private static final String TAG = GuardianCallback.class.getName();
+    private static final String TAG = DialogCallback.class.getName();
 
     private final Context context;
     private final Callback<T> callback;
     private final AlertDialog progressDialog;
 
-    GuardianCallback(@NonNull Context context,
-                     @StringRes int titleResId,
-                     @StringRes int messageResId,
-                     Callback<T> callback) {
+    DialogCallback(@NonNull Context context,
+                   @StringRes int titleResId,
+                   @StringRes int messageResId,
+                   Callback<T> callback) {
         this.context = context;
         this.callback = callback;
 
         ProgressBar progressBar = new ProgressBar(this.context);
         progressBar.setIndeterminate(true);
-        progressBar.setId(7); // need an id to align "right of" this
+        progressBar.setId(R.id.progress_bar); // need an id to align "right of" this
 
         RelativeLayout layout = new RelativeLayout(this.context);
         RelativeLayout.LayoutParams progressBarLayoutParams = new RelativeLayout.LayoutParams(
