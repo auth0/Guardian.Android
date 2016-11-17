@@ -231,9 +231,9 @@ public class GuardianAPIClientTest {
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
 
         Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasKey("challengeResponse"));
+        assertThat(body, hasKey("challenge_response"));
 
-        String jwt = (String) body.get("challengeResponse");
+        String jwt = (String) body.get("challenge_response");
         verifyJWT(jwt, true, null);
 
         assertThat(callback, hasNoError());
@@ -254,9 +254,9 @@ public class GuardianAPIClientTest {
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
 
         Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasKey("challengeResponse"));
+        assertThat(body, hasKey("challenge_response"));
 
-        String jwt = (String) body.get("challengeResponse");
+        String jwt = (String) body.get("challenge_response");
         verifyJWT(jwt, false, "hack");
 
         assertThat(callback, hasNoError());
@@ -277,9 +277,9 @@ public class GuardianAPIClientTest {
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
 
         Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasKey("challengeResponse"));
+        assertThat(body, hasKey("challenge_response"));
 
-        String jwt = (String) body.get("challengeResponse");
+        String jwt = (String) body.get("challenge_response");
         verifyJWT(jwt, false, null);
 
         assertThat(callback, hasNoError());

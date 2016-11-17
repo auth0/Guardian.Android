@@ -146,7 +146,7 @@ public class GuardianAPIClient {
         return requestFactory
                 .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), type)
                 .setBearer(txToken)
-                .setParameter("challengeResponse", jwt);
+                .setParameter("challenge_response", jwt);
     }
 
     /**
@@ -170,7 +170,7 @@ public class GuardianAPIClient {
         return requestFactory
                 .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), type)
                 .setBearer(txToken)
-                .setParameter("challengeResponse", jwt);
+                .setParameter("challenge_response", jwt);
     }
 
     /**
