@@ -231,9 +231,9 @@ public class GuardianAPIClientTest {
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
 
         Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasKey("challengeResponse"));
+        assertThat(body, hasKey("challenge_response"));
 
-        String jwt = (String) body.get("challengeResponse");
+        String jwt = (String) body.get("challenge_response");
         verifyJWT(jwt, true, null);
 
         assertThat(callback, hasNoError());
@@ -254,9 +254,9 @@ public class GuardianAPIClientTest {
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
 
         Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasKey("challengeResponse"));
+        assertThat(body, hasKey("challenge_response"));
 
-        String jwt = (String) body.get("challengeResponse");
+        String jwt = (String) body.get("challenge_response");
         verifyJWT(jwt, false, "hack");
 
         assertThat(callback, hasNoError());
@@ -277,9 +277,9 @@ public class GuardianAPIClientTest {
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
 
         Map<String, Object> body = bodyFromRequest(request);
-        assertThat(body, hasKey("challengeResponse"));
+        assertThat(body, hasKey("challenge_response"));
 
-        String jwt = (String) body.get("challengeResponse");
+        String jwt = (String) body.get("challenge_response");
         verifyJWT(jwt, false, null);
 
         assertThat(callback, hasNoError());
@@ -314,12 +314,12 @@ public class GuardianAPIClientTest {
         assertThat(payload, hasEntry("aud", (Object) apiClient.getUrl()));
         assertThat(payload, hasEntry("sub", (Object) CHALLENGE));
         assertThat(payload, hasEntry("iss", (Object) DEVICE_IDENTIFIER));
-        assertThat(payload, hasEntry("auth0.guardian.accepted", (Object) accepted));
-        assertThat(payload, hasEntry("auth0.guardian.method", (Object) "push"));
+        assertThat(payload, hasEntry("auth0_guardian_accepted", (Object) accepted));
+        assertThat(payload, hasEntry("auth0_guardian_method", (Object) "push"));
         if (!accepted && rejectReason != null) {
-            assertThat(payload, hasEntry("auth0.guardian.reason", (Object) rejectReason));
+            assertThat(payload, hasEntry("auth0_guardian_reason", (Object) rejectReason));
         } else {
-            assertThat(payload.containsKey("auth0.guardian.reason"), is(equalTo(false)));
+            assertThat(payload.containsKey("auth0_guardian_reason"), is(equalTo(false)));
         }
         assertThat(payload, hasKey("iat"));
         assertThat(payload, hasKey("exp"));
