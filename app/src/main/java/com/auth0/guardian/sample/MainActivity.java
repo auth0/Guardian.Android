@@ -29,6 +29,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -53,10 +54,6 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
 
     private static final String TAG = MainActivity.class.getName();
 
-    private static final String PREFS_FILE = "MainActivity";
-    private static final String ENROLLMENT = "ENROLLMENT";
-    private static final String NOTIFICATION = "NOTIFICATION";
-
     private static final int ENROLL_REQUEST = 123;
 
     private View loadingView;
@@ -76,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
     public static Intent getStartIntent(@NonNull Context context,
                                         @NonNull ParcelableNotification notification) {
         Intent intent = new Intent(context, MainActivity.class);
-        intent.putExtra(NOTIFICATION, notification);
+        intent.putExtra(Constants.NOTIFICATION, notification);
         return intent;
     }
 
@@ -97,13 +94,13 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
         GcmUtils gcmUtils = new GcmUtils(this, getString(R.string.google_app_id));
         gcmUtils.fetchGcmToken(this);
 
-        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_FILE, MODE_PRIVATE);
-        String enrollmentJSON = sharedPreferences.getString(ENROLLMENT, null);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String enrollmentJSON = sharedPreferences.getString(Constants.ENROLLMENT, null);
         if (enrollmentJSON != null) {
             enrollment = ParcelableEnrollment.fromJSON(enrollmentJSON);
             updateUI();
 
-            ParcelableNotification notification = getIntent().getParcelableExtra(NOTIFICATION);
+            ParcelableNotification notification = getIntent().getParcelableExtra(Constants.NOTIFICATION);
             if (notification != null) {
                 onPushNotificationReceived(notification);
             }
@@ -181,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
 
     private void onEnrollRequested() {
         Intent enrollIntent = EnrollActivity
-                .getStartIntent(this, guardian, deviceNameText.getText().toString(), gcmToken);
+                .getStartIntent(this, deviceNameText.getText().toString(), gcmToken);
         startActivityForResult(enrollIntent, ENROLL_REQUEST);
     }
 
@@ -210,9 +207,9 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
     }
 
     private void updateEnrollment(ParcelableEnrollment enrollment) {
-        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_FILE, MODE_PRIVATE);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(ENROLLMENT, enrollment != null ? enrollment.toJSON() : null);
+        editor.putString(Constants.ENROLLMENT, enrollment != null ? enrollment.toJSON() : null);
         editor.apply();
 
         this.enrollment = enrollment;
@@ -222,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
 
     private void onPushNotificationReceived(ParcelableNotification notification) {
         Intent intent = NotificationActivity
-                .getStartIntent(this, guardian, notification, enrollment);
+                .getStartIntent(this, notification, enrollment);
         startActivity(intent);
     }
 

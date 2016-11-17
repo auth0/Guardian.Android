@@ -24,6 +24,7 @@ package com.auth0.guardian.sample;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -37,12 +38,6 @@ import com.auth0.android.guardian.sdk.networking.Callback;
 
 public class NotificationActivity extends AppCompatActivity {
 
-    private static final String TAG = NotificationActivity.class.getName();
-
-    private static final String GUARDIAN = "GUARDIAN";
-    private static final String ENROLLMENT = "ENROLLMENT";
-    private static final String NOTIFICATION = "NOTIFICATION";
-
     private TextView labelText;
     private TextView userText;
     private TextView browserText;
@@ -55,7 +50,6 @@ public class NotificationActivity extends AppCompatActivity {
     private ParcelableNotification notification;
 
     static Intent getStartIntent(@NonNull Context context,
-                                 @NonNull Guardian guardian,
                                  @NonNull ParcelableNotification notification,
                                  @NonNull ParcelableEnrollment enrollment) {
         if (!enrollment.getId().equals(notification.getEnrollmentId())) {
@@ -65,9 +59,8 @@ public class NotificationActivity extends AppCompatActivity {
         }
 
         Intent intent = new Intent(context, NotificationActivity.class);
-        intent.putExtra(GUARDIAN, guardian);
-        intent.putExtra(ENROLLMENT, enrollment);
-        intent.putExtra(NOTIFICATION, notification);
+        intent.putExtra(Constants.ENROLLMENT, enrollment);
+        intent.putExtra(Constants.NOTIFICATION, notification);
         return intent;
     }
 
@@ -76,10 +69,13 @@ public class NotificationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification);
 
+        guardian = new Guardian.Builder()
+                .url(Uri.parse(getString(R.string.guardian_url)))
+                .build();
+
         Intent intent = getIntent();
-        guardian = intent.getParcelableExtra(GUARDIAN);
-        enrollment = intent.getParcelableExtra(ENROLLMENT);
-        notification = intent.getParcelableExtra(NOTIFICATION);
+        enrollment = intent.getParcelableExtra(Constants.ENROLLMENT);
+        notification = intent.getParcelableExtra(Constants.NOTIFICATION);
 
         setupUI();
 
