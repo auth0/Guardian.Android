@@ -206,10 +206,10 @@ public class GuardianAPIClient {
             claims.put("aud", getUrl());
             claims.put("iss", deviceIdentifier);
             claims.put("sub", challenge);
-            claims.put("auth0.guardian.method", "push");
-            claims.put("auth0.guardian.accepted", accepted);
+            claims.put("auth0_guardian_method", "push");
+            claims.put("auth0_guardian_accepted", accepted);
             if (reason != null) {
-                claims.put("auth0.guardian.reason", reason);
+                claims.put("auth0_guardian_reason", reason);
             }
             Gson gson = new GsonBuilder().create();
             String headerAndPayload = base64UrlSafeEncode(gson.toJson(headers).getBytes())
