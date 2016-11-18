@@ -40,7 +40,7 @@ import java.util.Map;
  * This class allows to create and delete enrollments, parse the push notifications and allow or
  * reject authentication requests
  */
-public class Guardian implements Parcelable {
+public class Guardian {
 
     private final GuardianAPIClient client;
 
@@ -243,31 +243,4 @@ public class Guardian implements Parcelable {
             return new Guardian(client);
         }
     }
-
-    // PARCELABLE
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(client.getUrl());
-    }
-
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<Guardian> CREATOR = new Parcelable.Creator<Guardian>() {
-        @Override
-        public Guardian createFromParcel(Parcel in) {
-            String url = in.readString();
-            return new Builder()
-                    .url(Uri.parse(url))
-                    .build();
-        }
-
-        @Override
-        public Guardian[] newArray(int size) {
-            return new Guardian[size];
-        }
-    };
 }

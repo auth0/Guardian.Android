@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -49,7 +50,6 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
 
     private static final String TAG = EnrollActivity.class.getName();
 
-    private static final String GUARDIAN = "com.auth0.guardian.sample.EnrollActivity.GUARDIAN";
     private static final String DEVICE_NAME = "com.auth0.guardian.sample.EnrollActivity.DEVICE_NAME";
     private static final String GCM_TOKEN = "com.auth0.guardian.sample.EnrollActivity.GCM_TOKEN";
 
@@ -64,11 +64,9 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     private CaptureView scanner;
 
     static Intent getStartIntent(@NonNull Context context,
-                                 @NonNull Guardian guardian,
                                  @NonNull String deviceName,
                                  @NonNull String gcmToken) {
         Intent intent = new Intent(context, EnrollActivity.class);
-        intent.putExtra(GUARDIAN, guardian);
         intent.putExtra(DEVICE_NAME, deviceName);
         intent.putExtra(GCM_TOKEN, gcmToken);
         return intent;
@@ -159,13 +157,16 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
 
     private void setupGuardian() {
         Intent intent = getIntent();
-        guardian = intent.getParcelableExtra(GUARDIAN);
         deviceName = intent.getStringExtra(DEVICE_NAME);
         gcmToken = intent.getStringExtra(GCM_TOKEN);
 
-        if (guardian == null || deviceName == null || gcmToken == null) {
-            throw new IllegalStateException("Missing guardian, deviceName or gcmToken");
+        if (deviceName == null || gcmToken == null) {
+            throw new IllegalStateException("Missing deviceName or gcmToken");
         }
+
+        guardian = new Guardian.Builder()
+                .url(Uri.parse(getString(R.string.guardian_url)))
+                .build();
     }
 
     private void setupUI() {

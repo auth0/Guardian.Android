@@ -237,22 +237,6 @@ public class GuardianTest {
                 is(equalTo("https://example.guardian.auth0.com/")));
     }
 
-    @Test
-    public void testParcelable() throws Exception {
-        Guardian originalGuardian = new Guardian.Builder()
-                .domain("example.guardian.auth0.com")
-                .build();
-
-        Parcel parcel = Parcel.obtain();
-        originalGuardian.writeToParcel(parcel, 0);
-        parcel.setDataPosition(0);
-        Guardian guardian = Guardian.CREATOR.createFromParcel(parcel);
-
-        assertThat(guardian, is(notNullValue()));
-        assertThat(guardian.getAPIClient().getUrl(),
-                is(equalTo("https://example.guardian.auth0.com/")));
-    }
-
     private String createEnrollmentUri() {
         return Uri.parse(
                 "otpauth://totp/" +
