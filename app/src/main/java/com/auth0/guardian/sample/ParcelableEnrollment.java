@@ -85,7 +85,7 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     public ParcelableEnrollment(Enrollment enrollment) {
         this.url = enrollment.getUrl();
         this.label = enrollment.getLabel();
-        this.user = enrollment.getUser();
+        this.user = enrollment.getUserId();
         this.period = enrollment.getPeriod();
         this.digits = enrollment.getDigits();
         this.algorithm = enrollment.getAlgorithm();
@@ -118,8 +118,7 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     }
 
     @NonNull
-    @Override
-    public String getUser() {
+    public String getUserId() {
         return user;
     }
 
