@@ -115,7 +115,7 @@ public class NotificationActivity extends AppCompatActivity {
 
     private void updateUI() {
         labelText.setText(enrollment.getLabel());
-        userText.setText(enrollment.getUser());
+        userText.setText(enrollment.getUserId());
         browserText.setText(
                 String.format("%s, %s",
                         notification.getBrowserName(),

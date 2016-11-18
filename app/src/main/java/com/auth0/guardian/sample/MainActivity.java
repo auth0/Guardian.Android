@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
                     enrollView.setVisibility(gcmToken != null ? View.VISIBLE : View.GONE);
                 } else {
                     labelText.setText(enrollment.getLabel());
-                    userText.setText(enrollment.getUser());
+                    userText.setText(enrollment.getUserId());
                     otpView.setEnrollment(enrollment);
                     enrollView.setVisibility(View.GONE);
                     accountView.setVisibility(gcmToken != null ? View.VISIBLE : View.GONE);

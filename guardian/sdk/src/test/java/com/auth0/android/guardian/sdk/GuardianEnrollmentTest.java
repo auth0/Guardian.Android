@@ -66,7 +66,7 @@ public class GuardianEnrollmentTest {
                 DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, device, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
         assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
-        assertThat(enrollment.getUser(), is(equalTo(USER)));
+        assertThat(enrollment.getUserId(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
         assertThat(enrollment.getAlgorithm(), is(equalTo(ALGORITHM)));

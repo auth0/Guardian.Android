@@ -61,12 +61,12 @@ public interface Enrollment {
     String getLabel();
 
     /**
-     * The name or email for this enrollment's user
+     * The id of this enrollment's user
      *
      * @return the user name or email
      */
     @NonNull
-    String getUser();
+    String getUserId();
 
     /**
      * The TOTP period

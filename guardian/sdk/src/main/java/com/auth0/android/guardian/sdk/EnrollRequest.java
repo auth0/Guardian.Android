@@ -35,7 +35,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
     private final static String KEY_ID = "id";
     private final static String KEY_URL = "url";
     private final static String KEY_ISSUER = "issuer";
-    private final static String KEY_USER = "user";
+    private final static String KEY_USER_ID = "user_id";
     private final static String KEY_TOKEN = "token";
     private final static String KEY_RECOVERY_CODE = "recovery_code";
     private final static String KEY_TOTP = "totp";
@@ -86,7 +86,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
         if (!result.containsKey(KEY_ID)
                 || !result.containsKey(KEY_URL)
                 || !result.containsKey(KEY_ISSUER)
-                || !result.containsKey(KEY_USER)
+                || !result.containsKey(KEY_USER_ID)
                 || !result.containsKey(KEY_TOKEN)) {
             throw new GuardianException("Invalid response, missing required fields " + result);
         }
@@ -94,7 +94,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
         String enrollmentId = (String) result.get(KEY_ID);
         String url = (String) result.get(KEY_URL);
         String issuer = (String) result.get(KEY_ISSUER);
-        String user = (String) result.get(KEY_USER);
+        String userId = (String) result.get(KEY_USER_ID);
         String deviceToken = (String) result.get(KEY_TOKEN);
         String recoveryCode = (String) result.get(KEY_RECOVERY_CODE);
         String totpAlgorithm = null, totpSecret = null;
@@ -107,7 +107,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
             totpPeriod = ((Double) totpData.get(KEY_PERIOD)).intValue();
         }
 
-        return new GuardianEnrollment(url, issuer, user, totpPeriod, totpDigits, totpAlgorithm,
+        return new GuardianEnrollment(url, issuer, userId, totpPeriod, totpDigits, totpAlgorithm,
                 totpSecret, enrollmentId, device, deviceToken, recoveryCode, deviceKeyPair.getPrivate());
     }
 }

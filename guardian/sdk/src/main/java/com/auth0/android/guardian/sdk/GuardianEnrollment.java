@@ -32,7 +32,7 @@ class GuardianEnrollment implements Enrollment {
     private final String id;
     private final String url;
     private final String label;
-    private final String user;
+    private final String userId;
     private final Integer period;
     private final Integer digits;
     private final String algorithm;
@@ -46,7 +46,7 @@ class GuardianEnrollment implements Enrollment {
 
     GuardianEnrollment(@NonNull String url,
                        @NonNull String label,
-                       @NonNull String user,
+                       @NonNull String userId,
                        @Nullable Integer period,
                        @Nullable Integer digits,
                        @Nullable String algorithm,
@@ -58,7 +58,7 @@ class GuardianEnrollment implements Enrollment {
                        @NonNull PrivateKey privateKey) {
         this.url = url;
         this.label = label;
-        this.user = user;
+        this.userId = userId;
         this.period = period;
         this.digits = digits;
         this.algorithm = algorithm;
@@ -92,8 +92,8 @@ class GuardianEnrollment implements Enrollment {
 
     @NonNull
     @Override
-    public String getUser() {
-        return user;
+    public String getUserId() {
+        return userId;
     }
 
     @Nullable

@@ -56,7 +56,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class EnrollRequestTest {
 
     private static final String TENANT = "TENANT";
-    private static final String USER = "USER";
+    private static final String USER_ID = "USER_ID";
     private static final int PERIOD = 30;
     private static final int DIGITS = 6;
     private static final String ALGORITHM = "ALGORITHM";
@@ -107,7 +107,7 @@ public class EnrollRequestTest {
     @Test
     public void shouldEnrollSucessfullySync() throws Exception {
         Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
-                TENANT, USER, DEVICE_TOKEN, RECOVERY_CODE, SECRET_BASE32, ALGORITHM, PERIOD, DIGITS);
+                TENANT, USER_ID, DEVICE_TOKEN, RECOVERY_CODE, SECRET_BASE32, ALGORITHM, PERIOD, DIGITS);
         when(request.execute())
                 .thenReturn(enrollmentResponse);
 
@@ -116,7 +116,7 @@ public class EnrollRequestTest {
 
         assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
-        assertThat(enrollment.getUser(), is(equalTo(USER)));
+        assertThat(enrollment.getUserId(), is(equalTo(USER_ID)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
         assertThat(enrollment.getAlgorithm(), is(equalTo(ALGORITHM)));
@@ -133,7 +133,7 @@ public class EnrollRequestTest {
     @Test
     public void shouldEnrollSuccessfullyAsync() throws Exception {
         Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
-                TENANT, USER, DEVICE_TOKEN, RECOVERY_CODE, SECRET_BASE32, ALGORITHM, PERIOD, DIGITS);
+                TENANT, USER_ID, DEVICE_TOKEN, RECOVERY_CODE, SECRET_BASE32, ALGORITHM, PERIOD, DIGITS);
 
         enrollRequest
                 .start(callback);
@@ -148,7 +148,7 @@ public class EnrollRequestTest {
 
         assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
-        assertThat(enrollment.getUser(), is(equalTo(USER)));
+        assertThat(enrollment.getUserId(), is(equalTo(USER_ID)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
         assertThat(enrollment.getAlgorithm(), is(equalTo(ALGORITHM)));
@@ -165,7 +165,7 @@ public class EnrollRequestTest {
     @Test
     public void shouldEnrollSucessfullySyncWithNullRecovey() throws Exception {
         Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
-                TENANT, USER, DEVICE_TOKEN, null, SECRET_BASE32, ALGORITHM, PERIOD, DIGITS);
+                TENANT, USER_ID, DEVICE_TOKEN, null, SECRET_BASE32, ALGORITHM, PERIOD, DIGITS);
         when(request.execute())
                 .thenReturn(enrollmentResponse);
 
@@ -174,7 +174,7 @@ public class EnrollRequestTest {
 
         assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
-        assertThat(enrollment.getUser(), is(equalTo(USER)));
+        assertThat(enrollment.getUserId(), is(equalTo(USER_ID)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
         assertThat(enrollment.getAlgorithm(), is(equalTo(ALGORITHM)));
@@ -191,7 +191,7 @@ public class EnrollRequestTest {
     @Test
     public void shouldEnrollSucessfullySyncWithNullTOTP() throws Exception {
         Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
-                TENANT, USER, DEVICE_TOKEN, RECOVERY_CODE, null, null, null, null);
+                TENANT, USER_ID, DEVICE_TOKEN, RECOVERY_CODE, null, null, null, null);
         when(request.execute())
                 .thenReturn(enrollmentResponse);
 
@@ -200,7 +200,7 @@ public class EnrollRequestTest {
 
         assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
         assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
-        assertThat(enrollment.getUser(), is(equalTo(USER)));
+        assertThat(enrollment.getUserId(), is(equalTo(USER_ID)));
         assertThat(enrollment.getPeriod(), is(nullValue()));
         assertThat(enrollment.getDigits(), is(nullValue()));
         assertThat(enrollment.getAlgorithm(), is(nullValue()));
@@ -238,7 +238,7 @@ public class EnrollRequestTest {
     }
 
     private Map<String, Object> createEnrollmentResponse(String id, String url, String issuer,
-                                                         String user, String token,
+                                                         String userId, String token,
                                                          String recoveryCode,
                                                          String totpSecret, String totpAlgorithm,
                                                          Integer totpPeriod, Integer totpDigits) {
@@ -246,7 +246,7 @@ public class EnrollRequestTest {
         enrollmentResponse.put("id", id);
         enrollmentResponse.put("url", url);
         enrollmentResponse.put("issuer", issuer);
-        enrollmentResponse.put("user", user);
+        enrollmentResponse.put("user_id", userId);
         enrollmentResponse.put("token", token);
         if (recoveryCode != null) {
             enrollmentResponse.put("recovery_code", recoveryCode);
