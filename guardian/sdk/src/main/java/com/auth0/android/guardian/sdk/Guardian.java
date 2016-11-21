@@ -22,6 +22,7 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -187,7 +188,17 @@ public class Guardian {
      */
     public static class Builder {
 
+        private final Context context;
         private Uri url;
+
+        /**
+         * Constructs an instance of a {@link Guardian} Builder
+         *
+         * @param context the android context
+         */
+        public Builder(Context context) {
+            this.context = context;
+        }
 
         /**
          * Set the URL of the Guardian server.
@@ -235,7 +246,7 @@ public class Guardian {
                 throw new IllegalStateException("You must set either a domain or an url");
             }
 
-            GuardianAPIClient client = new GuardianAPIClient.Builder()
+            GuardianAPIClient client = new GuardianAPIClient.Builder(context)
                     .url(url)
                     .build();
 

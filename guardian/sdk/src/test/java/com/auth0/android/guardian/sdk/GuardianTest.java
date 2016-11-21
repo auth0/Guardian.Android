@@ -31,6 +31,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import java.security.KeyPair;
@@ -221,7 +222,7 @@ public class GuardianTest {
 
     @Test
     public void shouldBuildWithUrl() throws Exception {
-        Guardian guardian = new Guardian.Builder()
+        Guardian guardian = new Guardian.Builder(RuntimeEnvironment.application)
                 .url(Uri.parse("https://example.guardian.auth0.com"))
                 .build();
 
@@ -231,7 +232,7 @@ public class GuardianTest {
 
     @Test
     public void shouldBuildWithDomain() throws Exception {
-        Guardian guardian = new Guardian.Builder()
+        Guardian guardian = new Guardian.Builder(RuntimeEnvironment.application)
                 .domain("example.guardian.auth0.com")
                 .build();
 
@@ -243,7 +244,7 @@ public class GuardianTest {
     public void shouldFailIfDomainWasAlreadySet() throws Exception {
         exception.expect(IllegalArgumentException.class);
 
-        new Guardian.Builder()
+        new Guardian.Builder(RuntimeEnvironment.application)
                 .domain("example.guardian.auth0.com")
                 .url(Uri.parse("https://example.guardian.auth0.com"))
                 .build();
@@ -253,7 +254,7 @@ public class GuardianTest {
     public void shouldFailIfUrlWasAlreadySet() throws Exception {
         exception.expect(IllegalArgumentException.class);
 
-        new Guardian.Builder()
+        new Guardian.Builder(RuntimeEnvironment.application)
                 .url(Uri.parse("https://example.guardian.auth0.com"))
                 .domain("example.guardian.auth0.com")
                 .build();
@@ -263,7 +264,7 @@ public class GuardianTest {
     public void shouldFailIfNoUrlOrDomainConfigured() throws Exception {
         exception.expect(IllegalStateException.class);
 
-        new Guardian.Builder()
+        new Guardian.Builder(RuntimeEnvironment.application)
                 .build();
     }
 
