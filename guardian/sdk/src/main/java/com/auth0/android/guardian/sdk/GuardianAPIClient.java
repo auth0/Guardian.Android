@@ -298,6 +298,11 @@ public class GuardianAPIClient {
 
             final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
+            final String clientInfo = Base64.encodeToString(
+                    String.format("{\"name\":\"GuardianSDK.Android\",\"version\":\"%s\"}",
+                            BuildConfig.VERSION_NAME).getBytes(),
+                    Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+
             builder.addInterceptor(new Interceptor() {
                 @Override
                 public Response intercept(Chain chain) throws IOException {
@@ -310,6 +315,7 @@ public class GuardianAPIClient {
                                             BuildConfig.VERSION_NAME,
                                             BuildConfig.VERSION_CODE,
                                             Build.VERSION.RELEASE))
+                            .header("Auth0-Client", clientInfo)
                             .build();
                     return chain.proceed(requestWithUserAgent);
                 }
