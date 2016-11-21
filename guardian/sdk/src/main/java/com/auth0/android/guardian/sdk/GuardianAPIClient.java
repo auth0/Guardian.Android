@@ -22,6 +22,7 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -52,6 +53,12 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
+/**
+ * Low level API client for Guardian MFA server
+ *
+ * Use this API client to manually create enrollments, allow/reject authentication requests, and
+ * manage an enrollment's device data
+ */
 public class GuardianAPIClient {
 
     private static final int JWT_EXP_SECS = 30;
@@ -226,7 +233,7 @@ public class GuardianAPIClient {
     }
 
     /**
-     * Returns an API client to create, update or delete a device
+     * Returns an API client to create, update or delete an enrollment's device data
      *
      * @param id    the device id
      * @param token the device token
@@ -236,66 +243,85 @@ public class GuardianAPIClient {
         return new DeviceAPIClient(requestFactory, baseUrl, id, token);
     }
 
+    /**
+     * A {@link GuardianAPIClient} Builder
+     */
     public static class Builder {
 
-        private HttpUrl baseUrl;
-        private OkHttpClient client;
-        private Gson gson;
+        private HttpUrl url;
 
-        public Builder baseUrl(@NonNull String baseUrl) {
-            this.baseUrl = HttpUrl.parse(baseUrl);
-            if (this.baseUrl == null) {
-                throw new IllegalArgumentException("Cannot use an invalid HTTP or HTTPS url: " + baseUrl);
+        /**
+         * Set the URL of the Guardian server.
+         * For example {@code https://tenant.guardian.auth0.com/}
+         *
+         * @param url the url
+         * @return itself
+         * @throws IllegalArgumentException when an url or domain was already set
+         */
+        public GuardianAPIClient.Builder url(@NonNull Uri url) {
+            if (this.url != null) {
+                throw new IllegalArgumentException("You need to set only one domain or url");
             }
+            this.url = HttpUrl.parse(url.toString());
             return this;
         }
 
-        public Builder client(@NonNull OkHttpClient client) {
-            this.client = client;
+        /**
+         * Set the domain of the Guardian server.
+         * For example {@code tenant.guardian.auth0.com}
+         *
+         * @param domain the domain name
+         * @return itself
+         * @throws IllegalArgumentException when an url or domain was already set
+         */
+        public GuardianAPIClient.Builder domain(@NonNull String domain) {
+            if (this.url != null) {
+                throw new IllegalArgumentException("You need to set only one domain or url");
+            }
+            this.url = new HttpUrl.Builder()
+                    .scheme("https")
+                    .host(domain)
+                    .build();
             return this;
         }
 
-        public Builder gson(@NonNull Gson gson) {
-            this.gson = gson;
-            return this;
-        }
-
+        /**
+         * Builds and returns the GuardianAPIClient instance
+         *
+         * @return the created instance
+         * @throws IllegalStateException when the builder was not configured correctly
+         */
         public GuardianAPIClient build() {
-            if (baseUrl == null) {
-                throw new IllegalArgumentException("baseUrl cannot be null");
+            if (url == null) {
+                throw new IllegalStateException("You need to set either a domain or an url");
             }
 
-            if (client == null) {
-                final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-                builder.addInterceptor(new Interceptor() {
-                    @Override
-                    public Response intercept(Chain chain) throws IOException {
-                        okhttp3.Request originalRequest = chain.request();
-                        okhttp3.Request requestWithUserAgent = originalRequest.newBuilder()
-                                .header("Accept-Language",
-                                        Locale.getDefault().toString())
-                                .header("User-Agent",
-                                        String.format("GuardianSDK/%s(%s) Android %s",
-                                                BuildConfig.VERSION_NAME,
-                                                BuildConfig.VERSION_CODE,
-                                                Build.VERSION.RELEASE))
-                                .build();
-                        return chain.proceed(requestWithUserAgent);
-                    }
-                });
+            builder.addInterceptor(new Interceptor() {
+                @Override
+                public Response intercept(Chain chain) throws IOException {
+                    okhttp3.Request originalRequest = chain.request();
+                    okhttp3.Request requestWithUserAgent = originalRequest.newBuilder()
+                            .header("Accept-Language",
+                                    Locale.getDefault().toString())
+                            .header("User-Agent",
+                                    String.format("GuardianSDK/%s(%s) Android %s",
+                                            BuildConfig.VERSION_NAME,
+                                            BuildConfig.VERSION_CODE,
+                                            Build.VERSION.RELEASE))
+                            .build();
+                    return chain.proceed(requestWithUserAgent);
+                }
+            });
 
-                client = builder.build();
-            }
+            OkHttpClient client = builder.build();
 
-            if (gson == null) {
-                gson = new GsonBuilder()
-                        .create();
-            }
+            Gson gson = new GsonBuilder().create();
 
             RequestFactory requestFactory = new RequestFactory(gson, client);
 
-            return new GuardianAPIClient(requestFactory, baseUrl);
+            return new GuardianAPIClient(requestFactory, url);
         }
     }
 }

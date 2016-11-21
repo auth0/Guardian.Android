@@ -23,7 +23,6 @@
 package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
-import android.os.Parcel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +39,6 @@ import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.Matchers.eq;

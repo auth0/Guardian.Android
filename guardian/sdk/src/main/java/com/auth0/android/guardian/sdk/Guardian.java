@@ -24,8 +24,6 @@ package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -161,6 +159,7 @@ public class Guardian {
      *
      * @param enrollment the enrollment for which to generate the OTP
      * @return the OTP code, or null if the enrollment doesn't include OTP data
+     * @throws IllegalArgumentException when the enrollment's OTP data is invalid
      */
     @Nullable
     public static String getOTPCode(Enrollment enrollment) {
@@ -237,7 +236,7 @@ public class Guardian {
             }
 
             GuardianAPIClient client = new GuardianAPIClient.Builder()
-                    .baseUrl(url.toString())
+                    .url(url)
                     .build();
 
             return new Guardian(client);

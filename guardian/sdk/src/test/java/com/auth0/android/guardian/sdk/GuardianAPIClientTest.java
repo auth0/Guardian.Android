@@ -22,6 +22,7 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.net.Uri;
 import android.os.Build;
 
 import com.auth0.android.guardian.sdk.utils.MockCallback;
@@ -113,7 +114,6 @@ public class GuardianAPIClientTest {
 
     MockWebService mockAPI;
     GuardianAPIClient apiClient;
-    Gson gson;
     KeyPair keyPair;
 
     @Before
@@ -132,12 +132,8 @@ public class GuardianAPIClientTest {
         mockAPI = new MockWebService();
         final String domain = mockAPI.getDomain();
 
-        gson = new GsonBuilder()
-                .create();
-
         apiClient = new GuardianAPIClient.Builder()
-                .baseUrl(domain)
-                .gson(gson)
+                .url(Uri.parse(domain))
                 .build();
     }
 
@@ -302,8 +298,8 @@ public class GuardianAPIClientTest {
     }
 
     private Map<String, Object> bodyFromRequest(RecordedRequest request) throws IOException {
-        Type type = new TypeToken<Map<String, Object>>() {
-        }.getType();
+        Gson gson = new GsonBuilder().create();
+        Type type = new TypeToken<Map<String, Object>>() {}.getType();
         return gson.fromJson(new InputStreamReader(request.getBody().inputStream()), type);
     }
 
