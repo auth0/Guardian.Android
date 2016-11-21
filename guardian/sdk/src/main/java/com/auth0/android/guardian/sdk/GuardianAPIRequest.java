@@ -29,7 +29,7 @@ import com.auth0.android.guardian.sdk.networking.Callback;
 import java.io.IOException;
 
 /**
- * A network request that could be executed synchronously or in a background thread.
+ * A network request that can be executed synchronously or in a background thread.
  *
  * @param <T> the type of the expected response
  */

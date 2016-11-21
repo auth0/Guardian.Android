@@ -260,7 +260,7 @@ public class GuardianAPIClient {
          */
         public GuardianAPIClient.Builder url(@NonNull Uri url) {
             if (this.url != null) {
-                throw new IllegalArgumentException("You need to set only one domain or url");
+                throw new IllegalArgumentException("An url/domain was already set");
             }
             this.url = HttpUrl.parse(url.toString());
             return this;
@@ -276,7 +276,7 @@ public class GuardianAPIClient {
          */
         public GuardianAPIClient.Builder domain(@NonNull String domain) {
             if (this.url != null) {
-                throw new IllegalArgumentException("You need to set only one domain or url");
+                throw new IllegalArgumentException("An url/domain was already set");
             }
             this.url = new HttpUrl.Builder()
                     .scheme("https")
@@ -293,7 +293,7 @@ public class GuardianAPIClient {
          */
         public GuardianAPIClient build() {
             if (url == null) {
-                throw new IllegalStateException("You need to set either a domain or an url");
+                throw new IllegalStateException("You must set either a domain or an url");
             }
 
             final OkHttpClient.Builder builder = new OkHttpClient.Builder();

@@ -199,7 +199,7 @@ public class Guardian {
          */
         public Builder url(@NonNull Uri url) {
             if (this.url != null) {
-                throw new IllegalArgumentException("You need to set only one domain or url");
+                throw new IllegalArgumentException("An url/domain was already set");
             }
             this.url = url;
             return this;
@@ -215,7 +215,7 @@ public class Guardian {
          */
         public Builder domain(@NonNull String domain) {
             if (this.url != null) {
-                throw new IllegalArgumentException("You need to set only one domain or url");
+                throw new IllegalArgumentException("An url/domain was already set");
             }
             this.url = new Uri.Builder()
                     .scheme("https")
@@ -232,7 +232,7 @@ public class Guardian {
          */
         public Guardian build() {
             if (url == null) {
-                throw new IllegalStateException("You need to set either a domain or an url");
+                throw new IllegalStateException("You must set either a domain or an url");
             }
 
             GuardianAPIClient client = new GuardianAPIClient.Builder()

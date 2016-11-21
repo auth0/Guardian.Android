@@ -25,7 +25,9 @@ package com.auth0.android.guardian.sdk;
 import android.net.Uri;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
@@ -67,6 +69,9 @@ public class GuardianTest {
     private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
     private static final String TRANSACTION_TOKEN = "TRANSACTION_TOKEN";
     private static final String CHALLENGE = "CHALLENGE";
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Mock
     GuardianAPIRequest<Map<String, Object>> mockEnrollRequest;
@@ -215,7 +220,7 @@ public class GuardianTest {
     }
 
     @Test
-    public void testBuilderWithUrl() throws Exception {
+    public void shouldBuildWithUrl() throws Exception {
         Guardian guardian = new Guardian.Builder()
                 .url(Uri.parse("https://example.guardian.auth0.com"))
                 .build();
@@ -225,13 +230,41 @@ public class GuardianTest {
     }
 
     @Test
-    public void testBuilderWithDomain() throws Exception {
+    public void shouldBuildWithDomain() throws Exception {
         Guardian guardian = new Guardian.Builder()
                 .domain("example.guardian.auth0.com")
                 .build();
 
         assertThat(guardian.getAPIClient().getUrl(),
                 is(equalTo("https://example.guardian.auth0.com/")));
+    }
+
+    @Test
+    public void shouldFailIfDomainWasAlreadySet() throws Exception {
+        exception.expect(IllegalArgumentException.class);
+
+        new Guardian.Builder()
+                .domain("example.guardian.auth0.com")
+                .url(Uri.parse("https://example.guardian.auth0.com"))
+                .build();
+    }
+
+    @Test
+    public void shouldFailIfUrlWasAlreadySet() throws Exception {
+        exception.expect(IllegalArgumentException.class);
+
+        new Guardian.Builder()
+                .url(Uri.parse("https://example.guardian.auth0.com"))
+                .domain("example.guardian.auth0.com")
+                .build();
+    }
+
+    @Test
+    public void shouldFailIfNoUrlOrDomainConfigured() throws Exception {
+        exception.expect(IllegalStateException.class);
+
+        new Guardian.Builder()
+                .build();
     }
 
     private String createEnrollmentUri() {

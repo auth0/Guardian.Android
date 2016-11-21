@@ -107,7 +107,7 @@ public class GuardianAPIClientTest {
     private static final String CHALLENGE = "CHALLENGE";
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public ExpectedException exception = ExpectedException.none();
 
     @Mock
     RSAPublicKey publicKey;
@@ -140,6 +140,54 @@ public class GuardianAPIClientTest {
     @After
     public void tearDown() throws Exception {
         mockAPI.shutdown();
+    }
+
+    @Test
+    public void shouldBuildWithUrl() throws Exception {
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .url(Uri.parse("https://example.guardian.auth0.com"))
+                .build();
+
+        assertThat(apiClient.getUrl(),
+                is(equalTo("https://example.guardian.auth0.com/")));
+    }
+
+    @Test
+    public void shouldBuildWithDomain() throws Exception {
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .domain("example.guardian.auth0.com")
+                .build();
+
+        assertThat(apiClient.getUrl(),
+                is(equalTo("https://example.guardian.auth0.com/")));
+    }
+
+    @Test
+    public void shouldFailIfDomainWasAlreadySet() throws Exception {
+        exception.expect(IllegalArgumentException.class);
+
+        new GuardianAPIClient.Builder()
+                .domain("example.guardian.auth0.com")
+                .url(Uri.parse("https://example.guardian.auth0.com"))
+                .build();
+    }
+
+    @Test
+    public void shouldFailIfUrlWasAlreadySet() throws Exception {
+        exception.expect(IllegalArgumentException.class);
+
+        new GuardianAPIClient.Builder()
+                .url(Uri.parse("https://example.guardian.auth0.com"))
+                .domain("example.guardian.auth0.com")
+                .build();
+    }
+
+    @Test
+    public void shouldFailIfNoUrlOrDomainConfigured() throws Exception {
+        exception.expect(IllegalStateException.class);
+
+        new GuardianAPIClient.Builder()
+                .build();
     }
 
     @Test
@@ -204,7 +252,7 @@ public class GuardianAPIClientTest {
 
     @Test
     public void shouldFailEnrollIfNotRSA() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
+        exception.expect(IllegalArgumentException.class);
 
         final MockCallback<Map<String,Object>> callback = new MockCallback<>();
 
