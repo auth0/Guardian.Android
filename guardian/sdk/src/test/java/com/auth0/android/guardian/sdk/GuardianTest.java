@@ -104,9 +104,8 @@ public class GuardianTest {
 
         currentDevice = new CurrentDevice(GCM_TOKEN, DEVICE_NAME, DEVICE_IDENTIFIER);
 
-        enrollment = new GuardianEnrollment(GUARDIAN_URL, TENANT, USER, PERIOD,
-                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, currentDevice, DEVICE_TOKEN,
-                RECOVERY_CODE, privateKey);
+        enrollment = new GuardianEnrollment(USER, PERIOD, DIGITS, ALGORITHM, SECRET_BASE32,
+                DEVICE_ID, currentDevice, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
 
         when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
                 .thenReturn(deviceApiClient);

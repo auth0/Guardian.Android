@@ -61,7 +61,6 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
     private View accountView;
     private TextView deviceNameText;
     private TextView gcmTokenText;
-    private TextView labelText;
     private TextView userText;
     private TOTPCodeView otpView;
 
@@ -131,7 +130,6 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
         accountView = findViewById(R.id.accountLayout);
         deviceNameText = (TextView) findViewById(R.id.deviceNameText);
         gcmTokenText = (TextView) findViewById(R.id.gcmTokenText);
-        labelText = (TextView) findViewById(R.id.labelText);
         userText = (TextView) findViewById(R.id.userText);
         otpView = (TOTPCodeView) findViewById(R.id.otpView);
 
@@ -166,7 +164,6 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
                     accountView.setVisibility(View.GONE);
                     enrollView.setVisibility(gcmToken != null ? View.VISIBLE : View.GONE);
                 } else {
-                    labelText.setText(enrollment.getLabel());
                     userText.setText(enrollment.getUserId());
                     otpView.setEnrollment(enrollment);
                     enrollView.setVisibility(View.GONE);

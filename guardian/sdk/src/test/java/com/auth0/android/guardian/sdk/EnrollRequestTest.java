@@ -114,8 +114,6 @@ public class EnrollRequestTest {
         Enrollment enrollment = enrollRequest
                 .execute();
 
-        assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
-        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUserId(), is(equalTo(USER_ID)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
@@ -146,8 +144,6 @@ public class EnrollRequestTest {
 
         Enrollment enrollment = enrollmentCaptor.getValue();
 
-        assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
-        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUserId(), is(equalTo(USER_ID)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
@@ -172,8 +168,6 @@ public class EnrollRequestTest {
         Enrollment enrollment = enrollRequest
                 .execute();
 
-        assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
-        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUserId(), is(equalTo(USER_ID)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));
@@ -198,8 +192,6 @@ public class EnrollRequestTest {
         Enrollment enrollment = enrollRequest
                 .execute();
 
-        assertThat(enrollment.getUrl(), is(equalTo(GUARDIAN_URL)));
-        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
         assertThat(enrollment.getUserId(), is(equalTo(USER_ID)));
         assertThat(enrollment.getPeriod(), is(nullValue()));
         assertThat(enrollment.getDigits(), is(nullValue()));

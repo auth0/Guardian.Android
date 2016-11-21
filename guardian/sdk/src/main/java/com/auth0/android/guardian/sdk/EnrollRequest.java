@@ -92,8 +92,6 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
         }
 
         String enrollmentId = (String) result.get(KEY_ID);
-        String url = (String) result.get(KEY_URL);
-        String issuer = (String) result.get(KEY_ISSUER);
         String userId = (String) result.get(KEY_USER_ID);
         String deviceToken = (String) result.get(KEY_TOKEN);
         String recoveryCode = (String) result.get(KEY_RECOVERY_CODE);
@@ -107,7 +105,7 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
             totpPeriod = ((Double) totpData.get(KEY_PERIOD)).intValue();
         }
 
-        return new GuardianEnrollment(url, issuer, userId, totpPeriod, totpDigits, totpAlgorithm,
+        return new GuardianEnrollment(userId, totpPeriod, totpDigits, totpAlgorithm,
                 totpSecret, enrollmentId, device, deviceToken, recoveryCode, deviceKeyPair.getPrivate());
     }
 }

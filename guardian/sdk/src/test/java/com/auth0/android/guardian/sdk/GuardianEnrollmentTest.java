@@ -62,10 +62,9 @@ public class GuardianEnrollmentTest {
     public void shouldHaveCorrectData() throws Exception {
         CurrentDevice device = new CurrentDevice(DEVICE_GCM_TOKEN, DEVICE_NAME, DEVICE_LOCAL_IDENTIFIER);
 
-        Enrollment enrollment = new GuardianEnrollment(URL_HTTP_WITH_FINAL_DASH, TENANT, USER, PERIOD,
-                DIGITS, ALGORITHM, SECRET_BASE32, DEVICE_ID, device, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
-        assertThat(enrollment.getUrl(), is(equalTo(URL_HTTP_WITH_FINAL_DASH)));
-        assertThat(enrollment.getLabel(), is(equalTo(TENANT)));
+        Enrollment enrollment = new GuardianEnrollment(USER, PERIOD, DIGITS, ALGORITHM,
+                SECRET_BASE32, DEVICE_ID, device, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
+
         assertThat(enrollment.getUserId(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
         assertThat(enrollment.getDigits(), is(equalTo(DIGITS)));

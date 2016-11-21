@@ -42,25 +42,6 @@ public interface Enrollment {
     String getId();
 
     /**
-     * The Guardian server url
-     *
-     * @return the url
-     */
-    @NonNull
-    String getUrl();
-
-    /**
-     * A label for the enrollment.
-     *
-     * This will be pre-filled with the Guardian tenant, but since it's only used to display to the
-     * user, this could be overridden to return whatever the developer wants.
-     *
-     * @return the label
-     */
-    @NonNull
-    String getLabel();
-
-    /**
      * The id of this enrollment's user
      *
      * @return the user name or email
