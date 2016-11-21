@@ -24,6 +24,7 @@ package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
 import android.os.Build;
+import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.utils.MockCallback;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
@@ -43,6 +44,7 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -67,6 +69,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -210,6 +213,21 @@ public class GuardianAPIClientTest {
 
         assertThat(request.getHeader("Accept-Language"),
                 is(equalTo(Locale.getDefault().toString())));
+
+        String auth0ClientEncoded = request.getHeader("Auth0-Client");
+        assertThat(auth0ClientEncoded, is(notNullValue()));
+
+        byte[] auth0ClientDecoded = Base64.decode(
+                auth0ClientEncoded, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+
+        Type type = new TypeToken<Map<String, String>>() {}.getType();
+        Gson gson = new GsonBuilder().create();
+        Map<String, String> auth0Client = gson.fromJson(
+                new InputStreamReader(
+                        new ByteArrayInputStream(auth0ClientDecoded)), type);
+        assertThat(auth0Client, is(notNullValue()));
+        assertThat(auth0Client, hasEntry("name", "GuardianSDK.Android"));
+        assertThat(auth0Client, hasEntry("version", BuildConfig.VERSION_NAME));
     }
 
     @Test
