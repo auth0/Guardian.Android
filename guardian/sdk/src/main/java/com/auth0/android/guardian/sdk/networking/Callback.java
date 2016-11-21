@@ -22,9 +22,30 @@
 
 package com.auth0.android.guardian.sdk.networking;
 
+import com.auth0.android.guardian.sdk.GuardianException;
+
+/**
+ * A callback for asynchronous network requests
+ *
+ * @param <T> the type of the expected response
+ */
 public interface Callback<T> {
 
+    /**
+     * Called when the request finishes successfully, passes the response data as an argument
+     *
+     * @param response the response data
+     */
     void onSuccess(T response);
 
+    /**
+     * Called when something failed, either because of a network issue or because the server
+     * returned an error.
+     *
+     * If the server returned an error, the exception will be an instance of
+     * {@link GuardianException}
+     *
+     * @param exception the cause of the failure
+     */
     void onFailure(Throwable exception);
 }

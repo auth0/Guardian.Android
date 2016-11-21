@@ -27,7 +27,7 @@ import android.content.Context;
 import android.provider.Settings;
 
 /**
- * Data about the current device, including name, identifier and push service's notification token
+ * Data about the current device, including name, identifier and push notification service's token
  */
 public class CurrentDevice {
 
