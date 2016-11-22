@@ -39,7 +39,6 @@ class GuardianEnrollment implements Enrollment {
     private final String deviceName;
     private final String notificationToken;
     private final String deviceToken;
-    private final String recoveryCode;
     private final PrivateKey privateKey;
 
     GuardianEnrollment(@NonNull String userId,
@@ -50,7 +49,6 @@ class GuardianEnrollment implements Enrollment {
                        @NonNull String enrollmentId,
                        @NonNull CurrentDevice device,
                        @NonNull String deviceToken,
-                       @Nullable String recoveryCode,
                        @NonNull PrivateKey privateKey) {
         this.userId = userId;
         this.period = period;
@@ -62,7 +60,6 @@ class GuardianEnrollment implements Enrollment {
         this.deviceName = device.getName();
         this.notificationToken = device.getNotificationToken();
         this.deviceToken = deviceToken;
-        this.recoveryCode = recoveryCode;
         this.privateKey = privateKey;
     }
 
@@ -124,12 +121,6 @@ class GuardianEnrollment implements Enrollment {
     @Override
     public String getDeviceToken() {
         return deviceToken;
-    }
-
-    @Nullable
-    @Override
-    public String getRecoveryCode() {
-        return recoveryCode;
     }
 
     @NonNull

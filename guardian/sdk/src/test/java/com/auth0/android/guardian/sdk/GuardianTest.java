@@ -65,7 +65,6 @@ public class GuardianTest {
     private static final String GCM_TOKEN = "GCM_TOKEN";
     private static final String DEVICE_TOKEN = "DEVICE_TOKEN";
     private static final String GUARDIAN_URL = "http://example.guardian.auth0.com/";
-    private static final String RECOVERY_CODE = "RECOVERY_CODE";
     private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
     private static final String TRANSACTION_TOKEN = "TRANSACTION_TOKEN";
     private static final String CHALLENGE = "CHALLENGE";
@@ -108,7 +107,7 @@ public class GuardianTest {
         currentDevice = new CurrentDevice(GCM_TOKEN, DEVICE_NAME, DEVICE_IDENTIFIER);
 
         enrollment = new GuardianEnrollment(USER, PERIOD, DIGITS, ALGORITHM, SECRET_BASE32,
-                DEVICE_ID, currentDevice, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
+                DEVICE_ID, currentDevice, DEVICE_TOKEN, privateKey);
 
         when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
                 .thenReturn(deviceApiClient);

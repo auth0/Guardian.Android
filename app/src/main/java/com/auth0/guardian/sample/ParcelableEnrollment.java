@@ -70,9 +70,6 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     @SerializedName("deviceToken")
     private final String deviceToken;
 
-    @SerializedName("recoveryCode")
-    private final String recoveryCode;
-
     @SerializedName("privateKey")
     private final String privateKey;
 
@@ -87,7 +84,6 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         this.deviceName = enrollment.getDeviceName();
         this.deviceGCMToken = enrollment.getNotificationToken();
         this.deviceToken = enrollment.getDeviceToken();
-        this.recoveryCode = enrollment.getRecoveryCode();
         this.privateKey = Base64.encodeToString(enrollment.getSigningKey().getEncoded(), Base64.DEFAULT);
     }
 
@@ -146,11 +142,6 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         return deviceToken;
     }
 
-    @Override
-    public String getRecoveryCode() {
-        return recoveryCode;
-    }
-
     @NonNull
     @Override
     public PrivateKey getSigningKey() {
@@ -176,7 +167,6 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         deviceName = in.readString();
         deviceGCMToken = in.readString();
         deviceToken = in.readString();
-        recoveryCode = in.readString();
         privateKey = in.readString();
     }
 
@@ -197,7 +187,6 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         dest.writeString(deviceName);
         dest.writeString(deviceGCMToken);
         dest.writeString(deviceToken);
-        dest.writeString(recoveryCode);
         dest.writeString(privateKey);
     }
 

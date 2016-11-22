@@ -36,8 +36,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class GuardianEnrollmentTest {
 
-    private static final String URL_HTTP_WITH_FINAL_DASH = "http://example.com/";
-    private static final String TENANT = "TENANT";
     private static final String USER = "USER";
     private static final int PERIOD = 30;
     private static final int DIGITS = 6;
@@ -48,7 +46,6 @@ public class GuardianEnrollmentTest {
     private static final String DEVICE_NAME = "DEVICE_NAME";
     private static final String DEVICE_GCM_TOKEN = "DEVICE_GCM_TOKEN";
     private static final String DEVICE_TOKEN = "DEVICE_TOKEN";
-    private static final String RECOVERY_CODE = "RECOVERY_CODE";
 
     @Mock
     PrivateKey privateKey;
@@ -63,7 +60,7 @@ public class GuardianEnrollmentTest {
         CurrentDevice device = new CurrentDevice(DEVICE_GCM_TOKEN, DEVICE_NAME, DEVICE_LOCAL_IDENTIFIER);
 
         Enrollment enrollment = new GuardianEnrollment(USER, PERIOD, DIGITS, ALGORITHM,
-                SECRET_BASE32, DEVICE_ID, device, DEVICE_TOKEN, RECOVERY_CODE, privateKey);
+                SECRET_BASE32, DEVICE_ID, device, DEVICE_TOKEN, privateKey);
 
         assertThat(enrollment.getUserId(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
@@ -75,7 +72,6 @@ public class GuardianEnrollmentTest {
         assertThat(enrollment.getDeviceName(), is(equalTo(DEVICE_NAME)));
         assertThat(enrollment.getNotificationToken(), is(equalTo(DEVICE_GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
-        assertThat(enrollment.getRecoveryCode(), is(equalTo(RECOVERY_CODE)));
         assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
     }
 }

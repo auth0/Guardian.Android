@@ -122,17 +122,6 @@ public interface Enrollment {
     String getDeviceToken();
 
     /**
-     * The recovery code that the user should keep in case he needs to log in without the device.
-     * Might be null if the user already had a recovery code.
-     * Remember that the recovery code is only one per user, not per enrollment, and that it can be
-     * used only once. You should get a new one after a successful login it.
-     *
-     * @return the Guardian recovery code, if present
-     */
-    @Nullable
-    String getRecoveryCode();
-
-    /**
      * The private key used to sign the requests to allow/reject an authentication request
      *
      * @return the RSA private key
