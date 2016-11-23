@@ -299,7 +299,7 @@ public class GuardianAPIClient {
             final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
             final String clientInfo = Base64.encodeToString(
-                    String.format("{\"name\":\"GuardianSDK.Android\",\"version\":\"%s\"}",
+                    String.format("{\"name\":\"Guardian.Android\",\"version\":\"%s\"}",
                             BuildConfig.VERSION_NAME).getBytes(),
                     Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
 
