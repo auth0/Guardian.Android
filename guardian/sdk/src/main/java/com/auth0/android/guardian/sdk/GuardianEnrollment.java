@@ -30,8 +30,6 @@ import java.security.PrivateKey;
 class GuardianEnrollment implements Enrollment {
 
     private final String id;
-    private final String url;
-    private final String label;
     private final String userId;
     private final Integer period;
     private final Integer digits;
@@ -41,34 +39,27 @@ class GuardianEnrollment implements Enrollment {
     private final String deviceName;
     private final String notificationToken;
     private final String deviceToken;
-    private final String recoveryCode;
     private final PrivateKey privateKey;
 
-    GuardianEnrollment(@NonNull String url,
-                       @NonNull String label,
-                       @NonNull String userId,
+    GuardianEnrollment(@NonNull String userId,
                        @Nullable Integer period,
                        @Nullable Integer digits,
                        @Nullable String algorithm,
                        @Nullable String secret,
-                       @NonNull String deviceId,
+                       @NonNull String enrollmentId,
                        @NonNull CurrentDevice device,
                        @NonNull String deviceToken,
-                       @Nullable String recoveryCode,
                        @NonNull PrivateKey privateKey) {
-        this.url = url;
-        this.label = label;
         this.userId = userId;
         this.period = period;
         this.digits = digits;
         this.algorithm = algorithm;
         this.secret = secret;
-        this.id = deviceId;
+        this.id = enrollmentId;
         this.deviceIdentifier = device.getIdentifier();
         this.deviceName = device.getName();
         this.notificationToken = device.getNotificationToken();
         this.deviceToken = deviceToken;
-        this.recoveryCode = recoveryCode;
         this.privateKey = privateKey;
     }
 
@@ -76,18 +67,6 @@ class GuardianEnrollment implements Enrollment {
     @Override
     public String getId() {
         return id;
-    }
-
-    @NonNull
-    @Override
-    public String getUrl() {
-        return url;
-    }
-
-    @NonNull
-    @Override
-    public String getLabel() {
-        return label;
     }
 
     @NonNull
@@ -142,12 +121,6 @@ class GuardianEnrollment implements Enrollment {
     @Override
     public String getDeviceToken() {
         return deviceToken;
-    }
-
-    @Nullable
-    @Override
-    public String getRecoveryCode() {
-        return recoveryCode;
     }
 
     @NonNull

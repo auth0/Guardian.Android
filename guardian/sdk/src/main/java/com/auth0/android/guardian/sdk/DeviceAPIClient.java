@@ -32,6 +32,11 @@ import java.util.Map;
 
 import okhttp3.HttpUrl;
 
+/**
+ * Enrollment's device management API client
+ *
+ * Use this API client to create, update or delete an enrollment's device data
+ */
 public class DeviceAPIClient {
 
     private final RequestFactory requestFactory;

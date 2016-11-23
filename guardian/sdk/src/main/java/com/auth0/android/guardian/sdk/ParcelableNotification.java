@@ -39,6 +39,10 @@ import java.util.TimeZone;
 
 import okhttp3.HttpUrl;
 
+/**
+ * A Guardian Notification that contains data about an authentication request and implements the
+ * {@link Parcelable} interface.
+ */
 public class ParcelableNotification implements Notification, Parcelable {
 
     private static final String TAG = ParcelableNotification.class.getName();

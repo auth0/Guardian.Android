@@ -27,6 +27,9 @@ import android.support.annotation.Nullable;
 
 import java.util.Date;
 
+/**
+ * A Guardian Notification contains data about an authentication request.
+ */
 public interface Notification {
 
     /**

@@ -42,25 +42,6 @@ public interface Enrollment {
     String getId();
 
     /**
-     * The Guardian server url
-     *
-     * @return the url
-     */
-    @NonNull
-    String getUrl();
-
-    /**
-     * A label for the enrollment.
-     *
-     * This will be pre-filled with the Guardian tenant, but since it's only used to display to the
-     * user, this could be overridden to return whatever the developer wants.
-     *
-     * @return the label
-     */
-    @NonNull
-    String getLabel();
-
-    /**
      * The id of this enrollment's user
      *
      * @return the user name or email
@@ -139,17 +120,6 @@ public interface Enrollment {
      */
     @NonNull
     String getDeviceToken();
-
-    /**
-     * The recovery code that the user should keep in case he needs to log in without the device.
-     * Might be null if the user already had a recovery code.
-     * Remember that the recovery code is only one per user, not per enrollment, and that it can be
-     * used only once. You should get a new one after a successful login it.
-     *
-     * @return the Guardian recovery code, if present
-     */
-    @Nullable
-    String getRecoveryCode();
 
     /**
      * The private key used to sign the requests to allow/reject an authentication request

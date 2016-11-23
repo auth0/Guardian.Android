@@ -22,6 +22,7 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.net.Uri;
 import android.os.Build;
 
 import com.auth0.android.guardian.sdk.utils.MockCallback;
@@ -106,14 +107,13 @@ public class GuardianAPIClientTest {
     private static final String CHALLENGE = "CHALLENGE";
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public ExpectedException exception = ExpectedException.none();
 
     @Mock
     RSAPublicKey publicKey;
 
     MockWebService mockAPI;
     GuardianAPIClient apiClient;
-    Gson gson;
     KeyPair keyPair;
 
     @Before
@@ -132,18 +132,62 @@ public class GuardianAPIClientTest {
         mockAPI = new MockWebService();
         final String domain = mockAPI.getDomain();
 
-        gson = new GsonBuilder()
-                .create();
-
         apiClient = new GuardianAPIClient.Builder()
-                .baseUrl(domain)
-                .gson(gson)
+                .url(Uri.parse(domain))
                 .build();
     }
 
     @After
     public void tearDown() throws Exception {
         mockAPI.shutdown();
+    }
+
+    @Test
+    public void shouldBuildWithUrl() throws Exception {
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .url(Uri.parse("https://example.guardian.auth0.com"))
+                .build();
+
+        assertThat(apiClient.getUrl(),
+                is(equalTo("https://example.guardian.auth0.com/")));
+    }
+
+    @Test
+    public void shouldBuildWithDomain() throws Exception {
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .domain("example.guardian.auth0.com")
+                .build();
+
+        assertThat(apiClient.getUrl(),
+                is(equalTo("https://example.guardian.auth0.com/")));
+    }
+
+    @Test
+    public void shouldFailIfDomainWasAlreadySet() throws Exception {
+        exception.expect(IllegalArgumentException.class);
+
+        new GuardianAPIClient.Builder()
+                .domain("example.guardian.auth0.com")
+                .url(Uri.parse("https://example.guardian.auth0.com"))
+                .build();
+    }
+
+    @Test
+    public void shouldFailIfUrlWasAlreadySet() throws Exception {
+        exception.expect(IllegalArgumentException.class);
+
+        new GuardianAPIClient.Builder()
+                .url(Uri.parse("https://example.guardian.auth0.com"))
+                .domain("example.guardian.auth0.com")
+                .build();
+    }
+
+    @Test
+    public void shouldFailIfNoUrlOrDomainConfigured() throws Exception {
+        exception.expect(IllegalStateException.class);
+
+        new GuardianAPIClient.Builder()
+                .build();
     }
 
     @Test
@@ -208,7 +252,7 @@ public class GuardianAPIClientTest {
 
     @Test
     public void shouldFailEnrollIfNotRSA() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
+        exception.expect(IllegalArgumentException.class);
 
         final MockCallback<Map<String,Object>> callback = new MockCallback<>();
 
@@ -302,8 +346,8 @@ public class GuardianAPIClientTest {
     }
 
     private Map<String, Object> bodyFromRequest(RecordedRequest request) throws IOException {
-        Type type = new TypeToken<Map<String, Object>>() {
-        }.getType();
+        Gson gson = new GsonBuilder().create();
+        Type type = new TypeToken<Map<String, Object>>() {}.getType();
         return gson.fromJson(new InputStreamReader(request.getBody().inputStream()), type);
     }
 

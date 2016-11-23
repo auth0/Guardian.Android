@@ -38,7 +38,6 @@ import com.auth0.android.guardian.sdk.networking.Callback;
 
 public class NotificationActivity extends AppCompatActivity {
 
-    private TextView labelText;
     private TextView userText;
     private TextView browserText;
     private TextView osText;
@@ -83,7 +82,6 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void setupUI() {
-        labelText = (TextView) findViewById(R.id.labelText);
         userText = (TextView) findViewById(R.id.userText);
         browserText = (TextView) findViewById(R.id.browserText);
         osText = (TextView) findViewById(R.id.osText);
@@ -110,7 +108,6 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        labelText.setText(enrollment.getLabel());
         userText.setText(enrollment.getUserId());
         browserText.setText(
                 String.format("%s, %s",

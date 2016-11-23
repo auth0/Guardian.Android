@@ -43,14 +43,8 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     @SerializedName("id")
     private final String id;
 
-    @SerializedName("url")
-    private final String url;
-
-    @SerializedName("label")
-    private final String label;
-
-    @SerializedName("user")
-    private final String user;
+    @SerializedName("userId")
+    private final String userId;
 
     @SerializedName("period")
     private final Integer period;
@@ -76,16 +70,11 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     @SerializedName("deviceToken")
     private final String deviceToken;
 
-    @SerializedName("recoveryCode")
-    private final String recoveryCode;
-
     @SerializedName("privateKey")
     private final String privateKey;
 
     public ParcelableEnrollment(Enrollment enrollment) {
-        this.url = enrollment.getUrl();
-        this.label = enrollment.getLabel();
-        this.user = enrollment.getUserId();
+        this.userId = enrollment.getUserId();
         this.period = enrollment.getPeriod();
         this.digits = enrollment.getDigits();
         this.algorithm = enrollment.getAlgorithm();
@@ -95,7 +84,6 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         this.deviceName = enrollment.getDeviceName();
         this.deviceGCMToken = enrollment.getNotificationToken();
         this.deviceToken = enrollment.getDeviceToken();
-        this.recoveryCode = enrollment.getRecoveryCode();
         this.privateKey = Base64.encodeToString(enrollment.getSigningKey().getEncoded(), Base64.DEFAULT);
     }
 
@@ -106,20 +94,8 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     }
 
     @NonNull
-    @Override
-    public String getUrl() {
-        return url;
-    }
-
-    @NonNull
-    @Override
-    public String getLabel() {
-        return label;
-    }
-
-    @NonNull
     public String getUserId() {
-        return user;
+        return userId;
     }
 
     @Override
@@ -166,11 +142,6 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         return deviceToken;
     }
 
-    @Override
-    public String getRecoveryCode() {
-        return recoveryCode;
-    }
-
     @NonNull
     @Override
     public PrivateKey getSigningKey() {
@@ -187,9 +158,7 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     // PARCELABLE
     protected ParcelableEnrollment(Parcel in) {
         id = in.readString();
-        url = in.readString();
-        label = in.readString();
-        user = in.readString();
+        userId = in.readString();
         period = in.readInt();
         digits = in.readInt();
         algorithm = in.readString();
@@ -198,7 +167,6 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         deviceName = in.readString();
         deviceGCMToken = in.readString();
         deviceToken = in.readString();
-        recoveryCode = in.readString();
         privateKey = in.readString();
     }
 
@@ -210,9 +178,7 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(id);
-        dest.writeString(url);
-        dest.writeString(label);
-        dest.writeString(user);
+        dest.writeString(userId);
         dest.writeInt(period);
         dest.writeInt(digits);
         dest.writeString(algorithm);
@@ -221,7 +187,6 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         dest.writeString(deviceName);
         dest.writeString(deviceGCMToken);
         dest.writeString(deviceToken);
-        dest.writeString(recoveryCode);
         dest.writeString(privateKey);
     }
 

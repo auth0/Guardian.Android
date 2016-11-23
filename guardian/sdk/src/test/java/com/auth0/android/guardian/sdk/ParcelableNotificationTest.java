@@ -154,22 +154,6 @@ public class ParcelableNotificationTest {
     }
 
     @Test
-    public void shouldMatchEnrollment() throws Exception {
-        Date currentDate = new Date();
-        Bundle data = createPushNotificationPayload(
-                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, currentDate, CHALLENGE);
-
-        ParcelableNotification notification = ParcelableNotification.parse(data);
-
-        Enrollment enrollment = new GuardianEnrollment(
-                HOSTNAME_HTTPS, null, null, 6, 30, null, null,
-                DEVICE_ID, currentDevice, null, null, privateKey);
-
-        assertThat(notification.getEnrollmentId(), is(equalTo(enrollment.getId())));
-        assertThat(notification.getUrl(), is(equalTo(enrollment.getUrl())));
-    }
-
-    @Test
     public void shouldReturnNullIfThereIsNoHostname() throws Exception {
         Bundle data = createPushNotificationPayload(null, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE);
 
