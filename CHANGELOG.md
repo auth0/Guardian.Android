@@ -2,10 +2,6 @@
 
 First release of Guardian for Android
 
-### Requirements
-
-Android API level 15+ is required in order to use Guardian.
-
 ### Install
 
 Add these lines to your `build.gradle` dependencies file:
@@ -16,17 +12,7 @@ compile 'com.auth0.android:guardian:0.1.0'
 
 ### Usage
 
-Create an instance of `Guardian` using either an url or domain:
-
-```java
-Uri url = Uri.parse("https://<TENANT>.guardian.auth0.com/");
-
-Guardian guardian = new Guardian.Builder()
-        .url(url)
-        .build();
-```
-
-or
+Create an instance of `Guardian`:
 
 ```java
 String domain = "<TENANT>.guardian.auth0.com";
@@ -62,14 +48,6 @@ guardian
         });
 ```
 
-To unenroll just call:
-
-```java
-guardian
-        .delete(enrollment)
-        .execute(); // or start(new Callback<> ...) asynchronously
-```
-
 To allow or reject a login request you first need to get the Guardian `Notification`:
 
 ```java
@@ -86,26 +64,10 @@ public void onMessageReceived(String from, Bundle data) {
 }
 ```
 
-Then, to allow the login request, call:
+Then, to allow the login request:
 
 ```java
 guardian
         .allow(notification, enrollment)
-        .execute(); // or start(new Callback<> ...) asynchronously
-```
-
-or to reject it:
-
-```java
-guardian
-        .reject(notification, enrollment) 
-        .execute(); // or start(new Callback<> ...) asynchronously
-```
- 
- or optionally, to indicate a reject reason:
- 
- ```java
-guardian
-        .reject(notification, enrollment, reason)
         .execute(); // or start(new Callback<> ...) asynchronously
 ```
