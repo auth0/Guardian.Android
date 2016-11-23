@@ -1,6 +1,7 @@
 # Guardian SDK for Android
 ============
 [![CI Status](https://travis-ci.org/auth0/Guardian.Android.svg?branch=master)](https://travis-ci.org/auth0/Guardian.Android)
+[![Coverage Status](https://img.shields.io/codecov/c/github/auth0/Guardian.Android/master.svg?style=flat-square)](https://codecov.io/github/auth0/Guardian.Android)
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat)](http://doge.mit-license.org)
 
 [Guardian](https://auth0.com/docs/multifactor-authentication/guardian) is Auth0's multi-factor
