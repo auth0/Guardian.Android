@@ -226,7 +226,7 @@ public class GuardianAPIClientTest {
                 new InputStreamReader(
                         new ByteArrayInputStream(auth0ClientDecoded)), type);
         assertThat(auth0Client, is(notNullValue()));
-        assertThat(auth0Client, hasEntry("name", "GuardianSDK.Android"));
+        assertThat(auth0Client, hasEntry("name", "Guardian.Android"));
         assertThat(auth0Client, hasEntry("version", BuildConfig.VERSION_NAME));
     }
 
