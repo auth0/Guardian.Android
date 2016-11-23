@@ -1,6 +1,6 @@
 # Guardian SDK for Android
 ============
-[![CI Status](https://travis-ci.com/auth0/GuardianSDK.Android.svg?token=R3xUbi1dnaoneyhnspcr&branch=master)](https://travis-ci.com/auth0/GuardianSDK.Android)
+[![CI Status](https://travis-ci.com/auth0/Guardian.Android.svg?token=R3xUbi1dnaoneyhnspcr&branch=master)](https://travis-ci.com/auth0/Guardian.Android)
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat)](http://doge.mit-license.org)
 
 [Guardian](https://auth0.com/docs/multifactor-authentication/guardian) is Auth0's multi-factor
@@ -30,7 +30,7 @@ GuardianSDK is available both in [Maven Central](http://search.maven.org) and
 To start using *GuardianSDK* add these lines to your `build.gradle` dependencies file:
 
 ```gradle
-compile 'com.auth0.android:guardian-sdk:0.1.0'
+compile 'com.auth0.android:guardian:0.1.0'
 ```
 
 ## Usage
@@ -39,7 +39,7 @@ compile 'com.auth0.android:guardian-sdk:0.1.0'
 tenant/url.
 
 ```java
-Uri url = Uri.parse("https://tenant.guardian.auth0.com/");
+Uri url = Uri.parse("https://<TENANT>.guardian.auth0.com/");
 
 Guardian guardian = new Guardian.Builder()
         .url(url)
@@ -49,7 +49,7 @@ Guardian guardian = new Guardian.Builder()
 or
 
 ```java
-String domain = "tenant.guardian.auth0.com";
+String domain = "<TENANT>.guardian.auth0.com";
 
 Guardian guardian = new Guardian.Builder()
         .domain(domain)
@@ -82,10 +82,10 @@ Then you just use the `enroll` method like this:
 ```java
 CurrentDevice device = new CurrentDevice(context, "gcmToken", "deviceName");
 
-String enrollmentDataFromQrOrTicket = ...; // the data from a Guardian QR code or enrollment ticket
+String enrollmentUriFromQr = ...; // the data from a Guardian QR code or enrollment ticket
 
 Enrollment enrollment = guardian
-        .enroll(enrollmentDataFromQrOrTicket, device, keyPair)
+        .enroll(enrollmentUriFromQr, device, keyPair)
         .execute();
 ```
 
@@ -93,7 +93,7 @@ or you can also execute the request in a background thread
 
 ```java
 guardian
-        .enroll(enrollmentUriFromQr, "deviceName", "gcmToken", keyPair)
+        .enroll(enrollmentUriFromQr, device, keyPair)
         .start(new Callback<Enrollment> {
             @Override
             void onSuccess(Enrollment enrollment) {
@@ -124,7 +124,7 @@ following request:
 ```java
 guardian
         .delete(enrollment)
-        .execute(); // or start(new Callback<> ...)
+        .execute(); // or start(new Callback<> ...) asynchronously
 ```
 
 ### Allow a login request
@@ -136,7 +136,7 @@ Guardian provides a method to parse the `Bundle` received from GCM and return a 
 instance ready to be used.
 
 ```java
-// at the GCM listener you receive a Bundle
+// at your GCM listener you receive a Bundle
 @Override
 public void onMessageReceived(String from, Bundle data) {
     Notification notification = Guardian.parseNotification(data);
@@ -160,7 +160,7 @@ notification (you can get the enrollment id with `getEnrollmentId()`.
 ```java
 guardian
         .allow(notification, enrollment)
-        .execute(); // or start(new Callback<> ...)
+        .execute(); // or start(new Callback<> ...) asynchronously
 ```
 
 ### Reject a login request
@@ -171,7 +171,7 @@ you want. The reject reason will be available in the guardian logs.
 ```java
 guardian
         .reject(notification, enrollment) // or reject(notification, enrollment, reason)
-        .execute(); // or start(new Callback<> ...)
+        .execute(); // or start(new Callback<> ...) asynchronously
 ```
 
 ## What is Auth0?
