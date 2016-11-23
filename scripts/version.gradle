@@ -16,12 +16,14 @@ def describeGit(boolean snapshot, String defaultValue = null) {
     def arguments = ['describe', '--tags']
     arguments.add(snapshot ? '--abbrev=0' : '--exact-match')
     def stdout = new ByteArrayOutputStream()
+    def errout = new ByteArrayOutputStream()
     def string = defaultValue
     try {
         def result = project.exec {
             executable = 'git'
             args = arguments
             standardOutput = stdout
+            errorOutput = errout
         }
 
         result.assertNormalExitValue()
