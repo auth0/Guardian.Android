@@ -22,6 +22,7 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -248,7 +249,17 @@ public class GuardianAPIClient {
      */
     public static class Builder {
 
+        private final Context context;
         private HttpUrl url;
+
+        /**
+         * Constructs an instance of a {@link GuardianAPIClient} Builder
+         *
+         * @param context the android context
+         */
+        public Builder(Context context) {
+            this.context = context;
+        }
 
         /**
          * Set the URL of the Guardian server.
@@ -298,6 +309,10 @@ public class GuardianAPIClient {
 
             final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
+            final String userAgent = String.format("%s Android %s",
+                    context.getPackageName(),
+                    Build.VERSION.RELEASE);
+
             final String clientInfo = Base64.encodeToString(
                     String.format("{\"name\":\"Guardian.Android\",\"version\":\"%s\"}",
                             BuildConfig.VERSION_NAME).getBytes(),
@@ -308,13 +323,8 @@ public class GuardianAPIClient {
                 public Response intercept(Chain chain) throws IOException {
                     okhttp3.Request originalRequest = chain.request();
                     okhttp3.Request requestWithUserAgent = originalRequest.newBuilder()
-                            .header("Accept-Language",
-                                    Locale.getDefault().toString())
-                            .header("User-Agent",
-                                    String.format("GuardianSDK/%s(%s) Android %s",
-                                            BuildConfig.VERSION_NAME,
-                                            BuildConfig.VERSION_CODE,
-                                            Build.VERSION.RELEASE))
+                            .header("Accept-Language", Locale.getDefault().toString())
+                            .header("User-Agent", userAgent)
                             .header("Auth0-Client", clientInfo)
                             .build();
                     return chain.proceed(requestWithUserAgent);

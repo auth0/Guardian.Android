@@ -42,6 +42,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import java.io.ByteArrayInputStream;
@@ -135,7 +136,7 @@ public class GuardianAPIClientTest {
         mockAPI = new MockWebService();
         final String domain = mockAPI.getDomain();
 
-        apiClient = new GuardianAPIClient.Builder()
+        apiClient = new GuardianAPIClient.Builder(RuntimeEnvironment.application)
                 .url(Uri.parse(domain))
                 .build();
     }
@@ -147,7 +148,7 @@ public class GuardianAPIClientTest {
 
     @Test
     public void shouldBuildWithUrl() throws Exception {
-        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder(RuntimeEnvironment.application)
                 .url(Uri.parse("https://example.guardian.auth0.com"))
                 .build();
 
@@ -157,7 +158,7 @@ public class GuardianAPIClientTest {
 
     @Test
     public void shouldBuildWithDomain() throws Exception {
-        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder(RuntimeEnvironment.application)
                 .domain("example.guardian.auth0.com")
                 .build();
 
@@ -169,7 +170,7 @@ public class GuardianAPIClientTest {
     public void shouldFailIfDomainWasAlreadySet() throws Exception {
         exception.expect(IllegalArgumentException.class);
 
-        new GuardianAPIClient.Builder()
+        new GuardianAPIClient.Builder(RuntimeEnvironment.application)
                 .domain("example.guardian.auth0.com")
                 .url(Uri.parse("https://example.guardian.auth0.com"))
                 .build();
@@ -179,7 +180,7 @@ public class GuardianAPIClientTest {
     public void shouldFailIfUrlWasAlreadySet() throws Exception {
         exception.expect(IllegalArgumentException.class);
 
-        new GuardianAPIClient.Builder()
+        new GuardianAPIClient.Builder(RuntimeEnvironment.application)
                 .url(Uri.parse("https://example.guardian.auth0.com"))
                 .domain("example.guardian.auth0.com")
                 .build();
@@ -189,7 +190,7 @@ public class GuardianAPIClientTest {
     public void shouldFailIfNoUrlOrDomainConfigured() throws Exception {
         exception.expect(IllegalStateException.class);
 
-        new GuardianAPIClient.Builder()
+        new GuardianAPIClient.Builder(RuntimeEnvironment.application)
                 .build();
     }
 
@@ -206,9 +207,8 @@ public class GuardianAPIClientTest {
         RecordedRequest request = mockAPI.takeRequest();
         assertThat(request.getHeader("User-Agent"),
                 is(equalTo(
-                        String.format("GuardianSDK/%s(%s) Android %s",
-                                BuildConfig.VERSION_NAME,
-                                BuildConfig.VERSION_CODE,
+                        String.format("%s Android %s",
+                                RuntimeEnvironment.application.getPackageName(),
                                 Build.VERSION.RELEASE))));
 
         assertThat(request.getHeader("Accept-Language"),
