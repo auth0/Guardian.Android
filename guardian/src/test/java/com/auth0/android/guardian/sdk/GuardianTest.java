@@ -41,6 +41,8 @@ import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.Matchers.eq;
@@ -264,6 +266,84 @@ public class GuardianTest {
 
         new Guardian.Builder()
                 .build();
+    }
+
+    @Test
+    public void shouldReturnNullOTPIfSecretIsNull() throws Exception {
+        Enrollment enrollment = mock(Enrollment.class);
+        when(enrollment.getSecret()).thenReturn(null);
+        when(enrollment.getAlgorithm()).thenReturn(ALGORITHM);
+        when(enrollment.getDigits()).thenReturn(DIGITS);
+        when(enrollment.getPeriod()).thenReturn(PERIOD);
+
+        String code = Guardian.getOTPCode(enrollment);
+
+        assertThat(code, is(nullValue()));
+    }
+
+    @Test
+    public void shouldReturnNullOTPIfAlgorithmIsNull() throws Exception {
+        Enrollment enrollment = mock(Enrollment.class);
+        when(enrollment.getSecret()).thenReturn(SECRET_BASE32);
+        when(enrollment.getAlgorithm()).thenReturn(null);
+        when(enrollment.getDigits()).thenReturn(DIGITS);
+        when(enrollment.getPeriod()).thenReturn(PERIOD);
+
+        String code = Guardian.getOTPCode(enrollment);
+
+        assertThat(code, is(nullValue()));
+    }
+
+    @Test
+    public void shouldReturnNullOTPIfDigitsIsNull() throws Exception {
+        Enrollment enrollment = mock(Enrollment.class);
+        when(enrollment.getSecret()).thenReturn(SECRET_BASE32);
+        when(enrollment.getAlgorithm()).thenReturn(ALGORITHM);
+        when(enrollment.getDigits()).thenReturn(null);
+        when(enrollment.getPeriod()).thenReturn(PERIOD);
+
+        String code = Guardian.getOTPCode(enrollment);
+
+        assertThat(code, is(nullValue()));
+    }
+
+    @Test
+    public void shouldReturnNullOTPIfPeriodIsNull() throws Exception {
+        Enrollment enrollment = mock(Enrollment.class);
+        when(enrollment.getSecret()).thenReturn(SECRET_BASE32);
+        when(enrollment.getAlgorithm()).thenReturn(ALGORITHM);
+        when(enrollment.getDigits()).thenReturn(DIGITS);
+        when(enrollment.getPeriod()).thenReturn(null);
+
+        String code = Guardian.getOTPCode(enrollment);
+
+        assertThat(code, is(nullValue()));
+    }
+
+    @Test
+    public void shouldReturnOTP() throws Exception {
+        Enrollment enrollment = mock(Enrollment.class);
+        when(enrollment.getSecret()).thenReturn(SECRET_BASE32);
+        when(enrollment.getAlgorithm()).thenReturn(ALGORITHM);
+        when(enrollment.getDigits()).thenReturn(DIGITS);
+        when(enrollment.getPeriod()).thenReturn(PERIOD);
+
+        String code = Guardian.getOTPCode(enrollment);
+
+        assertThat(code, is(not(nullValue())));
+    }
+
+    @Test
+    public void shouldThrowIfEnrollmentSecretIsInvalid() throws Exception {
+        exception.expect(IllegalArgumentException.class);
+
+        Enrollment enrollment = mock(Enrollment.class);
+        when(enrollment.getSecret()).thenReturn("THIS_IS_AN_INVALID_BASE32_SECRET_ñññ\n@");
+        when(enrollment.getAlgorithm()).thenReturn(ALGORITHM);
+        when(enrollment.getDigits()).thenReturn(DIGITS);
+        when(enrollment.getPeriod()).thenReturn(PERIOD);
+
+        String code = Guardian.getOTPCode(enrollment);
     }
 
     private String createEnrollmentUri() {
