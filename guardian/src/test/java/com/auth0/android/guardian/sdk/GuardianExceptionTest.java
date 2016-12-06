@@ -29,7 +29,9 @@ import java.util.Map;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.assertThat;
 
 public class GuardianExceptionTest {
 
@@ -37,50 +39,124 @@ public class GuardianExceptionTest {
     public void shouldBeUnknownError() throws Exception {
         GuardianException exception = new GuardianException("Some error message");
 
+        assertThat(exception.getMessage(), is(equalTo("Some error message")));
+
+        assertThat(exception.getErrorCode(), is(nullValue()));
+
         assertThat(exception.isInvalidOTP(), is(equalTo(false)));
         assertThat(exception.isInvalidToken(), is(equalTo(false)));
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
         assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
+    }
+
+    @Test
+    public void shouldBeUnknownErrorWithCause() throws Exception {
+        Throwable cause = new RuntimeException("The exception cause");
+        GuardianException exception = new GuardianException("Some error message", cause);
+
+        assertThat(exception.getMessage(), is(equalTo("Some error message")));
+
+        assertThat(exception.getCause(), is(sameInstance(cause)));
+
+        assertThat(exception.getErrorCode(), is(nullValue()));
+
+        assertThat(exception.isInvalidOTP(), is(equalTo(false)));
+        assertThat(exception.isInvalidToken(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
+    }
+
+    @Test
+    public void shouldHaveCustomErrorCode() throws Exception {
+        GuardianException exception = new GuardianException(createErrorMap("some_unknown_error_code"));
+
+        assertThat(exception.getErrorCode(), is(equalTo("some_unknown_error_code")));
+
+        assertThat(exception.isInvalidOTP(), is(equalTo(false)));
+        assertThat(exception.isInvalidToken(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
     }
 
     @Test
     public void testIsInvalidOTP() throws Exception {
         GuardianException exception = new GuardianException(createErrorMap("invalid_otp"));
 
+        assertThat(exception.getErrorCode(), is(equalTo("invalid_otp")));
+
         assertThat(exception.isInvalidOTP(), is(equalTo(true)));
         assertThat(exception.isInvalidToken(), is(equalTo(false)));
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
         assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
     }
 
     @Test
     public void testIsInvalidToken() throws Exception {
         GuardianException exception = new GuardianException(createErrorMap("invalid_token"));
 
+        assertThat(exception.getErrorCode(), is(equalTo("invalid_token")));
+
         assertThat(exception.isInvalidOTP(), is(equalTo(false)));
         assertThat(exception.isInvalidToken(), is(equalTo(true)));
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
         assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
     }
 
     @Test
-    public void testIsEnrollmentNotFound() throws Exception {
+    public void testIsEnrollmentNotFoundDeprecatedCode() throws Exception {
         GuardianException exception = new GuardianException(createErrorMap("device_account_not_found"));
+
+        assertThat(exception.getErrorCode(), is(equalTo("device_account_not_found")));
 
         assertThat(exception.isInvalidOTP(), is(equalTo(false)));
         assertThat(exception.isInvalidToken(), is(equalTo(false)));
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(true)));
         assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
+    }
+
+    @Test
+    public void testIsEnrollmentNotFound() throws Exception {
+        GuardianException exception = new GuardianException(createErrorMap("enrollment_not_found"));
+
+        assertThat(exception.getErrorCode(), is(equalTo("enrollment_not_found")));
+
+        assertThat(exception.isInvalidOTP(), is(equalTo(false)));
+        assertThat(exception.isInvalidToken(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentNotFound(), is(equalTo(true)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
     }
 
     @Test
     public void testIsEnrollmentTransactionNotFound() throws Exception {
         GuardianException exception = new GuardianException(createErrorMap("enrollment_transaction_not_found"));
 
+        assertThat(exception.getErrorCode(), is(equalTo("enrollment_transaction_not_found")));
+
         assertThat(exception.isInvalidOTP(), is(equalTo(false)));
         assertThat(exception.isInvalidToken(), is(equalTo(false)));
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
         assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(true)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
+    }
+
+    @Test
+    public void testIsLoginTransactionNotFound() throws Exception {
+        GuardianException exception = new GuardianException(createErrorMap("login_transaction_not_found"));
+
+        assertThat(exception.getErrorCode(), is(equalTo("login_transaction_not_found")));
+
+        assertThat(exception.isInvalidOTP(), is(equalTo(false)));
+        assertThat(exception.isInvalidToken(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(true)));
     }
 
     private Map<String, Object> createErrorMap(String errorCode) {

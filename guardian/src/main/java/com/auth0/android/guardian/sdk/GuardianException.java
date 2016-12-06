@@ -22,6 +22,8 @@
 
 package com.auth0.android.guardian.sdk;
 
+import android.support.annotation.Nullable;
+
 import java.util.Map;
 
 public class GuardianException extends RuntimeException {
@@ -31,6 +33,7 @@ public class GuardianException extends RuntimeException {
     private static final String ERROR_DEVICE_ACCOUNT_NOT_FOUND = "device_account_not_found";
     private static final String ERROR_ENROLLMENT_NOT_FOUND = "enrollment_not_found";
     private static final String ERROR_ENROLLMENT_TRANSACTION_NOT_FOUND = "enrollment_transaction_not_found";
+    private static final String ERROR_LOGIN_TRANSACTION_NOT_FOUND = "login_transaction_not_found";
 
     private final Map<String, Object> errorResponse;
     private final String errorCode;
@@ -51,6 +54,16 @@ public class GuardianException extends RuntimeException {
         super((String) errorResponse.get("error"));
         this.errorCode = (String) errorResponse.get("errorCode");
         this.errorResponse = errorResponse;
+    }
+
+    /**
+     * Returns the `errorCode` value, if available.
+     *
+     * @return the error code, or null
+     */
+    @Nullable
+    public String getErrorCode() {
+        return errorCode;
     }
 
     /**
@@ -88,6 +101,15 @@ public class GuardianException extends RuntimeException {
      */
     public boolean isEnrollmentTransactionNotFound() {
         return ERROR_ENROLLMENT_TRANSACTION_NOT_FOUND.equals(errorCode);
+    }
+
+    /**
+     * Whether the error is caused by the login transaction being invalid, expired or not found
+     *
+     * @return true if error is caused by the login transaction being invalid, expired or not found
+     */
+    public boolean isLoginTransactionNotFound() {
+        return ERROR_LOGIN_TRANSACTION_NOT_FOUND.equals(errorCode);
     }
 
     @Override
