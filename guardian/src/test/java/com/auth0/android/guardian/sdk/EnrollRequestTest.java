@@ -179,6 +179,81 @@ public class EnrollRequestTest {
     }
 
     @Test
+    public void shouldFailEnrollWhenMissingId() throws Exception {
+        Map<String, Object> enrollmentResponse = createEnrollmentResponse(null, GUARDIAN_URL,
+                TENANT, USER_ID, DEVICE_TOKEN, null, null, null, null);
+
+        enrollRequest
+                .start(callback);
+
+        verify(request).start(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onSuccess(enrollmentResponse);
+
+        verify(callback).onFailure(any(GuardianException.class));
+    }
+
+    @Test
+    public void shouldFailEnrollWhenMissingUrl() throws Exception {
+        Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, null,
+                TENANT, USER_ID, DEVICE_TOKEN, null, null, null, null);
+
+        enrollRequest
+                .start(callback);
+
+        verify(request).start(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onSuccess(enrollmentResponse);
+
+        verify(callback).onFailure(any(GuardianException.class));
+    }
+
+    @Test
+    public void shouldFailEnrollWhenMissingIssuer() throws Exception {
+        Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
+                null, USER_ID, DEVICE_TOKEN, null, null, null, null);
+
+        enrollRequest
+                .start(callback);
+
+        verify(request).start(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onSuccess(enrollmentResponse);
+
+        verify(callback).onFailure(any(GuardianException.class));
+    }
+
+    @Test
+    public void shouldFailEnrollWhenMissingUserId() throws Exception {
+        Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
+                TENANT, null, DEVICE_TOKEN, null, null, null, null);
+
+        enrollRequest
+                .start(callback);
+
+        verify(request).start(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onSuccess(enrollmentResponse);
+
+        verify(callback).onFailure(any(GuardianException.class));
+    }
+
+    @Test
+    public void shouldFailEnrollWhenMissingDeviceToken() throws Exception {
+        Map<String, Object> enrollmentResponse = createEnrollmentResponse(DEVICE_ID, GUARDIAN_URL,
+                TENANT, USER_ID, null, null, null, null, null);
+
+        enrollRequest
+                .start(callback);
+
+        verify(request).start(callbackCaptor.capture());
+        callbackCaptor.getValue()
+                .onSuccess(enrollmentResponse);
+
+        verify(callback).onFailure(any(GuardianException.class));
+    }
+
+    @Test
     public void shouldFailEnrollWhenRequestFailsSync() throws Exception {
         thrown.expect(Throwable.class);
 
@@ -206,11 +281,21 @@ public class EnrollRequestTest {
                                                          String totpSecret, String totpAlgorithm,
                                                          Integer totpPeriod, Integer totpDigits) {
         Map<String, Object> enrollmentResponse = new HashMap<>();
-        enrollmentResponse.put("id", id);
-        enrollmentResponse.put("url", url);
-        enrollmentResponse.put("issuer", issuer);
-        enrollmentResponse.put("user_id", userId);
-        enrollmentResponse.put("token", token);
+        if (id != null) {
+            enrollmentResponse.put("id", id);
+        }
+        if (url != null) {
+            enrollmentResponse.put("url", url);
+        }
+        if (issuer != null) {
+            enrollmentResponse.put("issuer", issuer);
+        }
+        if (userId != null) {
+            enrollmentResponse.put("user_id", userId);
+        }
+        if (token != null) {
+            enrollmentResponse.put("token", token);
+        }
         if (totpSecret != null || totpAlgorithm != null || totpPeriod != null || totpDigits != null) {
             Map<String, Object> totp = new HashMap<>();
             totp.put("secret", totpSecret);
