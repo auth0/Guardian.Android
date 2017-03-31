@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Base64;
 
+import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.utils.MockCallback;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
 import com.auth0.jwt.JWTVerifier;
@@ -40,6 +41,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
@@ -71,7 +74,11 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -114,6 +121,12 @@ public class GuardianAPIClientTest {
 
     @Mock
     RSAPublicKey publicKey;
+
+    @Mock
+    Callback<Map<String,Object>> enrollCallback;
+
+    @Captor
+    ArgumentCaptor<Map<String,Object>> enrollCallbackCaptor;
 
     MockWebService mockAPI;
     GuardianAPIClient apiClient;
@@ -235,10 +248,8 @@ public class GuardianAPIClientTest {
         mockAPI.willReturnEnrollment(ENROLLMENT_ID, ENROLLMENT_URL, ENROLLMENT_ISSUER, ENROLLMENT_USER,
                 DEVICE_ACCOUNT_TOKEN, RECOVERY_CODE, TOTP_SECRET, TOTP_ALGORITHM, TOTP_DIGITS, TOTP_PERIOD);
 
-        final MockCallback<Map<String,Object>> callback = new MockCallback<>();
-
         apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
-                .start(callback);
+                .start(enrollCallback);
 
         RecordedRequest request = mockAPI.takeRequest();
         assertThat(request.getPath(), is(equalTo("/api/enroll")));
@@ -266,6 +277,10 @@ public class GuardianAPIClientTest {
         assertThat(publicKey, hasEntry("e", (Object) "AQAB"));
         assertThat(publicKey, hasEntry("n", (Object) "AQIDBAUGBwgJAAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAA"));
         assertThat(publicKey.size(), is(equalTo(5)));
+
+        verify(enrollCallback, timeout(100)).onSuccess(anyMapOf(String.class, Object.class));
+
+        verifyNoMoreInteractions(enrollCallback);
     }
 
     @Test

@@ -58,9 +58,8 @@ public class DeviceAPIClient {
      * @return a request to execute
      */
     public GuardianAPIRequest<Void> delete() {
-        Type type = new TypeToken<Void>() {}.getType();
         return requestFactory
-                .<Void>newRequest("DELETE", url, type)
+                .<Void>newRequest("DELETE", url, Void.class)
                 .setBearer(token);
     }
 

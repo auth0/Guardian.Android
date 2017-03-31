@@ -149,9 +149,8 @@ public class GuardianAPIClient {
                                           @NonNull String challenge,
                                           @NonNull PrivateKey privateKey) {
         String jwt = createJWT(privateKey, deviceIdentifier, challenge, true, null);
-        Type type = new TypeToken<Void>() {}.getType();
         return requestFactory
-                .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), type)
+                .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), Void.class)
                 .setBearer(txToken)
                 .setParameter("challenge_response", jwt);
     }
@@ -173,9 +172,8 @@ public class GuardianAPIClient {
                                            @NonNull PrivateKey privateKey,
                                            @Nullable String reason) {
         String jwt = createJWT(privateKey, deviceIdentifier, challenge, false, reason);
-        Type type = new TypeToken<Void>() {}.getType();
         return requestFactory
-                .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), type)
+                .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), Void.class)
                 .setBearer(txToken)
                 .setParameter("challenge_response", jwt);
     }
