@@ -205,6 +205,167 @@ public class ParcelableNotificationTest {
     }
 
     @Test
+    public void shouldReturnNullSource() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                null, null, null, null, LOCATION, LATITUDE, LONGITUDE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getBrowserName(), is(nullValue()));
+        assertThat(notification.getBrowserVersion(), is(nullValue()));
+        assertThat(notification.getOsName(), is(nullValue()));
+        assertThat(notification.getOsVersion(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldReturnNullBrowser() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                null, null, OS_NAME, OS_VERSION, LOCATION, LATITUDE, LONGITUDE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getBrowserName(), is(nullValue()));
+        assertThat(notification.getBrowserVersion(), is(nullValue()));
+        assertThat(notification.getOsName(), is(equalTo(OS_NAME)));
+        assertThat(notification.getOsVersion(), is(equalTo(OS_VERSION)));
+    }
+
+    @Test
+    public void shouldReturnNullBrowserName() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                null, BROWSER_VERSION, OS_NAME, OS_VERSION, LOCATION, LATITUDE, LONGITUDE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getBrowserName(), is(nullValue()));
+        assertThat(notification.getBrowserVersion(), is(equalTo(BROWSER_VERSION)));
+        assertThat(notification.getOsName(), is(equalTo(OS_NAME)));
+        assertThat(notification.getOsVersion(), is(equalTo(OS_VERSION)));
+    }
+
+    @Test
+    public void shouldReturnNullBrowserVersion() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                BROWSER_NAME, null, OS_NAME, OS_VERSION, LOCATION, LATITUDE, LONGITUDE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getBrowserVersion(), is(nullValue()));
+        assertThat(notification.getBrowserName(), is(equalTo(BROWSER_NAME)));
+        assertThat(notification.getOsName(), is(equalTo(OS_NAME)));
+        assertThat(notification.getOsVersion(), is(equalTo(OS_VERSION)));
+    }
+
+    @Test
+    public void shouldReturnNullOs() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                BROWSER_NAME, BROWSER_VERSION, null, null, LOCATION, LATITUDE, LONGITUDE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getOsName(), is(nullValue()));
+        assertThat(notification.getOsVersion(), is(nullValue()));
+        assertThat(notification.getBrowserName(), is(equalTo(BROWSER_NAME)));
+        assertThat(notification.getBrowserVersion(), is(equalTo(BROWSER_VERSION)));
+    }
+
+    @Test
+    public void shouldReturnNullOsName() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                BROWSER_NAME, BROWSER_VERSION, null, OS_VERSION, LOCATION, LATITUDE, LONGITUDE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getOsName(), is(nullValue()));
+        assertThat(notification.getOsVersion(), is(equalTo(OS_VERSION)));
+        assertThat(notification.getBrowserName(), is(equalTo(BROWSER_NAME)));
+        assertThat(notification.getBrowserVersion(), is(equalTo(BROWSER_VERSION)));
+    }
+
+    @Test
+    public void shouldReturnNullOsVersion() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                BROWSER_NAME, BROWSER_VERSION, OS_NAME, null, LOCATION, LATITUDE, LONGITUDE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getOsVersion(), is(nullValue()));
+        assertThat(notification.getOsName(), is(equalTo(OS_NAME)));
+        assertThat(notification.getBrowserName(), is(equalTo(BROWSER_NAME)));
+        assertThat(notification.getBrowserVersion(), is(equalTo(BROWSER_VERSION)));
+    }
+
+    @Test
+    public void shouldReturnNullLocation() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                BROWSER_NAME, BROWSER_VERSION, OS_NAME, OS_VERSION, null, null, null);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getLocation(), is(nullValue()));
+        assertThat(notification.getLatitude(), is(nullValue()));
+        assertThat(notification.getLongitude(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldReturnNullLocationName() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                BROWSER_NAME, BROWSER_VERSION, OS_NAME, OS_VERSION, null, LATITUDE, LONGITUDE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getLocation(), is(nullValue()));
+        assertThat(notification.getLatitude(), is(equalTo(LATITUDE)));
+        assertThat(notification.getLongitude(), is(equalTo(LONGITUDE)));
+    }
+
+    @Test
+    public void shouldReturnNullLatitude() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                BROWSER_NAME, BROWSER_VERSION, OS_NAME, OS_VERSION, LOCATION, null, LONGITUDE);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getLatitude(), is(nullValue()));
+        assertThat(notification.getLocation(), is(equalTo(LOCATION)));
+        assertThat(notification.getLongitude(), is(equalTo(LONGITUDE)));
+    }
+
+    @Test
+    public void shouldReturnNullLongitude() throws Exception {
+        Bundle data = createPushNotificationPayload(
+                HOSTNAME, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE,
+                BROWSER_NAME, BROWSER_VERSION, OS_NAME, OS_VERSION, LOCATION, LATITUDE, null);
+
+        ParcelableNotification notification = ParcelableNotification.parse(data);
+
+        assertThat(notification, is(notNullValue()));
+        assertThat(notification.getLongitude(), is(nullValue()));
+        assertThat(notification.getLocation(), is(equalTo(LOCATION)));
+        assertThat(notification.getLatitude(), is(equalTo(LATITUDE)));
+    }
+
+    @Test
     public void shouldReturnNullIfThereIsNoHostname() throws Exception {
         Bundle data = createPushNotificationPayload(null, DEVICE_ID, TRANSACTION_TOKEN, new Date(), CHALLENGE);
 
@@ -274,15 +435,55 @@ public class ParcelableNotificationTest {
                                                  String challenge,
                                                  Double latitude,
                                                  Double longitude) {
+        return createPushNotificationPayload(hostname, deviceId, transactionToken, date, challenge,
+                BROWSER_NAME, BROWSER_VERSION, OS_NAME, OS_VERSION, LOCATION, latitude, longitude);
+    }
+
+    private Bundle createPushNotificationPayload(String hostname,
+                                                 String deviceId,
+                                                 String transactionToken,
+                                                 Date date,
+                                                 String challenge,
+                                                 String browserName,
+                                                 String browserVersion,
+                                                 String osName,
+                                                 String osVersion,
+                                                 String location,
+                                                 Double latitude,
+                                                 Double longitude) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         Bundle data = new Bundle();
         data.putString("d", date != null ? simpleDateFormat.format(date) : null);
-        data.putString("s", "{\"b\":{\"v\":\""+BROWSER_VERSION+"\",\"n\":\""+BROWSER_NAME+"\"}," +
-                "\"os\":{\"v\":\""+OS_VERSION+"\",\"n\":\""+OS_NAME+"\"}}");
-        data.putString("l", "{\"n\":\""+LOCATION+"\",\"lat\":\""+latitude+"\"," +
-                "\"long\":\""+longitude+"\"}");
+        if (browserName != null || browserVersion != null || osName != null || osVersion != null) {
+            data.putString("s", "{"
+                    + (browserName != null || browserVersion != null ? "\"b\":{"
+                    + (browserVersion != null
+                    ? ("\"v\":\"" + browserVersion + "\"" + (browserName != null ? "," : "")) : "")
+                    + (browserName != null
+                    ? "\"n\":\"" + browserName + "\"" : "")
+                    + "}"
+                    + (osName != null || osVersion != null ? "," : "") : "")
+                    + (osName != null || osVersion != null ? "\"os\":{"
+                    + (osVersion != null
+                    ? ("\"v\":\"" + osVersion + "\"" + (osName != null ? "," : "")) : "")
+                    + (osName != null
+                    ? "\"n\":\"" + osName + "\"" : "")
+                    + "}" : "")
+                    + "}");
+        }
+        if (location != null || latitude != null || longitude != null) {
+            data.putString("l", "{"
+                    + (location != null
+                    ? ("\"n\":\"" + location + "\"" + (latitude != null || longitude != null ? "," : ""))
+                    : "")
+                    + (latitude != null
+                    ? ("\"lat\":\"" + latitude + "\"" + (longitude != null ? "," : ""))
+                    : "")
+                    + (longitude != null ? "\"long\":\"" + longitude + "\"" : "")
+                    + "}");
+        }
         data.putString("sh", hostname);
         data.putString("txtkn", transactionToken);
         data.putString("dai", deviceId);
