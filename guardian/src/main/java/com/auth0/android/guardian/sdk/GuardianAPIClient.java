@@ -56,7 +56,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * Low level API client for Guardian MFA server
- *
+ * <p>
  * Use this API client to manually create enrollments, allow/reject authentication requests, and
  * manage an enrollment's device data
  */
@@ -85,9 +85,9 @@ public class GuardianAPIClient {
      * @param enrollmentTicket the enrollment ticket obtained from a Guardian QR code or enrollment
      *                         email
      * @param deviceIdentifier the local identifier that uniquely identifies the android device
-     * @param deviceName this device's name
-     * @param gcmToken the GCM token required to send push notifications to this device
-     * @param publicKey the RSA public key to associate with the enrollment
+     * @param deviceName       this device's name
+     * @param gcmToken         the GCM token required to send push notifications to this device
+     * @param publicKey        the RSA public key to associate with the enrollment
      * @return a request to execute or start
      */
     @NonNull
@@ -138,10 +138,10 @@ public class GuardianAPIClient {
     /**
      * Allows an authentication request using the enrollment's private key
      *
-     * @param txToken the auth transaction token
+     * @param txToken          the auth transaction token
      * @param deviceIdentifier the local device identifier
-     * @param challenge the one time password
-     * @param privateKey the private key used to sign the payload
+     * @param challenge        the one time password
+     * @param privateKey       the private key used to sign the payload
      * @return a request to execute
      * @throws GuardianException when signing with private key fails
      */
@@ -159,11 +159,11 @@ public class GuardianAPIClient {
     /**
      * Rejects an authentication request using the enrollment's private key, indicating a reason
      *
-     * @param txToken the auth transaction token
+     * @param txToken          the auth transaction token
      * @param deviceIdentifier the local device identifier
-     * @param challenge the one time password
-     * @param privateKey the private key used to sign the payload
-     * @param reason the reject reason
+     * @param challenge        the one time password
+     * @param privateKey       the private key used to sign the payload
+     * @param reason           the reject reason
      * @return a request to execute
      * @throws GuardianException when signing with private key fails
      */
@@ -182,10 +182,10 @@ public class GuardianAPIClient {
     /**
      * Rejects an authentication request using the enrollment's private key
      *
-     * @param txToken the auth transaction token
+     * @param txToken          the auth transaction token
      * @param deviceIdentifier the local device identifier
-     * @param challenge the one time password
-     * @param privateKey the private key used to sign the payload
+     * @param challenge        the one time password
+     * @param privateKey       the private key used to sign the payload
      * @return a request to execute
      * @throws GuardianException when signing with private key fails
      */
@@ -287,6 +287,8 @@ public class GuardianAPIClient {
 
         /**
          * Enables the logging of all HTTP requests to the console.
+         * <p>
+         * Should only be used during development, on debug builds
          *
          * @return itself
          */

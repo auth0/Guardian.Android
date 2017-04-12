@@ -49,7 +49,7 @@ public class Guardian {
     /**
      * Creates an enroll. When successful, returns a new Enrollment that is required to allow or
      * reject authentication requests.
-     *
+     * <p>
      * This device will now be available as a Guardian second factor.
      *
      * @param enrollmentData the enrollment URI or ticket obtained from a Guardian QR code or
@@ -227,6 +227,8 @@ public class Guardian {
 
         /**
          * Enables the logging of all HTTP requests to the console.
+         * <p>
+         * Should only be used during development, on debug builds
          *
          * @return itself
          */
