@@ -1,8 +1,10 @@
-# Guardian SDK for Android
+Guardian SDK for Android
 ============
 [![CI Status](https://travis-ci.org/auth0/Guardian.Android.svg?branch=master)](https://travis-ci.org/auth0/Guardian.Android)
 [![Coverage Status](https://img.shields.io/codecov/c/github/auth0/Guardian.Android/master.svg?style=flat-square)](https://codecov.io/github/auth0/Guardian.Android)
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat)](http://doge.mit-license.org)
+[![Maven Central](https://img.shields.io/maven-central/v/com.auth0.android/guardian.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.auth0.android%22%20AND%20a%3A%22guardian%22)
+[ ![Download](https://api.bintray.com/packages/auth0/android/Guardian.Android/images/download.svg) ](https://bintray.com/auth0/android/Guardian.Android/_latestVersion)
 
 [Guardian](https://auth0.com/docs/multifactor-authentication/guardian) is Auth0's multi-factor
 authentication (MFA) service that provides a simple, safe way for you to implement MFA.
@@ -31,7 +33,7 @@ GuardianSDK is available both in [Maven Central](http://search.maven.org) and
 To start using *GuardianSDK* add these lines to your `build.gradle` dependencies file:
 
 ```gradle
-compile 'com.auth0.android:guardian:0.1.0'
+compile 'com.auth0.android:guardian:0.2.0'
 ```
 
 ## Usage
