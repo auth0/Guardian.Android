@@ -243,15 +243,23 @@ public class ParcelableNotification implements Notification, Parcelable {
         String sourceJson = pushNotificationPayload.getString(SOURCE_KEY);
         try {
             JSONObject sourceData = new JSONObject(sourceJson);
-            JSONObject browserData = sourceData.getJSONObject(BROWSER_KEY);
+            JSONObject browserData = sourceData.optJSONObject(BROWSER_KEY);
             if (browserData != null) {
-                browserName = browserData.getString(NAME_KEY);
-                browserVersion = browserData.getString(VERSION_KEY);
+                if (browserData.has(NAME_KEY) && !browserData.isNull(NAME_KEY)) {
+                    browserName = browserData.getString(NAME_KEY);
+                }
+                if (browserData.has(VERSION_KEY) && !browserData.isNull(VERSION_KEY)) {
+                    browserVersion = browserData.getString(VERSION_KEY);
+                }
             }
-            JSONObject osData = sourceData.getJSONObject(OS_KEY);
+            JSONObject osData = sourceData.optJSONObject(OS_KEY);
             if (osData != null) {
-                osName = osData.getString(NAME_KEY);
-                osVersion = osData.getString(VERSION_KEY);
+                if (osData.has(NAME_KEY) && !osData.isNull(NAME_KEY)) {
+                    osName = osData.getString(NAME_KEY);
+                }
+                if (osData.has(VERSION_KEY) && !osData.isNull(VERSION_KEY)) {
+                    osVersion = osData.getString(VERSION_KEY);
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "Error while parsing source", e);
@@ -270,9 +278,15 @@ public class ParcelableNotification implements Notification, Parcelable {
             String locationJson = pushNotificationPayload.getString(LOCATION_KEY);
             try {
                 JSONObject locationData = new JSONObject(locationJson);
-                location = locationData.getString(NAME_KEY);
-                latitude = locationData.getDouble(LATITUDE_KEY);
-                longitude = locationData.getDouble(LONGITUDE_KEY);
+                if (locationData.has(NAME_KEY) && !locationData.isNull(NAME_KEY)) {
+                    location = locationData.getString(NAME_KEY);
+                }
+                if (locationData.has(LATITUDE_KEY) && !locationData.isNull(LATITUDE_KEY)) {
+                    latitude = locationData.getDouble(LATITUDE_KEY);
+                }
+                if (locationData.has(LONGITUDE_KEY) && !locationData.isNull(LONGITUDE_KEY)) {
+                    longitude = locationData.getDouble(LONGITUDE_KEY);
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Error while parsing location", e);
             }
