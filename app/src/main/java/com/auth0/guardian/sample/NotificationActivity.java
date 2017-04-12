@@ -70,6 +70,7 @@ public class NotificationActivity extends AppCompatActivity {
 
         guardian = new Guardian.Builder()
                 .url(Uri.parse(getString(R.string.guardian_url)))
+                .enableLogging()
                 .build();
 
         Intent intent = getIntent();

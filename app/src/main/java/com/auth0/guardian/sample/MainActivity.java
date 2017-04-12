@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
 
         guardian = new Guardian.Builder()
                 .url(Uri.parse(getString(R.string.guardian_url)))
+                .enableLogging()
                 .build();
 
         GcmUtils gcmUtils = new GcmUtils(this, getString(R.string.google_app_id));

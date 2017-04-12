@@ -52,6 +52,7 @@ import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * Low level API client for Guardian MFA server
@@ -247,6 +248,7 @@ public class GuardianAPIClient {
     public static class Builder {
 
         private HttpUrl url;
+        private boolean loggingEnabled = false;
 
         /**
          * Set the URL of the Guardian server.
@@ -256,7 +258,7 @@ public class GuardianAPIClient {
          * @return itself
          * @throws IllegalArgumentException when an url or domain was already set
          */
-        public GuardianAPIClient.Builder url(@NonNull Uri url) {
+        public Builder url(@NonNull Uri url) {
             if (this.url != null) {
                 throw new IllegalArgumentException("An url/domain was already set");
             }
@@ -272,7 +274,7 @@ public class GuardianAPIClient {
          * @return itself
          * @throws IllegalArgumentException when an url or domain was already set
          */
-        public GuardianAPIClient.Builder domain(@NonNull String domain) {
+        public Builder domain(@NonNull String domain) {
             if (this.url != null) {
                 throw new IllegalArgumentException("An url/domain was already set");
             }
@@ -280,6 +282,16 @@ public class GuardianAPIClient {
                     .scheme("https")
                     .host(domain)
                     .build();
+            return this;
+        }
+
+        /**
+         * Enables the logging of all HTTP requests to the console.
+         *
+         * @return itself
+         */
+        public Builder enableLogging() {
+            this.loggingEnabled = true;
             return this;
         }
 
@@ -318,6 +330,12 @@ public class GuardianAPIClient {
                     return chain.proceed(requestWithUserAgent);
                 }
             });
+
+            if (loggingEnabled) {
+                final HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor()
+                        .setLevel(HttpLoggingInterceptor.Level.BODY);
+                builder.addInterceptor(loggingInterceptor);
+            }
 
             OkHttpClient client = builder.build();
 

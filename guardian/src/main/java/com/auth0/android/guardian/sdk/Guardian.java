@@ -188,6 +188,7 @@ public class Guardian {
     public static class Builder {
 
         private Uri url;
+        private boolean loggingEnabled = false;
 
         /**
          * Set the URL of the Guardian server.
@@ -225,6 +226,16 @@ public class Guardian {
         }
 
         /**
+         * Enables the logging of all HTTP requests to the console.
+         *
+         * @return itself
+         */
+        public Builder enableLogging() {
+            this.loggingEnabled = true;
+            return this;
+        }
+
+        /**
          * Builds and returns the Guardian instance
          *
          * @return the created instance
@@ -235,11 +246,14 @@ public class Guardian {
                 throw new IllegalStateException("You must set either a domain or an url");
             }
 
-            GuardianAPIClient client = new GuardianAPIClient.Builder()
-                    .url(url)
-                    .build();
+            GuardianAPIClient.Builder builder = new GuardianAPIClient.Builder()
+                    .url(url);
 
-            return new Guardian(client);
+            if (loggingEnabled) {
+                builder.enableLogging();
+            }
+
+            return new Guardian(builder.build());
         }
     }
 }
