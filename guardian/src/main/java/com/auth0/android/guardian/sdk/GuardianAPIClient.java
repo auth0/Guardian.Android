@@ -149,9 +149,10 @@ public class GuardianAPIClient {
                                           @NonNull String deviceIdentifier,
                                           @NonNull String challenge,
                                           @NonNull PrivateKey privateKey) {
-        String jwt = createJWT(privateKey, deviceIdentifier, challenge, true, null);
+        final HttpUrl url = baseUrl.resolve("api/resolve-transaction");
+        final String jwt = createJWT(privateKey, url.toString(), deviceIdentifier, challenge, true, null);
         return requestFactory
-                .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), Void.class)
+                .<Void>newRequest("POST", url, Void.class)
                 .setBearer(txToken)
                 .setParameter("challenge_response", jwt);
     }
@@ -172,9 +173,10 @@ public class GuardianAPIClient {
                                            @NonNull String challenge,
                                            @NonNull PrivateKey privateKey,
                                            @Nullable String reason) {
-        String jwt = createJWT(privateKey, deviceIdentifier, challenge, false, reason);
+        final HttpUrl url = baseUrl.resolve("api/resolve-transaction");
+        final String jwt = createJWT(privateKey, url.toString(), deviceIdentifier, challenge, false, reason);
         return requestFactory
-                .<Void>newRequest("POST", baseUrl.resolve("api/resolve-transaction"), Void.class)
+                .<Void>newRequest("POST", url, Void.class)
                 .setBearer(txToken)
                 .setParameter("challenge_response", jwt);
     }
@@ -197,6 +199,7 @@ public class GuardianAPIClient {
     }
 
     private String createJWT(@NonNull PrivateKey privateKey,
+                             @NonNull String audience,
                              @NonNull String deviceIdentifier,
                              @NonNull String challenge,
                              boolean accepted,
@@ -209,7 +212,7 @@ public class GuardianAPIClient {
             Map<String, Object> claims = new HashMap<>();
             claims.put("iat", currentTime);
             claims.put("exp", currentTime + JWT_EXP_SECS);
-            claims.put("aud", getUrl());
+            claims.put("aud", audience);
             claims.put("iss", deviceIdentifier);
             claims.put("sub", challenge);
             claims.put("auth0_guardian_method", "push");

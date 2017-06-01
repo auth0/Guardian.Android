@@ -63,6 +63,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
+import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.RecordedRequest;
 
 import static com.auth0.android.guardian.sdk.utils.CallbackMatcher.hasNoError;
@@ -386,9 +387,10 @@ public class GuardianAPIClientTest {
 
     private void verifyJWT(String jwt, boolean accepted, String rejectReason)
             throws SignatureException, NoSuchAlgorithmException, JWTVerifyException, InvalidKeyException, IOException {
-        JWTVerifier jwtVerifier = new JWTVerifier(keyPair.getPublic(), apiClient.getUrl(), DEVICE_IDENTIFIER);
-        Map<String, Object> payload = jwtVerifier.verify(jwt);
-        assertThat(payload, hasEntry("aud", (Object) apiClient.getUrl()));
+        final String audience = HttpUrl.parse(apiClient.getUrl()).resolve("api/resolve-transaction").toString();
+        final JWTVerifier jwtVerifier = new JWTVerifier(keyPair.getPublic(), audience, DEVICE_IDENTIFIER);
+        final Map<String, Object> payload = jwtVerifier.verify(jwt);
+        assertThat(payload, hasEntry("aud", (Object) audience));
         assertThat(payload, hasEntry("sub", (Object) CHALLENGE));
         assertThat(payload, hasEntry("iss", (Object) DEVICE_IDENTIFIER));
         assertThat(payload, hasEntry("auth0_guardian_accepted", (Object) accepted));
