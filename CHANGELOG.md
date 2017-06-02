@@ -1,3 +1,18 @@
+# Change Log
+
+## [0.3.0](https://github.com/auth0/Guardian.Android/tree/0.3.0) (2017-06-01)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.2.0...0.3.0)
+
+**Added**
+- Use Auth0 OSS release plugin [\#70](https://github.com/auth0/Guardian.Android/pull/70) ([nikolaseu](https://github.com/nikolaseu))
+- Add support for appliance [\#69](https://github.com/auth0/Guardian.Android/pull/69) ([nikolaseu](https://github.com/nikolaseu))
+
+## [0.2.0](https://github.com/auth0/Guardian.Android/tree/0.2.0) (2016-12-07)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.1.0...0.2.0)
+
+**Added**
+- Add method to get errorCode and isLoginTransactionNotFound() [#62](https://github.com/auth0/Guardian.Android/pull/62) ([nikolaseu](https://github.com/nikolaseu))
+
 ## [0.1.0](https://github.com/auth0/Guardian.Android/tree/0.1.0) (2016-11-23)
 
 First release of Guardian for Android

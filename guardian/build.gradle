@@ -3,7 +3,7 @@ apply plugin: 'com.auth0.gradle.oss-library.android'
 logger.lifecycle("Using version ${version} for ${name}")
 
 oss {
-    name 'guardian'
+    name 'Guardian.Android'
     repository 'Guardian.Android'
     organization 'auth0'
     description 'Android toolkit for Auth0 Guardian API'

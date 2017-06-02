@@ -31,11 +31,11 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * This class generates One-Time-Passwords following the TOTP algorithm. It is an extension of the
  * HOTP algorithm.
- * <p/>
+ * <p>
  * The supported crypto algorithms are 'sha1', 'sha256' and 'sha512'.
- * <p/>
+ * <p>
  * The code is based on the sample implementation provided in the spec.
- * <p/>
+ * <p>
  * See <a href=https://tools.ietf.org/html/rfc4226>https://tools.ietf.org/html/rfc4226</a> and
  * <a href="https://tools.ietf.org/html/rfc6238">https://tools.ietf.org/html/rfc6238</a> for more
  * information.
