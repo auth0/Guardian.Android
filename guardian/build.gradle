@@ -1,6 +1,24 @@
-apply plugin: 'com.android.library'
-apply from: '../scripts/version.gradle'
-apply from: '../scripts/jacoco.gradle'
+apply plugin: 'com.auth0.gradle.oss-library.android'
+
+logger.lifecycle("Using version ${version} for ${name}")
+
+oss {
+    name 'guardian'
+    repository 'Guardian.Android'
+    organization 'auth0'
+    description 'Android toolkit for Auth0 Guardian API'
+
+    developers {
+        auth0 {
+            displayName = 'Auth0'
+            email = 'oss@auth0.com'
+        }
+        nikolaseu {
+            displayName = 'Nicolas Ulrich'
+            email = 'nicolas.ulrich@auth0.com'
+        }
+    }
+}
 
 android {
     compileSdkVersion 25
@@ -53,6 +71,3 @@ dependencies {
 
     testCompile 'junit:junit:4.12'
 }
-
-apply from: '../scripts/maven.gradle'
-apply from: '../scripts/bintray.gradle'
