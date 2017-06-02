@@ -1,2 +1,4 @@
+rootProject.name = 'Guardian.Android'
+
 include ':app'
 include ':guardian'

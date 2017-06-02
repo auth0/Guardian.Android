@@ -34,66 +34,88 @@ public interface Notification {
 
     /**
      * The id of the enrollment
+     *
+     * @return the id of the enrollment
      */
     @NonNull
     String getEnrollmentId();
 
     /**
      * The transaction token, used to identify the authentication request
+     *
+     * @return the transaction token
      */
     @NonNull
     String getTransactionToken();
 
     /**
      * The Guardian server url
+     *
+     * @return the server URL
      */
     @NonNull
     String getUrl();
 
     /**
      * The date/time when the authentication request was initiated
+     *
+     * @return the request start date
      */
     @NonNull
     Date getDate();
 
     /**
      * The name of the operating system where the authentication request was initiated
+     *
+     * @return the OS name
      */
     @Nullable
     String getOsName();
 
     /**
      * The version of the operating system
+     *
+     * @return the OS version
      */
     @Nullable
     String getOsVersion();
 
     /**
      * The name of the browser where the authentication request was initiated
+     *
+     * @return the browser name
      */
     @Nullable
     String getBrowserName();
 
     /**
      * The version of the browser
+     *
+     * @return the browser version
      */
     @Nullable
     String getBrowserVersion();
 
     /**
      * The name of the (approximate) location where the authentication request was initiated
+     *
+     * @return the location
      */
     @Nullable
     String getLocation();
 
     /**
      * The latitude of the (approximate) location
+     *
+     * @return the latitude
      */
     @Nullable
     Double getLatitude();
 
     /**
      * The longitude of the (approximate) location
+     *
+     * @return the longitude
      */
     @Nullable
     Double getLongitude();
@@ -101,6 +123,8 @@ public interface Notification {
     /**
      * The challenge sent by the server. The same challenge should be sent back when trying to
      * allow or reject an authentication request
+     *
+     * @return the challenge
      */
     @NonNull
     String getChallenge();
