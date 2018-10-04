@@ -18,7 +18,7 @@ multi-factor authentication from your app.
 
 ## Requirements
 
-Android API level 15+ is required in order to use Guardian.
+Android API level 15+(Android 4.0.3 or later) is required in order to use Guardian.
 
 ## Before getting started
 
