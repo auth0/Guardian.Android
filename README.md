@@ -7,10 +7,10 @@ Guardian SDK for Android
 [ ![Download](https://api.bintray.com/packages/auth0/android/guardian/images/download.svg) ](https://bintray.com/auth0/android/guardian/_latestVersion)
 
 [Guardian](https://auth0.com/docs/multifactor-authentication/guardian) is Auth0's multi-factor
-authentication (MFA) service that provides a simple, safe way for you to implement MFA.
+authentication (MFA) service that provides a simple and safe way for you to implement MFA.
 
 [Auth0](https://auth0.com) is an authentication broker that supports social identity providers as
-well as enterprise identity providers such as Active Directory, LDAP, Google Apps and Salesforce.
+well as enterprise identity providers such as Active Directory, LDAP, Google Apps, and Salesforce.
 
 This SDK allows you to integrate Auth0's Guardian multi-factor service in your own app, transforming
 it in the second factor itself. Your users will get all the benefits of our frictionless
@@ -23,14 +23,14 @@ Android API level 15+ is required in order to use Guardian.
 ## Before getting started
 
 To use this SDK you have to configure your tenant's Guardian service with your own push notification
-credentials, otherwise you would not receive any push notifications. Please read the
+credentials; Otherwise, you would not receive any push notifications. Please read the
 [docs](https://auth0.com/docs/multifactor-authentication/guardian) about how to accomplish that.
 
 ## Install
 
 GuardianSDK is available both in [Maven Central](http://search.maven.org) and
 [JCenter](https://bintray.com/bintray/jcenter).
-To start using *GuardianSDK* add these lines to your `build.gradle` dependencies file:
+To start using *GuardianSDK*, add these lines to your `build.gradle` dependencies file:
 
 ```gradle
 compile 'com.auth0.android:guardian:0.3.0'
@@ -63,11 +63,11 @@ That's all you need to setup your own instance of `Guardian`
 
 ### Enroll
 
-An enrollment is a link between the second factor and an Auth0 account. When an account is enrolled
+An enrollment is a link between the second factor and an Auth0 account. When an account is enrolled,
 you'll need the enrollment data to provide the second factor required to verify the identity. You
 can create an enrolment using the guardian instance you just created.
 
-First you'll need to obtain the enrollment info by scanning a Guardian QR code or obtaining an
+First, you'll need to obtain the enrollment info by scanning a Guardian QR code or obtaining an
 enrollment ticket by email for example.
 
 Next you'll have to create a new pair of RSA keys for the new enrollment. The private key will be
@@ -80,7 +80,7 @@ keyPairGenerator.initialize(2048); // you should use at least 2048 bit keys
 KeyPair keyPair = keyPairGenerator.generateKeyPair();
 ```
 
-Then you just use the `enroll` method like this:
+Then, you just use the `enroll` method like this:
 
 ```java
 CurrentDevice device = new CurrentDevice(context, "gcmToken", "deviceName");
@@ -92,7 +92,7 @@ Enrollment enrollment = guardian
         .execute();
 ```
 
-or you can also execute the request in a background thread
+Or, you can also execute the request in a background thread:
 
 ```java
 guardian
@@ -121,7 +121,7 @@ using GCM or you're not familiar with it, you should check their
 
 ### Unenroll
 
-If you want to delete an enrollment -for example if you want to disable MFA- you can make the
+If you want to delete an enrollment -for example, if you want to disable MFA- you can make the
 following request:
 
 ```java
@@ -152,7 +152,7 @@ public void onMessageReceived(String from, Bundle data) {
 }
 ```
 
-> If the `Bundle` you receive is not a Guardian notification this method will return null, so you
+> If the `Bundle` you receive is not a Guardian notification, this method will return null. So you
 > should always check before using it.
 
 Once you have the notification instance, you can easily allow the authentication request by using
@@ -168,7 +168,7 @@ guardian
 
 ### Reject a login request
 
-To deny an authentication request just call `reject` instead. You can also send a reject reason if
+To deny an authentication request, just call `reject` instead. You can also send a reject reason if
 you want. The reject reason will be available in the guardian logs.
 
 ```java
@@ -184,21 +184,21 @@ Auth0 helps you to:
 * Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders),
 either social like **Google, Facebook, Microsoft Account, LinkedIn, GitHub, Twitter, Box, Salesforce,
 amont others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory,
-ADFS or any SAML Identity Provider**.
+ADFS, or any SAML Identity Provider**.
 * Add authentication through more traditional
 **[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
 * Add support for **[linking different user accounts](https://docs.auth0.com/link-accounts)** with
 the same user.
 * Support for generating signed [Json Web Tokens](https://docs.auth0.com/jwt) to call your APIs and
 **flow the user identity** securely.
-* Analytics of how, when and where users are logging in.
+* Analytics of how, when, and where users are logging in.
 * Pull data from other sources and add it to the user profile, through
 [JavaScript rules](https://docs.auth0.com/rules).
 
 ## Create a free account in Auth0
 
 1. Go to [Auth0](https://auth0.com) and click Sign Up.
-2. Use Google, GitHub or Microsoft Account to login.
+2. Use Google, GitHub, or Microsoft Account to login.
 
 ## Issue Reporting
 
