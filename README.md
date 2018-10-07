@@ -71,7 +71,7 @@ First you'll need to obtain the enrollment info by scanning a Guardian QR code o
 enrollment ticket by email for example.
 
 Next you'll have to create a new pair of RSA keys for the new enrollment. The private key will be
-used to sign the requests to allow or reject a login. The public key will be sent during the enroll
+used to sign the requests to allow or reject a login. The public key will be sent during the enrollment
 process so the server can later verify the request's signature.
 
 ```java
@@ -183,7 +183,7 @@ Auth0 helps you to:
 
 * Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders),
 either social like **Google, Facebook, Microsoft Account, LinkedIn, GitHub, Twitter, Box, Salesforce,
-amont others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory,
+among others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory,
 ADFS or any SAML Identity Provider**.
 * Add authentication through more traditional
 **[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
