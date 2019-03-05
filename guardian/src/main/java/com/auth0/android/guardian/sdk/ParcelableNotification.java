@@ -108,11 +108,11 @@ public class ParcelableNotification implements Notification, Parcelable {
      * notification
      */
     @Nullable
-    public static ParcelableNotification parse(@NonNull Bundle pushNotificationPayload) {
-        String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
-        String enrollmentId = pushNotificationPayload.getString(ENROLLMENT_ID_KEY);
-        String transactionToken = pushNotificationPayload.getString(TRANSACTION_TOKEN_KEY);
-        String challenge = pushNotificationPayload.getString(CHALLENGE_KEY);
+    public static ParcelableNotification parse(@NonNull Map<String, String> pushNotificationPayload) {
+        String hostname = pushNotificationPayload.get(HOSTNAME_KEY);
+        String enrollmentId = pushNotificationPayload.get(ENROLLMENT_ID_KEY);
+        String transactionToken = pushNotificationPayload.get(TRANSACTION_TOKEN_KEY);
+        String challenge = pushNotificationPayload.get(CHALLENGE_KEY);
         Date date = parseDate(pushNotificationPayload);
 
         if (hostname == null || enrollmentId == null || transactionToken == null || challenge == null || date == null) {
@@ -213,8 +213,8 @@ public class ParcelableNotification implements Notification, Parcelable {
         return url;
     }
 
-    private static Date parseDate(Bundle pushNotificationPayload) {
-        String dateStr = pushNotificationPayload.getString(DATE_KEY);
+    private static Date parseDate(Map<String, String> pushNotificationPayload) {
+        String dateStr = pushNotificationPayload.get(DATE_KEY);
         if (dateStr == null) {
             return null;
         }
@@ -233,14 +233,14 @@ public class ParcelableNotification implements Notification, Parcelable {
         return date;
     }
 
-    private static Source parseSource(Bundle pushNotificationPayload) {
+    private static Source parseSource(Map<String, String> pushNotificationPayload) {
         String browserName = null;
         String browserVersion = null;
         String osName = null;
         String osVersion = null;
 
         // source ("s") arrives as a JSON encoded string
-        String sourceJson = pushNotificationPayload.getString(SOURCE_KEY);
+        String sourceJson = pushNotificationPayload.get(SOURCE_KEY);
         try {
             JSONObject sourceData = new JSONObject(sourceJson);
             JSONObject browserData = sourceData.optJSONObject(BROWSER_KEY);
@@ -268,14 +268,14 @@ public class ParcelableNotification implements Notification, Parcelable {
         return new Source(browserName, browserVersion, osName, osVersion);
     }
 
-    private static Location parseLocation(Bundle pushNotificationPayload) {
+    private static Location parseLocation(Map<String, String> pushNotificationPayload) {
         String location = null;
         Double latitude = null;
         Double longitude = null;
 
         // location ("l") arrives as a JSON encoded string
         if (pushNotificationPayload.containsKey(LOCATION_KEY)) {
-            String locationJson = pushNotificationPayload.getString(LOCATION_KEY);
+            String locationJson = pushNotificationPayload.get(LOCATION_KEY);
             try {
                 JSONObject locationData = new JSONObject(locationJson);
                 if (locationData.has(NAME_KEY) && !locationData.isNull(NAME_KEY)) {
@@ -372,7 +372,7 @@ public class ParcelableNotification implements Notification, Parcelable {
     }
 
     @SuppressWarnings("unused")
-    public static final Parcelable.Creator<ParcelableNotification> CREATOR = new Parcelable.Creator<ParcelableNotification>() {
+    public static final Creator<ParcelableNotification> CREATOR = new Creator<ParcelableNotification>() {
         @Override
         public ParcelableNotification createFromParcel(Parcel in) {
             return new ParcelableNotification(in);
