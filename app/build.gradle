@@ -1,13 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 28
 
     defaultConfig {
         applicationId "com.auth0.guardian.sample"
         minSdkVersion 15
-        targetSdkVersion 25
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
     }
@@ -17,23 +16,24 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-
-    compile project(':guardian')
-
-    compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:design:25.3.1'
-
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation project(':guardian')
+    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
+    //GSON
+    implementation 'com.google.code.gson:gson:2.8.5'
     //GCM
-    compile 'com.google.android.gms:play-services-gcm:10.2.1'
-
+    implementation 'com.google.android.gms:play-services-gcm:16.1.0'
     //EventBus
-    compile 'org.greenrobot:eventbus:3.0.0'
-
+    implementation 'org.greenrobot:eventbus:3.0.0'
     //ZXing QR decoder deps
-    compile 'com.google.zxing:core:3.2.1'
+    implementation 'com.google.zxing:core:3.2.1'
+    testImplementation 'junit:junit:4.12'
 }

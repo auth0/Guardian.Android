@@ -27,14 +27,13 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.CountDownTimer;
 import android.util.AttributeSet;
-import android.widget.TextView;
 
 import com.auth0.android.guardian.sdk.Enrollment;
 import com.auth0.android.guardian.sdk.otp.TOTP;
 import com.auth0.android.guardian.sdk.otp.utils.Base32;
 import com.auth0.guardian.sample.R;
 
-public class TOTPCodeView extends TextView {
+public class TOTPCodeView extends android.support.v7.widget.AppCompatTextView {
 
     private Enrollment enrollment;
     private CountDownTimer timer;
