@@ -147,11 +147,12 @@ public class Guardian {
      * @param pushNotificationPayload the GCM payload Bundle
      * @return the parsed data, or null if the push notification is not a valid Guardian
      * notification
+     * @deprecated After migrating to FCM you should use {@link #parseNotification(Map)} instead.
      */
     @SuppressWarnings("unused")
     @Nullable
+    @Deprecated
     public static ParcelableNotification parseNotification(@NonNull Bundle pushNotificationPayload) {
-        //FIXME: Deprecate
         return ParcelableNotification.parse(pushNotificationPayload);
     }
 

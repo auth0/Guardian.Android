@@ -107,10 +107,11 @@ public class ParcelableNotification implements Notification, Parcelable {
      * @param pushNotificationPayload the GCM payload Bundle
      * @return the parsed data, or null if the push notification is not a valid Guardian
      * notification
+     * @deprecated After migrating to FCM you should use {@link #parse(Map)} instead.
      */
     @Nullable
+    @Deprecated
     public static ParcelableNotification parse(@NonNull Bundle pushNotificationPayload) {
-        //FIXME: Deprecate
         String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
         String enrollmentId = pushNotificationPayload.getString(ENROLLMENT_ID_KEY);
         String transactionToken = pushNotificationPayload.getString(TRANSACTION_TOKEN_KEY);
