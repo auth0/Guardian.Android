@@ -35,6 +35,7 @@ import org.json.JSONObject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.TimeZone;
 
 import okhttp3.HttpUrl;
@@ -109,6 +110,7 @@ public class ParcelableNotification implements Notification, Parcelable {
      */
     @Nullable
     public static ParcelableNotification parse(@NonNull Bundle pushNotificationPayload) {
+        //FIXME: Deprecate
         String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
         String enrollmentId = pushNotificationPayload.getString(ENROLLMENT_ID_KEY);
         String transactionToken = pushNotificationPayload.getString(TRANSACTION_TOKEN_KEY);
@@ -126,6 +128,22 @@ public class ParcelableNotification implements Notification, Parcelable {
         return new ParcelableNotification(url, enrollmentId, transactionToken, date,
                 source.osName, source.osVersion, source.browserName, source.browserVersion,
                 location.location, location.latitude, location.longitude, challenge);
+    }
+
+    /**
+     * Parses the Map received from the FCM push notification into a ParcelableNotification
+     *
+     * @param pushNotificationPayload the FCM payload Map
+     * @return the parsed data, or null if the push notification is not a valid Guardian
+     * notification
+     */
+    @Nullable
+    public static ParcelableNotification parse(@NonNull Map<String, String> pushNotificationPayload) {
+        Bundle data = new Bundle(pushNotificationPayload.size());
+        for (Map.Entry<String, String> e : pushNotificationPayload.entrySet()) {
+            data.putString(e.getKey(), e.getValue());
+        }
+        return parse(data);
     }
 
     @NonNull

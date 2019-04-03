@@ -148,8 +148,23 @@ public class Guardian {
      * @return the parsed data, or null if the push notification is not a valid Guardian
      * notification
      */
+    @SuppressWarnings("unused")
     @Nullable
     public static ParcelableNotification parseNotification(@NonNull Bundle pushNotificationPayload) {
+        //FIXME: Deprecate
+        return ParcelableNotification.parse(pushNotificationPayload);
+    }
+
+    /**
+     * Parses the Map received from the FCM push notification into a Notification
+     *
+     * @param pushNotificationPayload the FCM payload Map
+     * @return the parsed data, or null if the push notification is not a valid Guardian
+     * notification
+     */
+    @SuppressWarnings("unused")
+    @Nullable
+    public static ParcelableNotification parseNotification(@NonNull Map<String, String> pushNotificationPayload) {
         return ParcelableNotification.parse(pushNotificationPayload);
     }
 
