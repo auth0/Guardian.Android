@@ -43,14 +43,14 @@ import com.auth0.android.guardian.sdk.GuardianException;
 import com.auth0.android.guardian.sdk.ParcelableNotification;
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.guardian.sample.events.GuardianNotificationReceivedEvent;
-import com.auth0.guardian.sample.gcm.GcmUtils;
+import com.auth0.guardian.sample.fcm.FcmUtils;
 import com.auth0.guardian.sample.views.TOTPCodeView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-public class MainActivity extends AppCompatActivity implements GcmUtils.GcmTokenListener {
+public class MainActivity extends AppCompatActivity implements FcmUtils.FcmTokenListener {
 
     private static final String TAG = MainActivity.class.getName();
 
@@ -60,14 +60,14 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
     private View enrollView;
     private View accountView;
     private TextView deviceNameText;
-    private TextView gcmTokenText;
+    private TextView fcmTokenText;
     private TextView userText;
     private TOTPCodeView otpView;
 
     private EventBus eventBus;
     private Guardian guardian;
     private ParcelableEnrollment enrollment;
-    private String gcmToken;
+    private String fcmToken;
 
     public static Intent getStartIntent(@NonNull Context context,
                                         @NonNull ParcelableNotification notification) {
@@ -91,8 +91,15 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
                 .enableLogging()
                 .build();
 
-        GcmUtils gcmUtils = new GcmUtils(this, getString(R.string.google_app_id));
-        gcmUtils.fetchGcmToken(this);
+        /*
+         * The following fetch token call is NOT required in a production app
+         * as the registration token is generated automatically by the Firebase SDK.
+         * This is just here for display purposes on this Activity's layout.
+         *
+         * See: https://developers.google.com/cloud-messaging/android/android-migrate-iid-service
+         */
+        FcmUtils fcmUtils = new FcmUtils();
+        fcmUtils.fetchFcmToken(this);
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String enrollmentJSON = sharedPreferences.getString(Constants.ENROLLMENT, null);
@@ -130,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
         enrollView = findViewById(R.id.enrollLayout);
         accountView = findViewById(R.id.accountLayout);
         deviceNameText = (TextView) findViewById(R.id.deviceNameText);
-        gcmTokenText = (TextView) findViewById(R.id.gcmTokenText);
+        fcmTokenText = (TextView) findViewById(R.id.fcmTokenText);
         userText = (TextView) findViewById(R.id.userText);
         otpView = (TOTPCodeView) findViewById(R.id.otpView);
 
@@ -159,16 +166,16 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                loadingView.setVisibility(gcmToken != null ? View.GONE : View.VISIBLE);
+                loadingView.setVisibility(fcmToken != null ? View.GONE : View.VISIBLE);
                 if (enrollment == null) {
-                    gcmTokenText.setText(gcmToken != null ? gcmToken : null);
+                    fcmTokenText.setText(fcmToken);
                     accountView.setVisibility(View.GONE);
-                    enrollView.setVisibility(gcmToken != null ? View.VISIBLE : View.GONE);
+                    enrollView.setVisibility(fcmToken != null ? View.VISIBLE : View.GONE);
                 } else {
                     userText.setText(enrollment.getUserId());
                     otpView.setEnrollment(enrollment);
                     enrollView.setVisibility(View.GONE);
-                    accountView.setVisibility(gcmToken != null ? View.VISIBLE : View.GONE);
+                    accountView.setVisibility(fcmToken != null ? View.VISIBLE : View.GONE);
                 }
             }
         });
@@ -176,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
 
     private void onEnrollRequested() {
         Intent enrollIntent = EnrollActivity
-                .getStartIntent(this, deviceNameText.getText().toString(), gcmToken);
+                .getStartIntent(this, deviceNameText.getText().toString(), fcmToken);
         startActivityForResult(enrollIntent, ENROLL_REQUEST);
     }
 
@@ -222,18 +229,18 @@ public class MainActivity extends AppCompatActivity implements GcmUtils.GcmToken
     }
 
     @Override
-    public void onGcmTokenObtained(String gcmToken) {
-        this.gcmToken = gcmToken;
+    public void onFcmTokenObtained(String fcmToken) {
+        this.fcmToken = fcmToken;
 
         updateUI();
     }
 
     @Override
-    public void onGcmFailure(Throwable exception) {
-        Log.e(TAG, "Error obtaining GCM token", exception);
+    public void onFcmFailure(Throwable exception) {
+        Log.e(TAG, "Error obtaining FCM token", exception);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.alert_title_error)
-                .setMessage(getString(R.string.alert_message_gcm_error))
+                .setMessage(getString(R.string.alert_message_fcm_error))
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

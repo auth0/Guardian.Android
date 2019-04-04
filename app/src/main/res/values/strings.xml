@@ -9,7 +9,7 @@
     <string name="progress_message_allow">Trying to allow the authentication request…</string>
     <string name="progress_message_enroll">Trying to enroll your account…</string>
     <string name="alert_title_error">Error</string>
-    <string name="alert_message_gcm_error">Could not obtain GCM token.\nCheck your GCM configuration and internet connection and try again later</string>
+    <string name="alert_message_fcm_error">Could not obtain FCM token.\nCheck your FCM configuration and internet connection and try again later</string>
     <string name="guardian_notification_title">Guardian notification received</string>
     <string name="guardian_notification_text">Click to see details</string>
 </resources>

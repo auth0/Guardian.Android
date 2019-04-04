@@ -51,13 +51,13 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     private static final String TAG = EnrollActivity.class.getName();
 
     private static final String DEVICE_NAME = "com.auth0.guardian.sample.EnrollActivity.DEVICE_NAME";
-    private static final String GCM_TOKEN = "com.auth0.guardian.sample.EnrollActivity.GCM_TOKEN";
+    private static final String FCM_TOKEN = "com.auth0.guardian.sample.EnrollActivity.FCM_TOKEN";
 
     private static final int REQUEST_CAMERA = 55;
 
     private Guardian guardian;
     private String deviceName;
-    private String gcmToken;
+    private String fcmToken;
 
     private View permissionLayout;
     private View scannerLayout;
@@ -65,10 +65,10 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
 
     static Intent getStartIntent(@NonNull Context context,
                                  @NonNull String deviceName,
-                                 @NonNull String gcmToken) {
+                                 @NonNull String fcmToken) {
         Intent intent = new Intent(context, EnrollActivity.class);
         intent.putExtra(DEVICE_NAME, deviceName);
-        intent.putExtra(GCM_TOKEN, gcmToken);
+        intent.putExtra(FCM_TOKEN, fcmToken);
         return intent;
     }
 
@@ -132,7 +132,7 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     public void onCodeScanned(String enrollmentData) {
         try {
             KeyPair keyPair = generateKeyPair();
-            CurrentDevice device = new CurrentDevice(this, gcmToken, deviceName);
+            CurrentDevice device = new CurrentDevice(this, fcmToken, deviceName);
             guardian.enroll(enrollmentData, device, keyPair)
                     .start(new DialogCallback<>(this,
                             R.string.progress_title_please_wait,
@@ -141,7 +141,7 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
                                 @Override
                                 public void onSuccess(Enrollment enrollment) {
                                     Log.d(TAG, "enroll success");
-                                    onEnrollSucess(enrollment);
+                                    onEnrollSuccess(enrollment);
                                 }
 
                                 @Override
@@ -158,10 +158,10 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     private void setupGuardian() {
         Intent intent = getIntent();
         deviceName = intent.getStringExtra(DEVICE_NAME);
-        gcmToken = intent.getStringExtra(GCM_TOKEN);
+        fcmToken = intent.getStringExtra(FCM_TOKEN);
 
-        if (deviceName == null || gcmToken == null) {
-            throw new IllegalStateException("Missing deviceName or gcmToken");
+        if (deviceName == null || fcmToken == null) {
+            throw new IllegalStateException("Missing deviceName or fcmToken");
         }
 
         guardian = new Guardian.Builder()
@@ -231,7 +231,7 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
         scanner.resume();
     }
 
-    private void onEnrollSucess(Enrollment enrollment) {
+    private void onEnrollSuccess(Enrollment enrollment) {
         Intent data = new Intent();
         ParcelableEnrollment parcelableEnrollment = new ParcelableEnrollment(enrollment);
         data.putExtra(Constants.ENROLLMENT, parcelableEnrollment);
