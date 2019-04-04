@@ -2,9 +2,9 @@
 
 ## Running
 
-Before running the sample app please configure your google app id and Guardian url properly.
+Before running the sample app please configure your Firebase app and Guardian URL properly.
 
-You should change your google app id (required for GCM push notifications) at `src/main/res/values/google_gcm.xml`.
+You should place the `google-services.json` file (required for FCM push notifications) inside your Android app module root. Typically at` at `MyApplication/app/google-services.json`.
 
-The Guardian url can be changed at `src/main/res/values/guardian.xml`. It should look like
+The Guardian URL can be changed at `src/main/res/values/guardian.xml`. It should look like
 `https://<YOUR_TENANT>.guardian.auth0.com`.
