@@ -34,8 +34,8 @@ import com.auth0.guardian.sample.scanner.utils.Tracker;
  */
 class BarcodeTrackerFactory implements MultiProcessor.Factory<Barcode> {
 
-    private GraphicOverlay<BarcodeGraphic> barcodeGraphicOverlay;
-    private BarcodeTrackerListener listener;
+    private final GraphicOverlay<BarcodeGraphic> barcodeGraphicOverlay;
+    private final BarcodeTrackerListener listener;
 
     BarcodeTrackerFactory(GraphicOverlay<BarcodeGraphic> barcodeGraphicOverlay,
                           BarcodeTrackerListener listener) {

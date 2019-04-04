@@ -270,8 +270,7 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             keyPairGenerator.initialize(2048); // at least 2048 bits!
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
-            return keyPair;
+            return keyPairGenerator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             Log.e(TAG, "Error generating keys", e);
         }

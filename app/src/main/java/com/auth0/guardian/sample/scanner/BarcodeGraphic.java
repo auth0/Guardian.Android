@@ -46,10 +46,10 @@ class BarcodeGraphic extends GraphicOverlay.Graphic {
     private int id;
     private volatile Barcode barcode;
 
-    private Paint paint;
-    private AnimatorSet animatorSet;
+    private final Paint paint;
+    private final AnimatorSet animatorSet;
     private ArrayList<Animator> animatorList;
-    private ArrayList<RippleView> rippleViewList = new ArrayList<>();
+    private final ArrayList<RippleView> rippleViewList = new ArrayList<>();
     private boolean shouldStartAnimation = true;
 
     BarcodeGraphic(GraphicOverlay overlay) {

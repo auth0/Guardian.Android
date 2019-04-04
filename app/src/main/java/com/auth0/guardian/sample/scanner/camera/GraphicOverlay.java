@@ -21,7 +21,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 import java.util.HashSet;
@@ -53,11 +52,11 @@ public class GraphicOverlay<T extends GraphicOverlay.Graphic> extends View {
     private int mPreviewHeight;
     private float mHeightScaleFactor = 1.0f;
     private int mFacing = CameraSource.CAMERA_FACING_BACK;
-    private Set<T> mGraphics = new HashSet<>();
+    private final Set<T> mGraphics = new HashSet<>();
     private T mFirstGraphic;
 
-    private Paint paint = new Paint();
-    private Rect rect = new Rect();
+    private final Paint paint = new Paint();
+    private final Rect rect = new Rect();
 
     /**
      * Base class for a custom graphics object to be rendered within the graphic overlay.  Subclass
@@ -68,7 +67,7 @@ public class GraphicOverlay<T extends GraphicOverlay.Graphic> extends View {
 
         private static final String TAG = Graphic.class.getName();
 
-        private GraphicOverlay mOverlay;
+        private final GraphicOverlay mOverlay;
 
         public Graphic(GraphicOverlay overlay) {
             mOverlay = overlay;

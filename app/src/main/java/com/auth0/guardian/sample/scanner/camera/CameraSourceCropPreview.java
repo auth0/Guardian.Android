@@ -40,8 +40,8 @@ public class CameraSourceCropPreview extends ViewGroup {
 
     private static final String TAG = CameraSourceCropPreview.class.getName();
 
-    private Context mContext;
-    private SurfaceView mSurfaceView;
+    private final Context mContext;
+    private final SurfaceView mSurfaceView;
     private boolean mStartRequested;
     private boolean mSurfaceAvailable;
     private CameraSource mCameraSource;
