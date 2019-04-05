@@ -122,10 +122,10 @@ public class CaptureView extends LinearLayout
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedPreviewSize(1024, 600)
                 .setRequestedFps(15.0f)
-                .setFocusMode(true ? Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE : null);
+                .setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 
         cameraSource = builder
-                .setFlashMode(false ? Camera.Parameters.FLASH_MODE_TORCH : null)
+                .setFlashMode(null)
                 .build();
     }
 
