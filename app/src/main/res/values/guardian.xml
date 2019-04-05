@@ -1,3 +1,3 @@
 <resources>
-    <string name="guardian_url">YOUR_GUARDIAN_URL_HERE</string>
+    <string name="guardian_url">https://custom-sns-app-test.guardian.auth0.com</string>
 </resources>

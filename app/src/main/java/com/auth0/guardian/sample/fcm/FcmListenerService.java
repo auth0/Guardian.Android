@@ -20,12 +20,11 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.guardian.sample.gcm;
+package com.auth0.guardian.sample.fcm;
 
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -36,28 +35,28 @@ import com.auth0.guardian.sample.BuildConfig;
 import com.auth0.guardian.sample.MainActivity;
 import com.auth0.guardian.sample.R;
 import com.auth0.guardian.sample.events.GuardianNotificationReceivedEvent;
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
 
 import org.greenrobot.eventbus.EventBus;
 
-public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerService {
+public class FcmListenerService extends FirebaseMessagingService {
 
-    private static final String TAG = GcmListenerService.class.getName();
+    private static final String TAG = FcmListenerService.class.getName();
 
     /**
      * Called when message is received.
      *
-     * @param from SenderID of the sender.
-     * @param data Data bundle containing message data as key/value pairs.
-     *             For Set of keys use data.keySet().
+     * @param message The message instance
      */
     @Override
-    public void onMessageReceived(String from, Bundle data) {
+    public void onMessageReceived(RemoteMessage message) {
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, String.format("Received GCM message from: %s with data: %s", from, data));
+            Log.d(TAG, String.format("Received FCM message from: %s with data: %s", message.getFrom(), message.getData()));
         }
 
         try {
-            ParcelableNotification notification = Guardian.parseNotification(data);
+            ParcelableNotification notification = Guardian.parseNotification(message.getData());
             EventBus eventBus = EventBus.getDefault();
             if (eventBus.hasSubscriberForEvent(GuardianNotificationReceivedEvent.class)) {
                 eventBus.post(new GuardianNotificationReceivedEvent(notification));
@@ -78,5 +77,16 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "Received a notification that is not a Guardian Notification", e);
         }
+    }
+
+    /**
+     * Called if InstanceID token is updated. This may occur if the security of
+     * the previous token had been compromised. This call is initiated by the
+     * InstanceID provider.
+     */
+    @Override
+    public void onNewToken(String token) {
+        // Use updated token and notify our app's server of any changes (if applicable).
+        Log.w(TAG, "Should refresh token!");
     }
 }

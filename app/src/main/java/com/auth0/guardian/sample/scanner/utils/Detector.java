@@ -26,7 +26,7 @@ import android.util.SparseArray;
 
 public abstract class Detector<T> {
 
-    private Object lock = new Object();
+    private final Object lock = new Object();
     private Detector.Processor<T> processor;
 
     public Detector() {
@@ -82,9 +82,9 @@ public abstract class Detector<T> {
 
     public static class Detections<T> {
 
-        private SparseArray<T> detectedItems;
-        private Frame.Metadata frameMetadata;
-        private boolean isOperational;
+        private final SparseArray<T> detectedItems;
+        private final Frame.Metadata frameMetadata;
+        private final boolean isOperational;
 
         public Detections(SparseArray<T> detectedItems, Frame.Metadata frameMetadata, boolean isOperational) {
             this.detectedItems = detectedItems;

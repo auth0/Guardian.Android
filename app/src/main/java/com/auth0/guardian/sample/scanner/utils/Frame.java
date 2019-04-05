@@ -33,7 +33,7 @@ public class Frame {
     public static final int ROTATION_180 = 2;
     public static final int ROTATION_270 = 3;
 
-    private Frame.Metadata metadata;
+    private final Frame.Metadata metadata;
     private ByteBuffer data;
 
     public Frame.Metadata getMetadata() {
@@ -111,7 +111,7 @@ public class Frame {
     }
 
     public static class Builder {
-        private Frame frame = new Frame();
+        private final Frame frame = new Frame();
 
         public Builder() {
         }

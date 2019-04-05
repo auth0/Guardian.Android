@@ -30,7 +30,7 @@ import java.util.Iterator;
 public class MultiProcessor<T> implements Detector.Processor<T> {
 
     private MultiProcessor.Factory<T> factory;
-    private SparseArray<TrackerCounter> trackers;
+    private final SparseArray<TrackerCounter> trackers;
     private int maxGapFrames;
 
     public void release() {
@@ -123,7 +123,7 @@ public class MultiProcessor<T> implements Detector.Processor<T> {
 
     public static class Builder<T> {
 
-        private MultiProcessor<T> multiProcessor = new MultiProcessor();
+        private final MultiProcessor<T> multiProcessor = new MultiProcessor();
 
         public Builder(MultiProcessor.Factory<T> factory) {
             if (factory == null) {

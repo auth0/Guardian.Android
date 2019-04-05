@@ -1,0 +1,52 @@
+/*
+** THIS IS A SAMPLE CONFIGURATIONFILE WITH DUMMY DATA
+**
+** Replace this file with a valid google-services.json
+** downloaded from the Firebase Console with your project details.
+** See: https://console.firebase.google.com
+*/
+
+{
+  "project_info": {
+    "project_number": "9999999999",
+    "firebase_url": "https://guardian.firebaseio.com",
+    "project_id": "guardian-fcm",
+    "storage_bucket": "guardian-fcm.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:9999999999:android:9999999999",
+        "android_client_info": {
+          "package_name": "com.auth0.guardian.sample"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "9999999999-j1oj123joojdsmnasdi123.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.auth0.guardian.sample",
+            "certificate_hash": "n123n132o132noi1n3nnodon123"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "ANskdaSNDOsdno-ASKdknasdnsdKSD"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "9999999999-j1oj123joojdsmnasdi123.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -28,8 +28,8 @@ import com.auth0.guardian.sample.scanner.utils.Tracker;
  */
 class BarcodeGraphicTracker extends Tracker<Barcode> {
 
-    private GraphicOverlay<BarcodeGraphic> overlay;
-    private BarcodeGraphic graphic;
+    private final GraphicOverlay<BarcodeGraphic> overlay;
+    private final BarcodeGraphic graphic;
 
     BarcodeGraphicTracker(GraphicOverlay<BarcodeGraphic> overlay, BarcodeGraphic graphic) {
         this.overlay = overlay;

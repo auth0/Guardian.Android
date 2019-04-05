@@ -25,7 +25,6 @@ package com.auth0.guardian.sample.scanner;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Camera;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
@@ -97,7 +96,7 @@ public class CaptureView extends LinearLayout
      * the constant.
      */
     @SuppressLint("InlinedApi")
-    private void createCameraSource(boolean autoFocus, boolean useFlash) {
+    private void createCameraSource() {
         Context context = getContext().getApplicationContext();
 
         // A barcode detector is created to track barcodes.  An associated multi-processor instance
@@ -123,17 +122,17 @@ public class CaptureView extends LinearLayout
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedPreviewSize(1024, 600)
                 .setRequestedFps(15.0f)
-                .setFocusMode(autoFocus ? Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE : null);
+                .setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 
         cameraSource = builder
-                .setFlashMode(useFlash ? Camera.Parameters.FLASH_MODE_TORCH : null)
+                .setFlashMode(null)
                 .build();
     }
 
     public void start(Listener listener) {
         Log.d(TAG, "start");
         this.listener = listener;
-        createCameraSource(true, false);
+        createCameraSource();
     }
 
     /**
