@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.4.0](https://github.com/auth0/Guardian.Android/tree/0.4.0) (2019-04-05)
+This release improves the compatibility with Firebase Cloud Messaging (FCM) which has replaced Google Cloud Messaging (GCM) and should no longer been used as April 11. More information on the Firebase blog https://firebase.googleblog.com/2018/04/time-to-upgrade-from-gcm-to-fcm.html
+
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.3.0...0.4.0)
+
+**Added**
+- Allow to parse notifications from a Map instance [\#84](https://github.com/auth0/Guardian.Android/pull/84) ([lbalmaceda](https://github.com/lbalmaceda))
+
+**Changed**
+- Migrate sample from GCM to FCM [\#87](https://github.com/auth0/Guardian.Android/pull/87) ([lbalmaceda](https://github.com/lbalmaceda))
+- Update gradle and dependencies version [\#82](https://github.com/auth0/Guardian.Android/pull/82) ([lbalmaceda](https://github.com/lbalmaceda))
+
+**Deprecated**
+- Deprecate methods to parse a notification payload from a Bundle [\#85](https://github.com/auth0/Guardian.Android/pull/85) ([lbalmaceda](https://github.com/lbalmaceda))
+
 ## [0.3.0](https://github.com/auth0/Guardian.Android/tree/0.3.0) (2017-06-01)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.2.0...0.3.0)
 
