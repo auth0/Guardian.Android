@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
@@ -96,7 +95,8 @@ public class GuardianAPIClient {
                                                           @NonNull String deviceName,
                                                           @NonNull String gcmToken,
                                                           @NonNull PublicKey publicKey) {
-        Type type = new TypeToken<Map<String, Object>>() {}.getType();
+        Type type = new TypeToken<Map<String, Object>>() {
+        }.getType();
         return requestFactory
                 .<Map<String, Object>>newRequest("POST", baseUrl.resolve("api/enroll"), type)
                 .setHeader("Authorization", String.format("Ticket id=\"%s\"", enrollmentTicket))
@@ -224,12 +224,12 @@ public class GuardianAPIClient {
             String headerAndPayload = base64UrlSafeEncode(gson.toJson(headers).getBytes())
                     + "." + base64UrlSafeEncode(gson.toJson(claims).getBytes());
             final byte[] messageBytes = headerAndPayload.getBytes();
-            final Signature signer = Signature.getInstance("SHA256withRSA", "BC");
+            final Signature signer = Signature.getInstance("SHA256withRSA");
             signer.initSign(privateKey);
             signer.update(messageBytes);
             byte[] signature = signer.sign();
             return headerAndPayload + "." + base64UrlSafeEncode(signature);
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             throw new GuardianException("Unable to generate the signed JWT", e);
         }
     }
