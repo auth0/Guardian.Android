@@ -1,10 +1,10 @@
 Guardian SDK for Android
 ============
-[![CI Status](https://travis-ci.org/auth0/Guardian.Android.svg?branch=master)](https://travis-ci.org/auth0/Guardian.Android)
+[![CircleCI](https://img.shields.io/circleci/project/github/auth0/Guardian.Android.svg)](https://circleci.com/gh/auth0/Guardian.Android)
 [![Coverage Status](https://img.shields.io/codecov/c/github/auth0/Guardian.Android/master.svg)](https://codecov.io/github/auth0/Guardian.Android)
 [![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org)
 [![Maven Central](https://img.shields.io/maven-central/v/com.auth0.android/guardian.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.auth0.android%22%20AND%20a%3A%22guardian%22)
-[ ![Download](https://api.bintray.com/packages/auth0/android/guardian/images/download.svg) ](https://bintray.com/auth0/android/guardian/_latestVersion)
+[![Download](https://api.bintray.com/packages/auth0/android/guardian/images/download.svg)](https://bintray.com/auth0/android/guardian/_latestVersion)
 
 [Guardian](https://auth0.com/docs/multifactor-authentication/guardian) is Auth0's multi-factor
 authentication (MFA) service that provides a simple, safe way for you to implement MFA.
@@ -83,7 +83,7 @@ KeyPair keyPair = keyPairGenerator.generateKeyPair();
 Then you just use the `enroll` method like this:
 
 ```java
-CurrentDevice device = new CurrentDevice(context, "gcmToken", "deviceName");
+CurrentDevice device = new CurrentDevice(context, "fcmToken", "deviceName");
 
 String enrollmentUriFromQr = ...; // the data from a Guardian QR code or enrollment ticket
 
@@ -110,14 +110,14 @@ guardian
         });
 ```
 
-The `deviceName` and `gcmToken` are data that you must provide:
+The `deviceName` and `fcmToken` are data that you must provide:
 
 - The `deviceName` is the name that you want for the enrollment. It will be displayed to the user
 when the second factor is required.
 
-- The GCM token is the token for Google's GCM push notification service. In case your app is not yet
-using GCM or you're not familiar with it, you should check their
-[docs](https://developers.google.com/cloud-messaging/android/client#sample-register).
+- The FCM token is the token for Firebase Cloud Messaging push notification service. In case your app
+is not yet using FCM or you're not familiar with it, you should check their
+[docs](https://firebase.google.com/docs/cloud-messaging/android/client#sample-register).
 
 ### Unenroll
 
@@ -132,17 +132,18 @@ guardian
 
 ### Allow a login request
 
-Once you have the enrollment in place, you will receive a GCM push notification every time the user
+Once you have the enrollment in place, you will receive a FCM push notification every time the user
 has to validate his identity with MFA.
 
-Guardian provides a method to parse the `Bundle` received from GCM and return a `Notification`
-instance ready to be used.
+Guardian provides a method to parse the `Map<String, String>` data inside the
+ [RemoteMessage](https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/RemoteMessage)
+ received from FCM and return a `Notification` instance ready to be used.
 
 ```java
-// at your GCM listener you receive a Bundle
+// at your FCM listener you receive a RemoteMessage
 @Override
-public void onMessageReceived(String from, Bundle data) {
-    Notification notification = Guardian.parseNotification(data);
+public void onMessageReceived(RemoteMessage message) {
+    Notification notification = Guardian.parseNotification(message.getData());
     if (notification != null) {
         handleGuardianNotification(notification);
         return;
@@ -152,29 +153,29 @@ public void onMessageReceived(String from, Bundle data) {
 }
 ```
 
-> If the `Bundle` you receive is not a Guardian notification this method will return null, so you
-> should always check before using it.
+> If the `RemoteMessage` you receive is not from a Guardian notification this method will return null,
+ so you should always check before using it.
 
-Once you have the notification instance, you can easily allow the authentication request by using
-the `allow` method. You'll also need the enrollment that you obtained previously.
-In case you have more than one enrollment, you'll have to find the one that has the same id as the
-notification (you can get the enrollment id with `getEnrollmentId()`.
+Once you have the notification instance, you can easily allow the authentication request by using the
+ `allow` method. You'll also need the enrollment that you obtained previously. In case you have more
+  than one enrollment, you'll have to find the one that has the same id as the notification (you can
+  get the enrollment id with `getEnrollmentId()`.
 
 ```java
 guardian
-        .allow(notification, enrollment)
-        .execute(); // or start(new Callback<> ...) asynchronously
+  .allow(notification, enrollment)
+  .execute(); // or start(new Callback<> ...) asynchronously
 ```
 
 ### Reject a login request
 
-To deny an authentication request just call `reject` instead. You can also send a reject reason if
-you want. The reject reason will be available in the guardian logs.
+To deny an authentication request just call `reject` instead. You can also send a reject reason if you want.
+The reject reason will be available in the guardian logs.
 
 ```java
 guardian
-        .reject(notification, enrollment) // or reject(notification, enrollment, reason)
-        .execute(); // or start(new Callback<> ...) asynchronously
+  .reject(notification, enrollment) // or reject(notification, enrollment, reason)
+  .execute(); // or start(new Callback<> ...) asynchronously
 ```
 
 ## What is Auth0?
@@ -183,7 +184,7 @@ Auth0 helps you to:
 
 * Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders),
 either social like **Google, Facebook, Microsoft Account, LinkedIn, GitHub, Twitter, Box, Salesforce,
-amont others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory,
+among others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory,
 ADFS or any SAML Identity Provider**.
 * Add authentication through more traditional
 **[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
