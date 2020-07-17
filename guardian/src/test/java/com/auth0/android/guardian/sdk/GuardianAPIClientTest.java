@@ -92,6 +92,7 @@ public class GuardianAPIClientTest {
     private static final String DEVICE_ACCOUNT_TOKEN = "DEVICE_ACCOUNT_TOKEN";
     private static final String TX_TOKEN = "TX_TOKEN";
     private static final String ENROLLMENT_URL = "https://example.guardian.auth0.com/";
+    private static final String PSAAS_ENROLLMENT_URL = "https://example.guardian.auth0.com/appliance-mfa";
     private static final String ENROLLMENT_ISSUER = "ENROLLMENT_ISSUER";
     private static final String ENROLLMENT_USER = "ENROLLMENT_USER";
     private static final String RECOVERY_CODE = "RECOVERY_CODE";
@@ -282,6 +283,27 @@ public class GuardianAPIClientTest {
         verify(enrollCallback, timeout(100)).onSuccess(anyMapOf(String.class, Object.class));
 
         verifyNoMoreInteractions(enrollCallback);
+    }
+
+    @Test
+    public void shouldCallTheRightUrlWhenUsingPathSegmentsWithoutTrailingSlash() throws Exception {
+        MockWebService newMockWebService = new MockWebService();
+        final String domain = newMockWebService.getDomain();
+        GuardianAPIClient apiClientPSaaS = new GuardianAPIClient.Builder()
+                .url(Uri.parse(domain + "appliance-mfa"))
+                .build();
+
+        newMockWebService.willReturnEnrollment(ENROLLMENT_ID, PSAAS_ENROLLMENT_URL, ENROLLMENT_ISSUER, ENROLLMENT_USER,
+                DEVICE_ACCOUNT_TOKEN, RECOVERY_CODE, TOTP_SECRET, TOTP_ALGORITHM, TOTP_DIGITS, TOTP_PERIOD);
+
+        apiClientPSaaS.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
+                .start(enrollCallback);
+
+        RecordedRequest request = newMockWebService.takeRequest();
+
+        assertThat(request.getPath(), is(equalTo("/appliance-mfa/api/enroll")));
+        assertThat(request.getMethod(), is(equalTo("POST")));
+        assertThat(request.getHeader("Authorization"), is(equalTo("Ticket id=\"" + ENROLLMENT_TICKET + "\"")));
     }
 
     @Test

@@ -97,8 +97,13 @@ public class GuardianAPIClient {
                                                           @NonNull PublicKey publicKey) {
         Type type = new TypeToken<Map<String, Object>>() {
         }.getType();
+
+        HttpUrl url = baseUrl.newBuilder()
+                .addPathSegments("api/enroll")
+                .build();
+
         return requestFactory
-                .<Map<String, Object>>newRequest("POST", baseUrl.resolve("api/enroll"), type)
+                .<Map<String, Object>>newRequest("POST", url, type)
                 .setHeader("Authorization", String.format("Ticket id=\"%s\"", enrollmentTicket))
                 .setParameter("identifier", deviceIdentifier)
                 .setParameter("name", deviceName)
