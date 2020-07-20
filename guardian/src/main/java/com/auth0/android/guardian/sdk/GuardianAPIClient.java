@@ -154,7 +154,10 @@ public class GuardianAPIClient {
                                           @NonNull String deviceIdentifier,
                                           @NonNull String challenge,
                                           @NonNull PrivateKey privateKey) {
-        final HttpUrl url = baseUrl.resolve("api/resolve-transaction");
+        final HttpUrl url = baseUrl.newBuilder()
+                .addPathSegments("api/resolve-transaction")
+                .build();
+
         final String jwt = createJWT(privateKey, url.toString(), deviceIdentifier, challenge, true, null);
         return requestFactory
                 .<Void>newRequest("POST", url, Void.class)
@@ -178,7 +181,10 @@ public class GuardianAPIClient {
                                            @NonNull String challenge,
                                            @NonNull PrivateKey privateKey,
                                            @Nullable String reason) {
-        final HttpUrl url = baseUrl.resolve("api/resolve-transaction");
+        final HttpUrl url = baseUrl.newBuilder()
+                .addPathSegments("api/resolve-transaction")
+                .build();
+
         final String jwt = createJWT(privateKey, url.toString(), deviceIdentifier, challenge, false, reason);
         return requestFactory
                 .<Void>newRequest("POST", url, Void.class)
