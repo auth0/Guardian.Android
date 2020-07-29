@@ -1,5 +1,8 @@
 # Change Log
 
+## [0.5.0](https://github.com/auth0/Guardian.Android/tree/0.5.0) (2020-07-29)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.4.0...0.5.0)
+
 ## [0.4.0](https://github.com/auth0/Guardian.Android/tree/0.4.0) (2019-04-05)
 This release improves the compatibility with Firebase Cloud Messaging (FCM) which has replaced Google Cloud Messaging (GCM) and should no longer been used as April 11. More information on the Firebase blog https://firebase.googleblog.com/2018/04/time-to-upgrade-from-gcm-to-fcm.html
 
