@@ -50,6 +50,7 @@
                 android:paddingTop="@dimen/activity_vertical_margin"
                 android:text="Scan a Guardian QR code"
                 android:textAlignment="center"
+                android:gravity="center_horizontal"
                 android:textSize="16sp" />
 
         </LinearLayout>
