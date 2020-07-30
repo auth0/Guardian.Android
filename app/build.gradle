@@ -29,7 +29,7 @@ dependencies {
     implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.android.support:design:28.0.0'
     //GSON
-    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.code.gson:gson:2.8.6'
     //FCM
     implementation 'com.google.firebase:firebase-core:16.0.8'
     implementation 'com.google.firebase:firebase-messaging:17.5.0'
@@ -37,5 +37,5 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.0.0'
     //ZXing QR decoder deps
     implementation 'com.google.zxing:core:3.2.1'
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13'
 }
