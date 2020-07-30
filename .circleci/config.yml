@@ -1,9 +1,6 @@
 version: 2
 jobs:
   build:
-    environment:
-      GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError"
-      _JAVA_OPTIONS: -Xms512m -Xmx1024m
     docker:
       - image: circleci/android:api-28
 
@@ -13,14 +10,13 @@ jobs:
         keys:
         - dep-{{ checksum "./guardian/build.gradle" }}-{{ checksum "./app/build.gradle" }}
         - dep-
-    - run: ./gradlew clean build
+    - run: ./gradlew clean test jacocoTestReport --continue --console=plain --max-workers 4
     - save_cache:
         key: dep-{{ checksum "./guardian/build.gradle" }}-{{ checksum "./app/build.gradle" }}
         paths:
-        - ~/.gradle
-        - ~/.android
-        - /usr/local/android-sdk-linux/extras
-    - run: ./gradlew clean test jacocoTestReport --continue --console=plain
+          - ~/.gradle
+          - ~/.android
+          - /usr/local/android-sdk-linux/extras
     - run:
           name: Upload Coverage
           when: on_success
