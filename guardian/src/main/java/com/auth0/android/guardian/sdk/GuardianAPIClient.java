@@ -35,18 +35,31 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.Dns;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -311,6 +324,47 @@ public class GuardianAPIClient {
             return this;
         }
 
+        private void setTrustAllCerts(OkHttpClient.Builder builder) throws NoSuchAlgorithmException, KeyManagementException {
+            final TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                    }
+
+                    @Override
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                    }
+
+                    @Override
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return new java.security.cert.X509Certificate[]{};
+                    }
+                }
+            };
+
+            // Install the all-trusting trust manager
+            SSLContext sslContext = sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            // Create an ssl socket factory with our all-trusting manager
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            builder.sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0]);
+        }
+
+        private void redirectVivaldiRequests(OkHttpClient.Builder builder) {
+            builder.dns(new Dns() {
+                @Override
+                public List<InetAddress> lookup(String hostname) throws UnknownHostException {
+                    if (hostname.endsWith("guardian.local.dev.auth0.com")) {
+                        List<InetAddress> addr = new ArrayList<>();
+                        addr.add(InetAddress.getByAddress(hostname, new byte[]{10, 0, 2, 2}));
+                        return addr;
+                    }
+
+                    return Arrays.asList(InetAddress.getAllByName(hostname));
+                }
+            });
+        }
         /**
          * Builds and returns the GuardianAPIClient instance
          *
@@ -352,6 +406,13 @@ public class GuardianAPIClient {
                         .setLevel(HttpLoggingInterceptor.Level.BODY);
                 builder.addInterceptor(loggingInterceptor);
             }
+
+            try {
+                this.setTrustAllCerts(builder);
+            } catch (KeyManagementException | NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+            this.redirectVivaldiRequests(builder);
 
             OkHttpClient client = builder.build();
 
