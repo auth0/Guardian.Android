@@ -261,12 +261,18 @@ public class GuardianAPIClient {
     /**
      * Returns an API client to create, update or delete an enrollment's device data
      *
-     * @param id    the device id
-     * @param token the device token
+     * @param enrollment the device
      * @return an API client for the device
      */
-    public DeviceAPIClient device(@NonNull String id, @NonNull String token) {
-        return new DeviceAPIClient(requestFactory, baseUrl, id, token);
+    public DeviceAPIClient device(@NonNull Enrollment enrollment) {
+        final HttpUrl url = baseUrl.newBuilder()
+                .addPathSegments("api/resolve-transaction")
+                .build();
+
+        final String token =
+                createJWT(enrollment.getSigningKey(), url.toString(), enrollment.getId(), "NOT_NEED_IT", true, null);
+
+        return new DeviceAPIClient(requestFactory, baseUrl, enrollment.getId(), token);
     }
 
     /**
