@@ -1,5 +1,5 @@
 plugins {
-    id "com.auth0.gradle.oss-library.android" version "0.8.0"
+    id "com.auth0.gradle.oss-library.android" version "0.15.1"
 }
 
 logger.lifecycle("Using version ${version} for ${name}")
@@ -30,6 +30,7 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName project.version
+        buildConfigField "String", "VERSION_NAME", "\"${project.version}\""
     }
     buildTypes {
         release {
@@ -48,7 +49,7 @@ dependencies {
     // Annotations (@NonNull etc)
     implementation 'com.android.support:support-annotations:28.0.0'
     //Gson
-    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.code.gson:gson:2.8.6'
     //OkHttp
     implementation 'com.squareup.okhttp3:okhttp:3.14.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.14.0'
