@@ -221,9 +221,8 @@ public class GuardianAPIClientTest {
         RecordedRequest request = mockAPI.takeRequest();
         assertThat(request.getHeader("User-Agent"),
                 is(equalTo(
-                        String.format("GuardianSDK/%s(%s) Android %s",
+                        String.format("GuardianSDK/%s Android %s",
                                 BuildConfig.VERSION_NAME,
-                                BuildConfig.VERSION_CODE,
                                 Build.VERSION.RELEASE))));
 
         assertThat(request.getHeader("Accept-Language"),
