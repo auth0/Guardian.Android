@@ -61,7 +61,8 @@ import okhttp3.logging.HttpLoggingInterceptor;
  */
 public class GuardianAPIClient {
 
-    private static final int JWT_EXP_SECS = 30;
+    private static final int ACCESS_APPROVAL_JWT_EXP_SECS = 30;
+    private static final int BASIC_JWT_EXP_SECS = 60 * 60 * 2; // 2 hours
 
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
@@ -235,7 +236,7 @@ public class GuardianAPIClient {
         long currentTime = new Date().getTime() / 1000L;
         Map<String, Object> claims = new HashMap<>();
         claims.put("iat", currentTime);
-        claims.put("exp", currentTime + JWT_EXP_SECS);
+        claims.put("exp", currentTime + BASIC_JWT_EXP_SECS);
         claims.put("aud", audience);
         claims.put("iss", deviceIdentifier);
         claims.put("sub", subject);
@@ -251,7 +252,7 @@ public class GuardianAPIClient {
         long currentTime = new Date().getTime() / 1000L;
         Map<String, Object> claims = new HashMap<>();
         claims.put("iat", currentTime);
-        claims.put("exp", currentTime + JWT_EXP_SECS);
+        claims.put("exp", currentTime + ACCESS_APPROVAL_JWT_EXP_SECS);
         claims.put("aud", audience);
         claims.put("iss", deviceIdentifier);
         claims.put("sub", subject);
