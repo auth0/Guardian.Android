@@ -54,7 +54,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.14.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.14.0'
     //Mockito
-    testImplementation 'org.mockito:mockito-core:2.8.9'
+    testImplementation 'org.mockito:mockito-core:3.6.28'
     //Hamcrest matchers
     testImplementation 'org.hamcrest:hamcrest-library:1.3'
     //OkHttp MockWebServer
@@ -62,8 +62,8 @@ dependencies {
     //Awaitility
     testImplementation 'com.jayway.awaitility:awaitility:1.7.0'
     //Robolectric
-    testImplementation 'org.robolectric:robolectric:3.1.2'
+    testImplementation 'org.robolectric:robolectric:4.4'
     // JWT verification
     testImplementation 'com.auth0:java-jwt:2.3.0'
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
 }

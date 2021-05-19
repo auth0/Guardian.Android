@@ -84,7 +84,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23, manifest = Config.NONE)
+@Config(sdk = 23, manifest = Config.NONE)
 public class GuardianAPIClientTest {
 
     private static final String ENROLLMENT_TICKET = "ENROLLMENT_TICKET";
