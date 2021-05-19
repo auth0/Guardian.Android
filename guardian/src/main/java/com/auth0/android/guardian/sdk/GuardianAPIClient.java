@@ -24,8 +24,8 @@ package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
@@ -337,9 +337,8 @@ public class GuardianAPIClient {
                             .header("Accept-Language",
                                     Locale.getDefault().toString())
                             .header("User-Agent",
-                                    String.format("GuardianSDK/%s(%s) Android %s",
+                                    String.format("GuardianSDK/%s Android %s",
                                             BuildConfig.VERSION_NAME,
-                                            BuildConfig.VERSION_CODE,
                                             Build.VERSION.RELEASE))
                             .header("Auth0-Client", clientInfo)
                             .build();

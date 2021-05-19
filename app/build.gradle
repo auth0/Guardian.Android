@@ -26,8 +26,8 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':guardian')
-    implementation 'com.android.support:support-v4:28.0.0'
-    implementation 'com.android.support:design:28.0.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.android.material:material:1.3.0'
     //GSON
     implementation 'com.google.code.gson:gson:2.8.6'
     //FCM
@@ -36,6 +36,6 @@ dependencies {
     //EventBus
     implementation 'org.greenrobot:eventbus:3.0.0'
     //ZXing QR decoder deps
-    implementation 'com.google.zxing:core:3.2.1'
-    testImplementation 'junit:junit:4.12'
+    implementation 'com.google.zxing:core:3.3.0'
+    testImplementation 'junit:junit:4.13.2'
 }

@@ -54,7 +54,7 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     // Annotations (@NonNull etc)
-    implementation 'com.android.support:support-annotations:28.0.0'
+    implementation 'androidx.annotation:annotation:1.2.0'
     //Gson
     implementation 'com.google.code.gson:gson:2.8.6'
     //OkHttp
