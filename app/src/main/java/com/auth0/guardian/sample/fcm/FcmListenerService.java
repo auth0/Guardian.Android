@@ -25,8 +25,8 @@ package com.auth0.guardian.sample.fcm;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Color;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.auth0.android.guardian.sdk.Guardian;
