@@ -36,7 +36,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23, manifest = Config.NONE)
+@Config(sdk = 23, manifest = Config.NONE)
 public class CurrentDeviceTest {
 
     private static final String NOTIFICATION_TOKEN = "NOTIFICATION_TOKEN";

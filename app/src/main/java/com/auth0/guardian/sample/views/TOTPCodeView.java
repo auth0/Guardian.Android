@@ -33,7 +33,7 @@ import com.auth0.android.guardian.sdk.otp.TOTP;
 import com.auth0.android.guardian.sdk.otp.utils.Base32;
 import com.auth0.guardian.sample.R;
 
-public class TOTPCodeView extends android.support.v7.widget.AppCompatTextView {
+public class TOTPCodeView extends androidx.appcompat.widget.AppCompatTextView {
 
     private Enrollment enrollment;
     private CountDownTimer timer;

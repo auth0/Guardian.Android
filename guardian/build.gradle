@@ -1,5 +1,5 @@
 plugins {
-    id "com.auth0.gradle.oss-library.android" version "0.8.0"
+    id "com.auth0.gradle.oss-library.android" version "0.15.1"
 }
 
 logger.lifecycle("Using version ${version} for ${name}")
@@ -23,13 +23,14 @@ oss {
 }
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 30
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 28
+        targetSdkVersion 30
         versionCode 1
         versionName project.version
+        buildConfigField "String", "VERSION_NAME", "\"${project.version}\""
     }
     buildTypes {
         release {
@@ -41,19 +42,26 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    testOptions {
+        unitTests {
+            all {
+                maxHeapSize = "1024m"
+            }
+        }
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     // Annotations (@NonNull etc)
-    implementation 'com.android.support:support-annotations:28.0.0'
+    implementation 'androidx.annotation:annotation:1.2.0'
     //Gson
-    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.code.gson:gson:2.8.6'
     //OkHttp
     implementation 'com.squareup.okhttp3:okhttp:3.14.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.14.0'
     //Mockito
-    testImplementation 'org.mockito:mockito-core:2.8.9'
+    testImplementation 'org.mockito:mockito-core:3.6.28'
     //Hamcrest matchers
     testImplementation 'org.hamcrest:hamcrest-library:1.3'
     //OkHttp MockWebServer
@@ -61,8 +69,8 @@ dependencies {
     //Awaitility
     testImplementation 'com.jayway.awaitility:awaitility:1.7.0'
     //Robolectric
-    testImplementation 'org.robolectric:robolectric:3.1.2'
+    testImplementation 'org.robolectric:robolectric:4.4'
     // JWT verification
     testImplementation 'com.auth0:java-jwt:2.3.0'
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
 }

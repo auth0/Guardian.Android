@@ -84,7 +84,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23, manifest = Config.NONE)
+@Config(sdk = 23, manifest = Config.NONE)
 public class GuardianAPIClientTest {
 
     private static final String ENROLLMENT_TICKET = "ENROLLMENT_TICKET";
@@ -220,9 +220,8 @@ public class GuardianAPIClientTest {
         RecordedRequest request = mockAPI.takeRequest();
         assertThat(request.getHeader("User-Agent"),
                 is(equalTo(
-                        String.format("GuardianSDK/%s(%s) Android %s",
+                        String.format("GuardianSDK/%s Android %s",
                                 BuildConfig.VERSION_NAME,
-                                BuildConfig.VERSION_CODE,
                                 Build.VERSION.RELEASE))));
 
         assertThat(request.getHeader("Accept-Language"),
