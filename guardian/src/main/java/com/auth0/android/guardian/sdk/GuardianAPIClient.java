@@ -289,7 +289,9 @@ public class GuardianAPIClient {
      * @param id    the device id
      * @param token the device token
      * @return an API client for the device
+     * @deprecated Use {@link #device(String, String, PrivateKey)} to prefer JWT authentication.
      */
+    @Deprecated
     public DeviceAPIClient device(@NonNull String id, @NonNull String token) {
         return new DeviceAPIClient(requestFactory, baseUrl, id, token);
     }
