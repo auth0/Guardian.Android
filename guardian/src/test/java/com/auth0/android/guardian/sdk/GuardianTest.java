@@ -47,12 +47,13 @@ import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23, manifest = Config.NONE)
+@Config(sdk = 23, manifest = Config.NONE)
 public class GuardianTest {
 
     private static final String TENANT = "TENANT";
@@ -113,6 +114,8 @@ public class GuardianTest {
 
         when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
                 .thenReturn(deviceApiClient);
+        when(apiClient.device(DEVICE_ID, USER, privateKey))
+                .thenReturn(deviceApiClient);
 
         guardian = new Guardian(apiClient);
     }
@@ -160,7 +163,8 @@ public class GuardianTest {
 
         GuardianAPIRequest<Void> request = guardian.delete(enrollment);
 
-        verify(apiClient).device(DEVICE_ID, DEVICE_TOKEN);
+        verify(apiClient, never()).device(DEVICE_ID, DEVICE_TOKEN);
+        verify(apiClient).device(DEVICE_ID, USER, privateKey);
         verify(deviceApiClient).delete();
 
         assertThat(request, is(sameInstance(mockRequest)));

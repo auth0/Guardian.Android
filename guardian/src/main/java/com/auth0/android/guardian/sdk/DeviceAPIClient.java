@@ -22,7 +22,7 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.google.gson.reflect.TypeToken;

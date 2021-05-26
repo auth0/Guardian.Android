@@ -24,8 +24,8 @@ package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.auth0.android.guardian.sdk.otp.TOTP;
 import com.auth0.android.guardian.sdk.otp.utils.Base32;
@@ -86,7 +86,7 @@ public class Guardian {
     @NonNull
     public GuardianAPIRequest<Void> delete(@NonNull Enrollment enrollment) {
         return client
-                .device(enrollment.getId(), enrollment.getDeviceToken())
+                .device(enrollment.getId(), enrollment.getUserId(), enrollment.getSigningKey())
                 .delete();
     }
 

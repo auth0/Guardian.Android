@@ -52,7 +52,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23, manifest = Config.NONE)
+@Config(sdk = 23, manifest = Config.NONE)
 public class ParcelableNotificationTest {
 
     private static final String HOSTNAME = "example.com";

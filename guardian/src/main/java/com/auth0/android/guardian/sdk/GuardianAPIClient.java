@@ -24,8 +24,8 @@ package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
@@ -61,7 +61,8 @@ import okhttp3.logging.HttpLoggingInterceptor;
  */
 public class GuardianAPIClient {
 
-    private static final int JWT_EXP_SECS = 30;
+    private static final int ACCESS_APPROVAL_JWT_EXP_SECS = 30;
+    private static final int BASIC_JWT_EXP_SECS = 60 * 60 * 2; // 2 hours
 
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
@@ -158,7 +159,7 @@ public class GuardianAPIClient {
                 .addPathSegments("api/resolve-transaction")
                 .build();
 
-        final String jwt = createJWT(privateKey, url.toString(), deviceIdentifier, challenge, true, null);
+        final String jwt = createAccessApprovalJWT(privateKey, url.toString(), deviceIdentifier, challenge, true, null);
         return requestFactory
                 .<Void>newRequest("POST", url, Void.class)
                 .setBearer(txToken)
@@ -185,7 +186,7 @@ public class GuardianAPIClient {
                 .addPathSegments("api/resolve-transaction")
                 .build();
 
-        final String jwt = createJWT(privateKey, url.toString(), deviceIdentifier, challenge, false, reason);
+        final String jwt = createAccessApprovalJWT(privateKey, url.toString(), deviceIdentifier, challenge, false, reason);
         return requestFactory
                 .<Void>newRequest("POST", url, Void.class)
                 .setBearer(txToken)
@@ -209,28 +210,65 @@ public class GuardianAPIClient {
         return reject(txToken, deviceIdentifier, challenge, privateKey, null);
     }
 
-    private String createJWT(@NonNull PrivateKey privateKey,
-                             @NonNull String audience,
-                             @NonNull String deviceIdentifier,
-                             @NonNull String challenge,
-                             boolean accepted,
-                             @Nullable String reason) {
+    /**
+     * Returns an API client to create, update or delete an enrollment's device data
+     *
+     * @param deviceIdentifier the device id
+     * @param subject          the enrollment's user id
+     * @param privateKey       the private key used to sign the payload
+     * @return an API client for the device
+     */
+    @NonNull
+    public DeviceAPIClient device(@NonNull String deviceIdentifier, @NonNull String subject, @NonNull PrivateKey privateKey) {
+        final HttpUrl url = baseUrl.newBuilder()
+                .addPathSegments("api/device-accounts")
+                .build();
+
+        final String token = createBasicJWT(privateKey, url.toString(), deviceIdentifier, subject);
+
+        return new DeviceAPIClient(requestFactory, baseUrl, deviceIdentifier, token);
+    }
+
+    private String createBasicJWT(@NonNull PrivateKey privateKey,
+                                  @NonNull String audience,
+                                  @NonNull String deviceIdentifier,
+                                  @NonNull String subject) {
+        long currentTime = new Date().getTime() / 1000L;
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("iat", currentTime);
+        claims.put("exp", currentTime + BASIC_JWT_EXP_SECS);
+        claims.put("aud", audience);
+        claims.put("iss", deviceIdentifier);
+        claims.put("sub", subject);
+        return signJWT(privateKey, claims);
+    }
+
+    private String createAccessApprovalJWT(@NonNull PrivateKey privateKey,
+                                           @NonNull String audience,
+                                           @NonNull String deviceIdentifier,
+                                           @NonNull String subject,
+                                           boolean accepted,
+                                           @Nullable String reason) {
+        long currentTime = new Date().getTime() / 1000L;
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("iat", currentTime);
+        claims.put("exp", currentTime + ACCESS_APPROVAL_JWT_EXP_SECS);
+        claims.put("aud", audience);
+        claims.put("iss", deviceIdentifier);
+        claims.put("sub", subject);
+        claims.put("auth0_guardian_method", "push");
+        claims.put("auth0_guardian_accepted", accepted);
+        if (reason != null) {
+            claims.put("auth0_guardian_reason", reason);
+        }
+        return signJWT(privateKey, claims);
+    }
+
+    private String signJWT(@NonNull PrivateKey privateKey, @NonNull Map<String, Object> claims) {
         try {
             Map<String, Object> headers = new HashMap<>();
             headers.put("alg", "RS256");
             headers.put("typ", "JWT");
-            long currentTime = new Date().getTime() / 1000L;
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("iat", currentTime);
-            claims.put("exp", currentTime + JWT_EXP_SECS);
-            claims.put("aud", audience);
-            claims.put("iss", deviceIdentifier);
-            claims.put("sub", challenge);
-            claims.put("auth0_guardian_method", "push");
-            claims.put("auth0_guardian_accepted", accepted);
-            if (reason != null) {
-                claims.put("auth0_guardian_reason", reason);
-            }
             Gson gson = new GsonBuilder().create();
             String headerAndPayload = base64UrlSafeEncode(gson.toJson(headers).getBytes())
                     + "." + base64UrlSafeEncode(gson.toJson(claims).getBytes());
@@ -339,9 +377,8 @@ public class GuardianAPIClient {
                             .header("Accept-Language",
                                     Locale.getDefault().toString())
                             .header("User-Agent",
-                                    String.format("GuardianSDK/%s(%s) Android %s",
+                                    String.format("GuardianSDK/%s Android %s",
                                             BuildConfig.VERSION_NAME,
-                                            BuildConfig.VERSION_CODE,
                                             Build.VERSION.RELEASE))
                             .header("Auth0-Client", clientInfo)
                             .build();

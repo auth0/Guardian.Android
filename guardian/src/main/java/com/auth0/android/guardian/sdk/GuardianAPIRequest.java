@@ -22,7 +22,7 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.auth0.android.guardian.sdk.networking.Callback;
 
