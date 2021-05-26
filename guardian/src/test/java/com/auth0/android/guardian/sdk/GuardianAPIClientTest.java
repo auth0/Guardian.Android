@@ -35,14 +35,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
@@ -73,6 +72,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyMapOf;
@@ -103,7 +103,7 @@ public class GuardianAPIClientTest {
     private static final String DEVICE_IDENTIFIER = "DEVICE_IDENTIFIER";
     private static final String DEVICE_NAME = "DEVICE_NAME";
     private static final String GCM_TOKEN = "GCM_TOKEN";
-    private static final byte[] PUBLIC_KEY_EXPONENT = new byte[]{ 0x01, 0x00, 0x01 };
+    private static final byte[] PUBLIC_KEY_EXPONENT = new byte[]{0x01, 0x00, 0x01};
     private static final byte[] PUBLIC_KEY_MODULUS = new byte[]{
             1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
             1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
@@ -117,6 +117,8 @@ public class GuardianAPIClientTest {
             1, 2, 3, 4, 5, 6, 7, 8, 9, 0
     };
     private static final String CHALLENGE = "CHALLENGE";
+    private static final Integer THIRTY_SECONDS = 30;
+    private static final Integer TWO_HOURS_IN_SECONDS = 2 * 60 * 60;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -125,10 +127,7 @@ public class GuardianAPIClientTest {
     RSAPublicKey publicKey;
 
     @Mock
-    Callback<Map<String,Object>> enrollCallback;
-
-    @Captor
-    ArgumentCaptor<Map<String,Object>> enrollCallbackCaptor;
+    Callback<Map<String, Object>> enrollCallback;
 
     MockWebService mockAPI;
     GuardianAPIClient apiClient;
@@ -213,7 +212,7 @@ public class GuardianAPIClientTest {
         mockAPI.willReturnEnrollment(ENROLLMENT_ID, ENROLLMENT_URL, ENROLLMENT_ISSUER, ENROLLMENT_USER,
                 DEVICE_ACCOUNT_TOKEN, RECOVERY_CODE, TOTP_SECRET, TOTP_ALGORITHM, TOTP_DIGITS, TOTP_PERIOD);
 
-        final MockCallback<Map<String,Object>> callback = new MockCallback<>();
+        final MockCallback<Map<String, Object>> callback = new MockCallback<>();
 
         apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
                 .start(callback);
@@ -234,7 +233,8 @@ public class GuardianAPIClientTest {
         byte[] auth0ClientDecoded = Base64.decode(
                 auth0ClientEncoded, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
 
-        Type type = new TypeToken<Map<String, String>>() {}.getType();
+        Type type = new TypeToken<Map<String, String>>() {
+        }.getType();
         Gson gson = new GsonBuilder().create();
         Map<String, String> auth0Client = gson.fromJson(
                 new InputStreamReader(
@@ -330,7 +330,7 @@ public class GuardianAPIClientTest {
     public void shouldFailEnrollIfNotRSA() throws Exception {
         exception.expect(IllegalArgumentException.class);
 
-        final MockCallback<Map<String,Object>> callback = new MockCallback<>();
+        final MockCallback<Map<String, Object>> callback = new MockCallback<>();
 
         apiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, mock(PublicKey.class))
                 .start(callback);
@@ -354,7 +354,7 @@ public class GuardianAPIClientTest {
         assertThat(body, hasKey("challenge_response"));
 
         String jwt = (String) body.get("challenge_response");
-        verifyJWT(jwt, true, null);
+        verifyAccessApprovalJWT(jwt, true, null);
 
         assertThat(callback, hasNoError());
     }
@@ -377,7 +377,7 @@ public class GuardianAPIClientTest {
         assertThat(body, hasKey("challenge_response"));
 
         String jwt = (String) body.get("challenge_response");
-        verifyJWT(jwt, false, "hack");
+        verifyAccessApprovalJWT(jwt, false, "hack");
 
         assertThat(callback, hasNoError());
     }
@@ -400,13 +400,13 @@ public class GuardianAPIClientTest {
         assertThat(body, hasKey("challenge_response"));
 
         String jwt = (String) body.get("challenge_response");
-        verifyJWT(jwt, false, null);
+        verifyAccessApprovalJWT(jwt, false, null);
 
         assertThat(callback, hasNoError());
     }
 
     @Test
-    public void shouldCreateValidDeviceAPI() throws Exception {
+    public void shouldCreateValidDeviceAPIWithOpaqueToken() throws Exception {
         mockAPI.willReturnSuccess(200);
 
         final MockCallback<Void> callback = new MockCallback<>();
@@ -421,20 +421,46 @@ public class GuardianAPIClientTest {
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + DEVICE_ACCOUNT_TOKEN)));
     }
 
+    @Test
+    public void shouldCreateValidDeviceAPIWithJWT() throws Exception {
+        mockAPI.willReturnSuccess(200);
+
+        final MockCallback<Void> callback = new MockCallback<>();
+
+        apiClient.device(ENROLLMENT_ID, ENROLLMENT_USER, keyPair.getPrivate())
+                .delete()
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
+        assertThat(request.getPath(), is(equalTo(String.format("/api/device-accounts/%s", ENROLLMENT_ID))));
+        assertThat(request.getMethod(), is(equalTo("DELETE")));
+        String authorization = request.getHeader("Authorization");
+        assertThat(authorization, Matchers.startsWith("Bearer "));
+        String jwt = authorization.split("Bearer ")[1];
+        verifyBasicJWT(jwt);
+    }
+
     private Map<String, Object> bodyFromRequest(RecordedRequest request) throws IOException {
         Gson gson = new GsonBuilder().create();
-        Type type = new TypeToken<Map<String, Object>>() {}.getType();
+        Type type = new TypeToken<Map<String, Object>>() {
+        }.getType();
         return gson.fromJson(new InputStreamReader(request.getBody().inputStream()), type);
     }
 
-    private void verifyJWT(String jwt, boolean accepted, String rejectReason)
-            throws SignatureException, NoSuchAlgorithmException, JWTVerifyException, InvalidKeyException, IOException {
+    private void verifyBasicJWT(String jwt) throws SignatureException, NoSuchAlgorithmException, JWTVerifyException, InvalidKeyException, IOException {
+        final String audience = HttpUrl.parse(apiClient.getUrl()).resolve("api/device-accounts").toString();
+        Map<String, Object> payload = verifyJWT(jwt, ENROLLMENT_ID, audience, TWO_HOURS_IN_SECONDS);
+        assertThat(payload, hasEntry("sub", (Object) ENROLLMENT_USER));
+        assertThat(payload, not(hasKey("auth0_guardian_accepted")));
+        assertThat(payload, not(hasKey("auth0_guardian_method")));
+        assertThat(payload, not(hasKey("auth0_guardian_reason")));
+
+    }
+
+    private void verifyAccessApprovalJWT(String jwt, boolean accepted, String rejectReason) throws NoSuchAlgorithmException, SignatureException, JWTVerifyException, InvalidKeyException, IOException {
         final String audience = HttpUrl.parse(apiClient.getUrl()).resolve("api/resolve-transaction").toString();
-        final JWTVerifier jwtVerifier = new JWTVerifier(keyPair.getPublic(), audience, DEVICE_IDENTIFIER);
-        final Map<String, Object> payload = jwtVerifier.verify(jwt);
-        assertThat(payload, hasEntry("aud", (Object) audience));
+        Map<String, Object> payload = verifyJWT(jwt, DEVICE_IDENTIFIER, audience, THIRTY_SECONDS);
         assertThat(payload, hasEntry("sub", (Object) CHALLENGE));
-        assertThat(payload, hasEntry("iss", (Object) DEVICE_IDENTIFIER));
         assertThat(payload, hasEntry("auth0_guardian_accepted", (Object) accepted));
         assertThat(payload, hasEntry("auth0_guardian_method", (Object) "push"));
         if (!accepted && rejectReason != null) {
@@ -442,15 +468,23 @@ public class GuardianAPIClientTest {
         } else {
             assertThat(payload.containsKey("auth0_guardian_reason"), is(equalTo(false)));
         }
+    }
+
+    private Map<String, Object> verifyJWT(String jwt, String issuer, String audience, Integer expiresIn) throws SignatureException, NoSuchAlgorithmException, JWTVerifyException, InvalidKeyException, IOException {
+        final JWTVerifier jwtVerifier = new JWTVerifier(keyPair.getPublic(), audience, issuer);
+        final Map<String, Object> payload = jwtVerifier.verify(jwt);
+        assertThat(payload, hasEntry("aud", (Object) audience));
+        assertThat(payload, hasEntry("iss", (Object) issuer));
         assertThat(payload, hasKey("iat"));
         assertThat(payload, hasKey("exp"));
 
         Integer iat = (Integer) payload.get("iat");
         Integer exp = (Integer) payload.get("exp");
 
-        int currentTime = (int)(new Date().getTime() / 1000L);
+        int currentTime = (int) (new Date().getTime() / 1000L);
         assertThat(iat, is(lessThanOrEqualTo(currentTime)));
         assertThat(exp, is(greaterThan(currentTime)));
-        assertThat(exp - iat, is(equalTo(30)));
+        assertThat(exp - iat, is(equalTo(expiresIn)));
+        return payload;
     }
 }

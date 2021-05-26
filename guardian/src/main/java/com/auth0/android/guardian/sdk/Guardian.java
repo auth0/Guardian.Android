@@ -86,7 +86,7 @@ public class Guardian {
     @NonNull
     public GuardianAPIRequest<Void> delete(@NonNull Enrollment enrollment) {
         return client
-                .device(enrollment.getId(), enrollment.getDeviceToken())
+                .device(enrollment.getId(), enrollment.getUserId(), enrollment.getSigningKey())
                 .delete();
     }
 
