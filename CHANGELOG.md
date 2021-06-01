@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.6.0](https://github.com/auth0/Guardian.Android/tree/0.6.0) (2021-06-01)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.5.0...0.6.0)
+
+**Changed**
+- Use JWT to authenticate /api/device-accounts [SDK-2561] [\#95](https://github.com/auth0/Guardian.Android/pull/95) ([lbalmaceda](https://github.com/lbalmaceda))
+
+**Deprecated**
+- Deprecate the 'device' method and document the alternative [\#96](https://github.com/auth0/Guardian.Android/pull/96) ([lbalmaceda](https://github.com/lbalmaceda))
+
+**Breaking changes**
+- Migrate to AndroidX  [\#94](https://github.com/auth0/Guardian.Android/pull/94) ([lbalmaceda](https://github.com/lbalmaceda))
+
 ## [0.5.0](https://github.com/auth0/Guardian.Android/tree/0.5.0) (2020-07-29)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.4.0...0.5.0)
 
