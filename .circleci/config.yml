@@ -7,7 +7,6 @@ parameters:
     type: string
     default: circleci/android:api-30
 
-version: 2
 jobs:
   build:
     docker:
