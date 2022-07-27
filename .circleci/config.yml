@@ -1,9 +1,16 @@
-version: 2
+version: 2.1
+orbs:
+  ship: auth0/ship@0.1.0
+  codecov: codecov/codecov@3
+parameters:
+  docker_image:
+    type: string
+    default: circleci/android:api-30
+
 jobs:
   build:
     docker:
-      - image: circleci/android:api-30
-
+      - image: << pipeline.parameters.docker_image >>
     steps:
     - checkout
     - restore_cache:
@@ -17,7 +24,4 @@ jobs:
         - ~/.gradle
         - ~/.android
         - /usr/local/android-sdk-linux/extras
-    - run:
-          name: Upload Coverage
-          when: on_success
-          command: bash <(curl -s https://codecov.io/bash) -Z -C $CIRCLE_SHA1
+    - codecov/upload
