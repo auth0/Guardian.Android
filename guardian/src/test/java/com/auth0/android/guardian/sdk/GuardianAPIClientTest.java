@@ -29,8 +29,11 @@ import android.util.Base64;
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.utils.MockCallback;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
+import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.JWTVerifyException;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -57,8 +60,10 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SignatureException;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -66,6 +71,9 @@ import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.RecordedRequest;
 
 import static com.auth0.android.guardian.sdk.utils.CallbackMatcher.hasNoError;
+import static org.hamcrest.Matchers.blankOrNullString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasEntry;
@@ -75,13 +83,13 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 23, manifest = Config.NONE)
@@ -135,7 +143,7 @@ public class GuardianAPIClientTest {
 
     @Before
     public void setUp() throws Exception {
-        initMocks(this);
+        openMocks(this);
 
         when(publicKey.getModulus())
                 .thenReturn(new BigInteger(PUBLIC_KEY_MODULUS));
@@ -279,7 +287,7 @@ public class GuardianAPIClientTest {
         assertThat(publicKey, hasEntry("n", (Object) "AQIDBAUGBwgJAAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAA"));
         assertThat(publicKey.size(), is(equalTo(5)));
 
-        verify(enrollCallback, timeout(100)).onSuccess(anyMapOf(String.class, Object.class));
+        verify(enrollCallback, timeout(100)).onSuccess(anyMap());
 
         verifyNoMoreInteractions(enrollCallback);
     }
@@ -447,41 +455,47 @@ public class GuardianAPIClientTest {
         return gson.fromJson(new InputStreamReader(request.getBody().inputStream()), type);
     }
 
-    private void verifyBasicJWT(String jwt) throws SignatureException, NoSuchAlgorithmException, JWTVerifyException, InvalidKeyException, IOException {
+    private void verifyBasicJWT(String jwt) throws SignatureException, NoSuchAlgorithmException, JWTVerificationException, InvalidKeyException, IOException {
         final String audience = HttpUrl.parse(apiClient.getUrl()).resolve("api/device-accounts").toString();
-        Map<String, Object> payload = verifyJWT(jwt, ENROLLMENT_ID, audience, TWO_HOURS_IN_SECONDS);
-        assertThat(payload, hasEntry("sub", (Object) ENROLLMENT_USER));
-        assertThat(payload, not(hasKey("auth0_guardian_accepted")));
-        assertThat(payload, not(hasKey("auth0_guardian_method")));
-        assertThat(payload, not(hasKey("auth0_guardian_reason")));
-
+        DecodedJWT payload = verifyJWT(jwt, ENROLLMENT_ID, audience, TWO_HOURS_IN_SECONDS * 1000L);
+        assertThat(payload.getSubject(), is(equalTo(ENROLLMENT_USER)));
+        assertThat(payload.getClaim("auth0_guardian_accepted").isMissing(), is(equalTo(true)));
+        assertThat(payload.getClaim("auth0_guardian_method").isMissing(), is(equalTo(true)));
+        assertThat(payload.getClaim("auth0_guardian_reason").isMissing(), is(equalTo(true)));
     }
 
-    private void verifyAccessApprovalJWT(String jwt, boolean accepted, String rejectReason) throws NoSuchAlgorithmException, SignatureException, JWTVerifyException, InvalidKeyException, IOException {
+    private void verifyAccessApprovalJWT(String jwt, boolean accepted, String rejectReason) throws NoSuchAlgorithmException, SignatureException, JWTVerificationException, InvalidKeyException, IOException {
         final String audience = HttpUrl.parse(apiClient.getUrl()).resolve("api/resolve-transaction").toString();
-        Map<String, Object> payload = verifyJWT(jwt, DEVICE_IDENTIFIER, audience, THIRTY_SECONDS);
-        assertThat(payload, hasEntry("sub", (Object) CHALLENGE));
-        assertThat(payload, hasEntry("auth0_guardian_accepted", (Object) accepted));
-        assertThat(payload, hasEntry("auth0_guardian_method", (Object) "push"));
+        DecodedJWT payload = verifyJWT(jwt, DEVICE_IDENTIFIER, audience, THIRTY_SECONDS * 1000L);
+        assertThat(payload.getSubject(), is(equalTo(CHALLENGE)));
+        assertThat(payload.getClaim("auth0_guardian_accepted").asBoolean(), is(equalTo(accepted)));
+        assertThat(payload.getClaim("auth0_guardian_method").asString(), is(equalTo("push")));
         if (!accepted && rejectReason != null) {
-            assertThat(payload, hasEntry("auth0_guardian_reason", (Object) rejectReason));
+            assertThat(payload.getClaim("auth0_guardian_reason").asString(), is(equalTo(rejectReason)));
         } else {
-            assertThat(payload.containsKey("auth0_guardian_reason"), is(equalTo(false)));
+            assertThat(payload.getClaim("auth0_guardian_reason").isMissing(), is(equalTo(true)));
         }
     }
 
-    private Map<String, Object> verifyJWT(String jwt, String issuer, String audience, Integer expiresIn) throws SignatureException, NoSuchAlgorithmException, JWTVerifyException, InvalidKeyException, IOException {
-        final JWTVerifier jwtVerifier = new JWTVerifier(keyPair.getPublic(), audience, issuer);
-        final Map<String, Object> payload = jwtVerifier.verify(jwt);
-        assertThat(payload, hasEntry("aud", (Object) audience));
-        assertThat(payload, hasEntry("iss", (Object) issuer));
-        assertThat(payload, hasKey("iat"));
-        assertThat(payload, hasKey("exp"));
+    private DecodedJWT verifyJWT(String jwt, String issuer, String audience, long expiresIn) throws SignatureException, NoSuchAlgorithmException, JWTVerificationException, InvalidKeyException, IOException {
+        RSAPublicKey pub = (RSAPublicKey) keyPair.getPublic();
+        RSAPrivateKey priv = (RSAPrivateKey) keyPair.getPrivate();
+        Algorithm algorithm = Algorithm.RSA256(pub, priv);
+        JWTVerifier verifier = JWT.require(algorithm)
+                .withIssuer(issuer)
+                .withAudience(audience)
+                .build();
+        DecodedJWT payload = verifier.verify(jwt);
 
-        Integer iat = (Integer) payload.get("iat");
-        Integer exp = (Integer) payload.get("exp");
+        List<String> aud = payload.getAudience();
+        String iss = payload.getIssuer();
+        assertThat(aud, is(not(empty())));
+        assertThat(iss, is(not(blankOrNullString())));
 
-        int currentTime = (int) (new Date().getTime() / 1000L);
+        long iat = payload.getIssuedAt().getTime();
+        long exp = payload.getExpiresAt().getTime();
+
+        long currentTime = new Date().getTime();
         assertThat(iat, is(lessThanOrEqualTo(currentTime)));
         assertThat(exp, is(greaterThan(currentTime)));
         assertThat(exp - iat, is(equalTo(expiresIn)));
