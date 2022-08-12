@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "com.auth0.guardian.sample"
-        minSdkVersion 15
-        targetSdkVersion 30
+        minSdkVersion 22
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
     }
@@ -26,16 +26,19 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':guardian')
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.3.0'
-    //GSON
-    implementation 'com.google.code.gson:gson:2.8.6'
-    //FCM
-    implementation 'com.google.firebase:firebase-core:16.0.8'
-    implementation 'com.google.firebase:firebase-messaging:17.5.0'
-    //EventBus
-    implementation 'org.greenrobot:eventbus:3.0.0'
-    //ZXing QR decoder deps
-    implementation 'com.google.zxing:core:3.3.0'
-    testImplementation 'junit:junit:4.13.2'
+
+    implementation platform('com.google.firebase:firebase-bom:17.1.0')
+    // FCM
+    implementation 'com.google.firebase:firebase-core'
+    implementation 'com.google.firebase:firebase-messaging'
+
+//    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+//    implementation 'androidx.legacy:legacy-support-v13:1.0.0'
+    implementation 'com.google.android.material:material:1.6.1'
+    // GSON
+    implementation 'com.google.code.gson:gson:2.9.1'
+    // EventBus
+    implementation 'org.greenrobot:eventbus:3.3.1'
+    // ZXing QR decoder deps
+    implementation 'com.google.zxing:core:3.5.0'
 }

@@ -16,7 +16,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:label="@string/title_main">
+            android:label="@string/title_main"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -38,7 +39,8 @@
 
         <!-- [START FCM services] -->
 
-        <service android:name=".fcm.FcmListenerService">
+        <service android:name=".fcm.FcmListenerService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>

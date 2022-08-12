@@ -1,5 +1,5 @@
 plugins {
-    id "com.auth0.gradle.oss-library.android" version "0.15.1"
+    id "com.auth0.gradle.oss-library.android" version "0.17.1"
 }
 
 logger.lifecycle("Using version ${version} for ${name}")
@@ -23,11 +23,11 @@ oss {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 33
 
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 30
+        minSdkVersion 22
+        targetSdkVersion 33
         versionCode 1
         versionName project.version
         buildConfigField "String", "VERSION_NAME", "\"${project.version}\""
@@ -46,6 +46,7 @@ android {
         unitTests {
             all {
                 maxHeapSize = "1024m"
+                includeAndroidResources = true
             }
         }
     }
@@ -54,23 +55,22 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     // Annotations (@NonNull etc)
-    implementation 'androidx.annotation:annotation:1.2.0'
-    //Gson
-    implementation 'com.google.code.gson:gson:2.8.6'
-    //OkHttp
-    implementation 'com.squareup.okhttp3:okhttp:3.14.0'
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.14.0'
-    //Mockito
-    testImplementation 'org.mockito:mockito-core:3.6.28'
-    //Hamcrest matchers
-    testImplementation 'org.hamcrest:hamcrest-library:1.3'
-    //OkHttp MockWebServer
-    testImplementation 'com.squareup.okhttp3:mockwebserver:3.14.0'
-    //Awaitility
-    testImplementation 'com.jayway.awaitility:awaitility:1.7.0'
-    //Robolectric
+    implementation 'androidx.annotation:annotation:1.4.0'
+    // Gson
+    implementation 'com.google.code.gson:gson:2.9.1'
+    // OkHttp
+    implementation 'com.squareup.okhttp3:okhttp-bom:4.10.0'
+    implementation 'com.squareup.okhttp3:okhttp'
+    implementation 'com.squareup.okhttp3:logging-interceptor'
+    testImplementation 'com.squareup.okhttp3:mockwebserver'
+    // Mockito
+    testImplementation 'org.mockito:mockito-core:4.6.1'
+    // Hamcrest matchers
+    testImplementation 'org.hamcrest:hamcrest-library:2.2'
+    // Awaitility
+    testImplementation 'org.awaitility:awaitility:4.2.0'
+    // Robolectric
     testImplementation 'org.robolectric:robolectric:4.4'
     // JWT verification
-    testImplementation 'com.auth0:java-jwt:2.3.0'
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'com.auth0:java-jwt:4.0.0'
 }
