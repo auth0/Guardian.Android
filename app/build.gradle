@@ -27,7 +27,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':guardian')
 
-    implementation platform('com.google.firebase:firebase-bom:17.1.0')
+    implementation platform('com.google.firebase:firebase-bom:22.1.0')
     // FCM
     implementation 'com.google.firebase:firebase-core'
     implementation 'com.google.firebase:firebase-messaging'
