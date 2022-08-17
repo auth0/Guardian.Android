@@ -11,9 +11,6 @@ jobs:
   build:
     docker:
       - image: << pipeline.parameters.docker_image >>
-        environment:
-          GRADLE_VERSION: "6.9.1"
-
     steps:
     - checkout
     - restore_cache:
