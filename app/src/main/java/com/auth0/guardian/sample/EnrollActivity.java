@@ -146,7 +146,11 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
 
                                 @Override
                                 public void onFailure(Throwable exception) {
-                                    resumeScanning();
+                                    // TODO might not need here
+                                    // It looks like the toast resumes scanning as well
+                                    // This resume happens as the error is popped up,
+                                    // wait to dismiss instead
+                                    // resumeScanning();
                                 }
                             }));
         } catch (IllegalArgumentException exception) {
