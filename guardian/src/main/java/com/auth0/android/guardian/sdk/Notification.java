@@ -121,6 +121,15 @@ public interface Notification {
     Double getLongitude();
 
     /**
+     * The transaction linking id, used to correlate the notification with
+     * an ongoing authorization transaction
+     *
+     * @return the transaction linking id
+     */
+    @Nullable
+    String getTransactionLinkingId();
+
+    /**
      * The challenge sent by the server. The same challenge should be sent back when trying to
      * allow or reject an authentication request
      *

@@ -49,6 +49,7 @@ public class ParcelableNotification implements Notification, Parcelable {
     private static final String TAG = ParcelableNotification.class.getName();
 
     private static final String TRANSACTION_TOKEN_KEY = "txtkn";
+    private static final String TRANSACTION_LINKING_ID_KEY = "txlnkid";
     private static final String ENROLLMENT_ID_KEY = "dai";
     private static final String DATE_KEY = "d";
     private static final String SOURCE_KEY = "s";
@@ -73,6 +74,7 @@ public class ParcelableNotification implements Notification, Parcelable {
     private final String location;
     private final Double latitude;
     private final Double longitude;
+    private final String transactionLinkingId;
     private final String challenge;
 
     ParcelableNotification(@NonNull HttpUrl url,
@@ -86,6 +88,7 @@ public class ParcelableNotification implements Notification, Parcelable {
                            @Nullable String location,
                            @Nullable Double latitude,
                            @Nullable Double longitude,
+                           @Nullable String transactionLinkingId,
                            @NonNull String challenge) {
         this.url = url.toString();
         this.enrollmentId = deviceId;
@@ -98,6 +101,7 @@ public class ParcelableNotification implements Notification, Parcelable {
         this.location = location;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.transactionLinkingId = transactionLinkingId;
         this.challenge = challenge;
     }
 
@@ -115,6 +119,7 @@ public class ParcelableNotification implements Notification, Parcelable {
         String hostname = pushNotificationPayload.getString(HOSTNAME_KEY);
         String enrollmentId = pushNotificationPayload.getString(ENROLLMENT_ID_KEY);
         String transactionToken = pushNotificationPayload.getString(TRANSACTION_TOKEN_KEY);
+        String transactionLinkingId = pushNotificationPayload.getString(TRANSACTION_LINKING_ID_KEY);
         String challenge = pushNotificationPayload.getString(CHALLENGE_KEY);
         Date date = parseDate(pushNotificationPayload);
 
@@ -128,7 +133,7 @@ public class ParcelableNotification implements Notification, Parcelable {
 
         return new ParcelableNotification(url, enrollmentId, transactionToken, date,
                 source.osName, source.osVersion, source.browserName, source.browserVersion,
-                location.location, location.latitude, location.longitude, challenge);
+                location.location, location.latitude, location.longitude, transactionLinkingId, challenge);
     }
 
     /**
@@ -211,6 +216,12 @@ public class ParcelableNotification implements Notification, Parcelable {
     @Override
     public Double getLongitude() {
         return longitude;
+    }
+
+    @Nullable
+    @Override
+    public String getTransactionLinkingId() {
+        return transactionLinkingId;
     }
 
     @NonNull
@@ -356,6 +367,7 @@ public class ParcelableNotification implements Notification, Parcelable {
         location = in.readString();
         latitude = in.readByte() == 0x00 ? null : in.readDouble();
         longitude = in.readByte() == 0x00 ? null : in.readDouble();
+        transactionLinkingId = in.readString();
         challenge = in.readString();
     }
 
@@ -387,6 +399,7 @@ public class ParcelableNotification implements Notification, Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeDouble(longitude);
         }
+        dest.writeString(transactionLinkingId);
         dest.writeString(challenge);
     }
 
