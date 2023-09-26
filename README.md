@@ -42,20 +42,20 @@ implementation 'com.auth0.android:guardian:0.6.0'
 tenant/url.
 
 ```java
-Uri url = Uri.parse("https://<TENANT>.guardian.auth0.com/");
+Uri url = Uri.parse("https://<AUTH0_TENANT_DOMAIN>/appliance-mfa");
 
 Guardian guardian = new Guardian.Builder()
         .url(url)
         .build();
 ```
 
-or
+alternatively you can use the custom domain if you configured one
 
 ```java
-String domain = "<TENANT>.guardian.auth0.com";
+Uri url = Uri.parse("https://<CUSTOM_DOMAIN>/appliance-mfa");
 
 Guardian guardian = new Guardian.Builder()
-        .domain(domain)
+        .url(url)
         .build();
 ```
 
