@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.7.0](https://github.com/auth0/Guardian.Android/tree/0.6.0) (2023-11-01)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.6.0...0.7.0)
+
+**Changed**
+- Add support for transaction linking id
+- Add support for custom domain
+
 ## [0.6.0](https://github.com/auth0/Guardian.Android/tree/0.6.0) (2021-06-01)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.5.0...0.6.0)
 
