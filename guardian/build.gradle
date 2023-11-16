@@ -15,10 +15,6 @@ oss {
             displayName = 'Auth0'
             email = 'oss@auth0.com'
         }
-        nikolaseu {
-            displayName = 'Nicolas Ulrich'
-            email = 'nicolas.ulrich@auth0.com'
-        }
     }
 }
 
