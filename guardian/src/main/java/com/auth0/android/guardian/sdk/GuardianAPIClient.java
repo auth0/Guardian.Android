@@ -358,7 +358,7 @@ public class GuardianAPIClient {
          * @throws IllegalStateException when the builder was not configured correctly
          */
         public GuardianAPIClient build() {
-            if (url == null) {
+            if (this.url == null) {
                 throw new IllegalStateException("You must set either a domain or an url");
             }
 
@@ -398,7 +398,7 @@ public class GuardianAPIClient {
 
             RequestFactory requestFactory = new RequestFactory(gson, client);
 
-            return new GuardianAPIClient(requestFactory, url);
+            return new GuardianAPIClient(requestFactory, this.url);
         }
     }
 }
