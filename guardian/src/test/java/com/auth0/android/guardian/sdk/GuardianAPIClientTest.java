@@ -73,7 +73,6 @@ import okhttp3.mockwebserver.RecordedRequest;
 import static com.auth0.android.guardian.sdk.utils.CallbackMatcher.hasNoError;
 import static org.hamcrest.Matchers.blankOrNullString;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasEntry;
@@ -234,6 +233,27 @@ public class GuardianAPIClientTest {
 
         assertThat(request.getHeader("Accept-Language"),
                 is(equalTo(Locale.getDefault().toString())));
+    }
+
+    @Test
+    public void shouldCorrectlySetClientHeader() throws Exception {
+        mockAPI.willReturnEnrollment(ENROLLMENT_ID, ENROLLMENT_URL, ENROLLMENT_ISSUER, ENROLLMENT_USER,
+                DEVICE_ACCOUNT_TOKEN, RECOVERY_CODE, TOTP_SECRET, TOTP_ALGORITHM, TOTP_DIGITS, TOTP_PERIOD);
+
+        final MockCallback<Map<String, Object>> callback = new MockCallback<>();
+
+        final String STUB_APP_NAME = "SomeCoolApp";
+        final String STUB_APP_VERSION = "1.2.3.4";
+
+        GuardianAPIClient testApiClient = new GuardianAPIClient.Builder()
+                .url(Uri.parse(this.mockAPI.getDomain()))
+                .setTelemetryInfo(STUB_APP_NAME, STUB_APP_VERSION)
+                .build();
+
+        testApiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
 
         String auth0ClientEncoded = request.getHeader("Auth0-Client");
         assertThat(auth0ClientEncoded, is(notNullValue()));
@@ -241,15 +261,17 @@ public class GuardianAPIClientTest {
         byte[] auth0ClientDecoded = Base64.decode(
                 auth0ClientEncoded, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
 
-        Type type = new TypeToken<Map<String, String>>() {
-        }.getType();
         Gson gson = new GsonBuilder().create();
-        Map<String, String> auth0Client = gson.fromJson(
+
+        ClientInfo auth0Client = gson.fromJson(
                 new InputStreamReader(
-                        new ByteArrayInputStream(auth0ClientDecoded)), type);
+                        new ByteArrayInputStream(auth0ClientDecoded)), ClientInfo.class);
+
         assertThat(auth0Client, is(notNullValue()));
-        assertThat(auth0Client, hasEntry("name", "Guardian.Android"));
-        assertThat(auth0Client, hasEntry("version", BuildConfig.VERSION_NAME));
+
+        assertThat(auth0Client.telemetryInfo, is(notNullValue()));
+        assertThat(auth0Client.telemetryInfo.appName, equalTo(STUB_APP_NAME));
+        assertThat(auth0Client.telemetryInfo.appVersion, equalTo(STUB_APP_VERSION));
     }
 
     @Test

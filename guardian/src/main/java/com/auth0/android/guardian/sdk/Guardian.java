@@ -24,6 +24,7 @@ package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -253,6 +254,13 @@ public class Guardian {
             return this;
         }
 
+        private ClientInfo.TelemetryInfo telemetryInfo;
+
+        public Builder setTelemetryInfo(String appName, String appVersion) {
+            this.telemetryInfo = new ClientInfo.TelemetryInfo(appName, appVersion);
+            return this;
+        }
+
         /**
          * Builds and returns the Guardian instance
          *
@@ -269,6 +277,10 @@ public class Guardian {
 
             if (loggingEnabled) {
                 builder.enableLogging();
+            }
+
+            if (this.telemetryInfo != null) {
+                builder.setTelemetryInfo(telemetryInfo.appName, telemetryInfo.appVersion);
             }
 
             return new Guardian(builder.build());
