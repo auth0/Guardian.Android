@@ -245,6 +245,17 @@ public class GuardianTest {
     }
 
     @Test
+    public void shouldBuildWithTelemetryInfo() throws Exception {
+        Guardian guardian = new Guardian.Builder()
+                .domain("example.guardian.auth0.com")
+                .setTelemetryInfo("SomeAppName", "1.2.3")
+                .build();
+
+        assertThat(guardian.getAPIClient().getUrl(),
+                is(equalTo("https://example.guardian.auth0.com/")));
+    }
+
+    @Test
     public void shouldFailIfDomainWasAlreadySet() throws Exception {
         exception.expect(IllegalArgumentException.class);
 

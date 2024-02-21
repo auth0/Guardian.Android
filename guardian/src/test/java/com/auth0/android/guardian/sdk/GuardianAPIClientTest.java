@@ -81,6 +81,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
@@ -272,6 +273,38 @@ public class GuardianAPIClientTest {
         assertThat(auth0Client.telemetryInfo, is(notNullValue()));
         assertThat(auth0Client.telemetryInfo.appName, equalTo(STUB_APP_NAME));
         assertThat(auth0Client.telemetryInfo.appVersion, equalTo(STUB_APP_VERSION));
+    }
+
+    @Test
+    public void shouldNotSetTelemetryInfoIfNoneIsProvided() throws Exception {
+        mockAPI.willReturnEnrollment(ENROLLMENT_ID, ENROLLMENT_URL, ENROLLMENT_ISSUER, ENROLLMENT_USER,
+                DEVICE_ACCOUNT_TOKEN, RECOVERY_CODE, TOTP_SECRET, TOTP_ALGORITHM, TOTP_DIGITS, TOTP_PERIOD);
+
+        final MockCallback<Map<String, Object>> callback = new MockCallback<>();
+
+        GuardianAPIClient testApiClient = new GuardianAPIClient.Builder()
+                .url(Uri.parse(this.mockAPI.getDomain()))
+                .build();
+
+        testApiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
+
+        String auth0ClientEncoded = request.getHeader("Auth0-Client");
+        assertThat(auth0ClientEncoded, is(notNullValue()));
+
+        byte[] auth0ClientDecoded = Base64.decode(
+                auth0ClientEncoded, Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+
+        Gson gson = new GsonBuilder().create();
+
+        ClientInfo auth0Client = gson.fromJson(
+                new InputStreamReader(
+                        new ByteArrayInputStream(auth0ClientDecoded)), ClientInfo.class);
+
+        assertThat(auth0Client, is(notNullValue()));
+        assertThat(auth0Client.telemetryInfo, is(nullValue()));
     }
 
     @Test

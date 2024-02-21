@@ -279,7 +279,7 @@ public class Guardian {
                 builder.enableLogging();
             }
 
-            if (this.telemetryInfo != null) {
+            if (telemetryInfo != null) {
                 builder.setTelemetryInfo(telemetryInfo.appName, telemetryInfo.appVersion);
             }
 
