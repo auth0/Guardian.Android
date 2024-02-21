@@ -415,6 +415,10 @@ public class GuardianAPIClient {
 
             RequestFactory requestFactory = new RequestFactory(gson, client);
 
+            if(clientInfo.telemetryInfo != null) {
+                return new GuardianAPIClient(requestFactory, url, clientInfo.telemetryInfo);
+            }
+
             return new GuardianAPIClient(requestFactory, url);
         }
     }
