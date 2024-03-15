@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.8.0](https://github.com/auth0/Guardian.Android/tree/0.8.0) (2024-03-15)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.7.0...0.8.0)
+
+**Changed**
+- Add telemetry to track usage
+
+
 ## [0.7.0](https://github.com/auth0/Guardian.Android/tree/0.6.0) (2023-11-01)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.6.0...0.7.0)
 
