@@ -43,13 +43,20 @@ public class DeviceAPIClient {
     private final HttpUrl url;
     private final String token;
 
+    private final ClientInfo clientInfo;
+
     DeviceAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, String id, String token) {
+        this(requestFactory, baseUrl, id, token, null);
+    }
+
+    DeviceAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, String id, String token, @Nullable ClientInfo.TelemetryInfo telemetryInfo) {
         this.requestFactory = requestFactory;
         this.url = baseUrl.newBuilder()
                 .addPathSegments("api/device-accounts")
                 .addPathSegment(id)
                 .build();
         this.token = token;
+        this.clientInfo = new ClientInfo(telemetryInfo);
     }
 
     /**
@@ -60,6 +67,7 @@ public class DeviceAPIClient {
     public GuardianAPIRequest<Void> delete() {
         return requestFactory
                 .<Void>newRequest("DELETE", url, Void.class)
+                .setHeader("Auth0-Client", this.clientInfo.toBase64())
                 .setBearer(token);
     }
 
@@ -80,6 +88,7 @@ public class DeviceAPIClient {
                                                           @Nullable String gcmToken) {
         Type type = new TypeToken<Map<String, Object>>() {}.getType();
         return requestFactory.<Map<String, Object>>newRequest("PATCH", url, type)
+                .setHeader("Auth0-Client", this.clientInfo.toBase64())
                 .setBearer(token)
                 .setParameter("identifier", identifier)
                 .setParameter("name", name)

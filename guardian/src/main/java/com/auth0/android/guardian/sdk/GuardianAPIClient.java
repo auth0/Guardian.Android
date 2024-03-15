@@ -67,9 +67,19 @@ public class GuardianAPIClient {
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
 
+    private final ClientInfo clientInfo;
+
+
     GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl) {
         this.requestFactory = requestFactory;
         this.baseUrl = baseUrl;
+        this.clientInfo = new ClientInfo(null);
+    }
+
+    GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, ClientInfo.TelemetryInfo telemetryInfo) {
+        this.requestFactory = requestFactory;
+        this.baseUrl = baseUrl;
+        this.clientInfo = new ClientInfo(telemetryInfo);
     }
 
     String getUrl() {
@@ -106,6 +116,7 @@ public class GuardianAPIClient {
         return requestFactory
                 .<Map<String, Object>>newRequest("POST", url, type)
                 .setHeader("Authorization", String.format("Ticket id=\"%s\"", enrollmentTicket))
+                .setHeader("Auth0-Client", this.clientInfo.toBase64())
                 .setParameter("identifier", deviceIdentifier)
                 .setParameter("name", deviceName)
                 .setParameter("push_credentials", createPushCredentials(gcmToken))
@@ -162,6 +173,7 @@ public class GuardianAPIClient {
         final String jwt = createAccessApprovalJWT(privateKey, url.toString(), deviceIdentifier, challenge, true, null);
         return requestFactory
                 .<Void>newRequest("POST", url, Void.class)
+                .setHeader("Auth0-Client", this.clientInfo.toBase64())
                 .setBearer(txToken)
                 .setParameter("challenge_response", jwt);
     }
@@ -189,6 +201,7 @@ public class GuardianAPIClient {
         final String jwt = createAccessApprovalJWT(privateKey, url.toString(), deviceIdentifier, challenge, false, reason);
         return requestFactory
                 .<Void>newRequest("POST", url, Void.class)
+                .setHeader("Auth0-Client", this.clientInfo.toBase64())
                 .setBearer(txToken)
                 .setParameter("challenge_response", jwt);
     }
@@ -351,6 +364,13 @@ public class GuardianAPIClient {
             return this;
         }
 
+        ClientInfo clientInfo = new ClientInfo();
+
+        public Builder setTelemetryInfo(String appName, String appVersion) {
+            this.clientInfo.telemetryInfo = new ClientInfo.TelemetryInfo(appName, appVersion);
+            return this;
+        }
+
         /**
          * Builds and returns the GuardianAPIClient instance
          *
@@ -364,10 +384,7 @@ public class GuardianAPIClient {
 
             final OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-            final String clientInfo = Base64.encodeToString(
-                    String.format("{\"name\":\"Guardian.Android\",\"version\":\"%s\"}",
-                            BuildConfig.VERSION_NAME).getBytes(),
-                    Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+            final String encodedClientInfo = this.clientInfo.toBase64();
 
             builder.addInterceptor(new Interceptor() {
                 @Override
@@ -380,7 +397,7 @@ public class GuardianAPIClient {
                                     String.format("GuardianSDK/%s Android %s",
                                             BuildConfig.VERSION_NAME,
                                             Build.VERSION.RELEASE))
-                            .header("Auth0-Client", clientInfo)
+                            .header("Auth0-Client", encodedClientInfo)
                             .build();
                     return chain.proceed(requestWithUserAgent);
                 }
@@ -397,6 +414,10 @@ public class GuardianAPIClient {
             Gson gson = new GsonBuilder().create();
 
             RequestFactory requestFactory = new RequestFactory(gson, client);
+
+            if(clientInfo.telemetryInfo != null) {
+                return new GuardianAPIClient(requestFactory, url, clientInfo.telemetryInfo);
+            }
 
             return new GuardianAPIClient(requestFactory, url);
         }
