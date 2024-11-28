@@ -23,6 +23,7 @@
 package com.auth0.android.guardian.sdk.utils;
 
 import java.io.IOException;
+import java.time.Instant;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -121,6 +122,22 @@ public class MockWebService {
                 "   }") +
                 "}";
         server.enqueue(responseWithJSON(json, 201));
+        return this;
+    }
+
+    public MockWebService willReturnRichConsent(String id, String audience, String scope, String binding_message) {
+        String json = "" +
+                "{" +
+                "   \"id\": \""+id+"\"" +
+                "  ,\"created_at\": \""+ Instant.now().minusSeconds(10).getEpochSecond() +"\"" +
+                "  ,\"expires_at\": \""+ Instant.now().plusSeconds(290).getEpochSecond() +"\"" +
+                "  ,\"requested_details\": {" +
+                "       \"audience\": \""+audience+"\"" +
+                "      ,\"scope\": "+scope +
+                "      ,\"binding_message\": "+binding_message +
+                "   }" +
+                "}";
+        server.enqueue(responseWithJSON(json, 200));
         return this;
     }
 
