@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Base64;
 
+import com.auth0.android.guardian.sdk.model.RichConsent;
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.utils.MockCallback;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
@@ -501,6 +502,25 @@ public class GuardianAPIClientTest {
         assertThat(authorization, Matchers.startsWith("Bearer "));
         String jwt = authorization.split("Bearer ")[1];
         verifyBasicJWT(jwt);
+    }
+
+    @Test
+    public void shouldCreateValidRichConsentsAPI() throws Exception {
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .url(Uri.parse(mockAPI.getDomain() + "appliance-mfa"))
+                .build();
+        String consentId = "cns_00000001";
+
+        mockAPI.willReturnRichConsent(consentId, "https://api", "openid", "test");
+
+        final MockCallback<RichConsent> callback = new MockCallback<>();
+
+        apiClient.richConsents(keyPair.getPrivate(), keyPair.getPublic())
+                .fetch(consentId, "token")
+                .start(callback);
+
+        RecordedRequest request = mockAPI.takeRequest();
+        assertThat(request.getPath(), is(equalTo(String.format("/rich-consents/%s", consentId))));
     }
 
     private Map<String, Object> bodyFromRequest(RecordedRequest request) throws IOException {
