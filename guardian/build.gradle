@@ -40,6 +40,9 @@ dependencies {
     implementation platform('com.squareup.okhttp3:okhttp-bom:4.10.0')
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.squareup.okhttp3:logging-interceptor'
+    // JWT signing/verification
+    implementation 'com.auth0:java-jwt:4.0.0'
+
     testImplementation 'com.squareup.okhttp3:mockwebserver'
     // Mockito
     testImplementation 'org.mockito:mockito-core:4.6.1'
@@ -48,8 +51,6 @@ dependencies {
     // Awaitility
     testImplementation 'org.awaitility:awaitility:4.2.0'
     // Robolectric
-    testImplementation 'org.robolectric:robolectric:4.4'
-    // JWT verification
-    testImplementation 'com.auth0:java-jwt:4.0.0'
+    testImplementation 'org.robolectric:robolectric:4.14'
     testImplementation 'junit:junit:4.13.2'
 }

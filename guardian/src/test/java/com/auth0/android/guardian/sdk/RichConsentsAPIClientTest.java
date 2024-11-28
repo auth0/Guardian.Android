@@ -1,8 +1,10 @@
 package com.auth0.android.guardian.sdk;
 
+import static com.auth0.android.guardian.sdk.oauth2.OAuth2AccessToken.getTokenHash;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -12,6 +14,8 @@ import com.auth0.android.guardian.sdk.model.RichConsent;
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -22,6 +26,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAKey;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -36,16 +44,20 @@ public class RichConsentsAPIClientTest {
     private static final String BINDING_MESSAGE = "abc-123";
     // TODO: actual token
     private static final String TRANSACTION_TOKEN = "token";
-
-    private MockWebService mockAPI;
-    private RichConsentsAPIClient richConsentsAPIClient;
-
     @Mock
     Callback<RichConsent> fetchCallback;
+    private MockWebService mockAPI;
+    private KeyPair keyPair;
+    private Gson gson;
+    private RichConsentsAPIClient richConsentsAPIClient;
 
     @Before
     public void setUp() throws Exception {
         openMocks(this);
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        keyPair = keyPairGenerator.generateKeyPair();
+
         mockAPI = new MockWebService();
         final String domain = mockAPI.getDomain();
 
@@ -54,7 +66,10 @@ public class RichConsentsAPIClientTest {
 
         RequestFactory requestFactory = new RequestFactory(gson, new OkHttpClient());
 
-        richConsentsAPIClient = new RichConsentsAPIClient(requestFactory, HttpUrl.parse(domain));
+        richConsentsAPIClient = new RichConsentsAPIClient(requestFactory,
+                HttpUrl.parse(domain),
+                keyPair.getPrivate(),
+                keyPair.getPublic());
     }
 
     @Test
@@ -70,8 +85,10 @@ public class RichConsentsAPIClientTest {
         assertThat(request.getPath(), is(equalTo(String.format("/rich-consents/%s", CONSENT_ID))));
         assertThat(request.getMethod(), is(equalTo("GET")));
         assertThat(request.getHeader("Authorization"), is(equalTo("MFA-DPoP " + TRANSACTION_TOKEN)));
-//         TODO: calculate actual assertion
-//        assertThat(request.getHeader("MFA-DPoP"), is(equalTo("MFA-DPoP " + "assertion")));
+
+        String dpopAssertion = request.getHeader("MFA-DPoP");
+        assertThat(dpopAssertion, is(notNullValue()));
+        verifyDPoPAssertion(dpopAssertion);
 
         ArgumentCaptor<RichConsent> onSuccessCaptor = ArgumentCaptor.forClass(RichConsent.class);
         verify(fetchCallback, timeout(100)).onSuccess(onSuccessCaptor.capture());
@@ -79,10 +96,26 @@ public class RichConsentsAPIClientTest {
         RichConsent capturedRichConsent = onSuccessCaptor.getValue();
         assertThat(capturedRichConsent.id, is(equalTo(CONSENT_ID)));
         assertThat(capturedRichConsent.requested_details.audience, is(equalTo(AUDIENCE)));
-        assertThat(capturedRichConsent.requested_details.scope, is(equalTo(SCOPE)));
+        assertThat(capturedRichConsent.requested_details.scope[0], is(equalTo(SCOPE)));
         assertThat(capturedRichConsent.requested_details.binding_message, is(equalTo(BINDING_MESSAGE)));
 
         verifyNoMoreInteractions(fetchCallback);
         assertThat(true, is(equalTo(true)));
+    }
+
+    private void verifyDPoPAssertion(String assertion) {
+        Algorithm algorithm = Algorithm.RSA256((RSAKey) keyPair.getPublic());
+        HttpUrl htu = HttpUrl.parse(mockAPI.getDomain())
+                .newBuilder()
+                .addPathSegment("rich-consents")
+                .addPathSegments(CONSENT_ID)
+                .build();
+
+        JWT.require(algorithm)
+                .withClaim("htu", htu.toString())
+                .withClaim("htm", "GET")
+                .withClaim("ath", getTokenHash(TRANSACTION_TOKEN))
+                .build()
+                .verify(assertion);
     }
 }

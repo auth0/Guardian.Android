@@ -128,13 +128,13 @@ public class MockWebService {
     public MockWebService willReturnRichConsent(String id, String audience, String scope, String binding_message) {
         String json = "" +
                 "{" +
-                "   \"id\": \""+id+"\"" +
-                "  ,\"created_at\": \""+ Instant.now().minusSeconds(10).getEpochSecond() +"\"" +
-                "  ,\"expires_at\": \""+ Instant.now().plusSeconds(290).getEpochSecond() +"\"" +
+                "   \"id\": \"" + id + "\"" +
+                "  ,\"created_at\": " + Instant.now().minusSeconds(10).getEpochSecond() +
+                "  ,\"expires_at\": " + Instant.now().plusSeconds(290).getEpochSecond() +
                 "  ,\"requested_details\": {" +
-                "       \"audience\": \""+audience+"\"" +
-                "      ,\"scope\": "+scope +
-                "      ,\"binding_message\": "+binding_message +
+                "       \"audience\": \"" + audience + "\"" +
+                "      ,\"scope\": [\"" + scope + "\"]" +
+                "      ,\"binding_message\": \"" + binding_message + "\"" +
                 "   }" +
                 "}";
         server.enqueue(responseWithJSON(json, 200));
