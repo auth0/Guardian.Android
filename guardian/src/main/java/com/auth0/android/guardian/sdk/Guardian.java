@@ -28,10 +28,12 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.auth0.android.guardian.sdk.model.RichConsent;
 import com.auth0.android.guardian.sdk.otp.TOTP;
 import com.auth0.android.guardian.sdk.otp.utils.Base32;
 
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Map;
 
 /**
@@ -136,6 +138,11 @@ public class Guardian {
     public GuardianAPIRequest<Void> reject(@NonNull Notification notification,
                                            @NonNull Enrollment enrollment) {
         return reject(notification, enrollment, null);
+    }
+
+    public GuardianAPIRequest<RichConsent> fetchConsent(@NonNull Notification notification, @NonNull Enrollment enrollment, @NonNull PublicKey publicKey) {
+        return client.richConsents(enrollment.getSigningKey(), publicKey)
+                .fetch(notification.getTransactionLinkingId(), notification.getTransactionToken());
     }
 
     GuardianAPIClient getAPIClient() {

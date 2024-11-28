@@ -22,7 +22,23 @@
 
 package com.auth0.android.guardian.sdk;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
+
 import android.net.Uri;
+
+import com.auth0.android.guardian.sdk.model.RichConsent;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,20 +53,6 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.sameInstance;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 23, manifest = Config.NONE)
@@ -71,6 +73,7 @@ public class GuardianTest {
     private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
     private static final String TRANSACTION_TOKEN = "TRANSACTION_TOKEN";
     private static final String CHALLENGE = "CHALLENGE";
+    private static final String TRANSACTION_LINKING_ID= "TRANSACTION_LINKING_ID";
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -80,6 +83,9 @@ public class GuardianTest {
 
     @Mock
     DeviceAPIClient deviceApiClient;
+
+    @Mock
+    RichConsentsAPIClient richConsentsAPIClient;
 
     @Mock
     GuardianAPIClient apiClient;
@@ -104,6 +110,8 @@ public class GuardianTest {
 
         when(notification.getTransactionToken())
                 .thenReturn(TRANSACTION_TOKEN);
+        when(notification.getTransactionLinkingId())
+                .thenReturn(TRANSACTION_LINKING_ID);
 
         keyPair = new KeyPair(publicKey, privateKey);
 
@@ -116,6 +124,9 @@ public class GuardianTest {
                 .thenReturn(deviceApiClient);
         when(apiClient.device(DEVICE_ID, USER, privateKey))
                 .thenReturn(deviceApiClient);
+
+        when(apiClient.richConsents(keyPair.getPrivate(), keyPair.getPublic()))
+                .thenReturn(richConsentsAPIClient);
 
         guardian = new Guardian(apiClient);
     }
@@ -166,6 +177,21 @@ public class GuardianTest {
         verify(apiClient, never()).device(DEVICE_ID, DEVICE_TOKEN);
         verify(apiClient).device(DEVICE_ID, USER, privateKey);
         verify(deviceApiClient).delete();
+
+        assertThat(request, is(sameInstance(mockRequest)));
+    }
+
+    @Test
+    public void shouldCallFetch() throws Exception {
+        @SuppressWarnings("unchecked")
+        GuardianAPIRequest<RichConsent> mockRequest = mock(GuardianAPIRequest.class);
+        when(richConsentsAPIClient.fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN))
+                .thenReturn(mockRequest);
+
+        GuardianAPIRequest<RichConsent> request = guardian.fetchConsent(notification, enrollment, publicKey);
+
+        verify(apiClient).richConsents(privateKey, publicKey);
+        verify(richConsentsAPIClient).fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN);
 
         assertThat(request, is(sameInstance(mockRequest)));
     }
