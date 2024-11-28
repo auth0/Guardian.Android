@@ -175,6 +175,7 @@ public class Request<T> implements GuardianAPIRequest<T> {
     private T payloadFromResponse(Response response) throws GuardianException {
         try {
             final Reader reader = response.body().charStream();
+            if (typeOfT == Void.class) return null;
             return converter.parse(typeOfT, reader);
         } catch (Exception e) {
             throw new GuardianException("Error parsing server response", e);
