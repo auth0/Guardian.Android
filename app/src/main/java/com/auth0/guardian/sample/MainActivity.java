@@ -223,8 +223,9 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
     }
 
     private void onPushNotificationReceived(ParcelableNotification notification) {
-        Intent intent = NotificationActivity
-                .getStartIntent(this, notification, enrollment);
+        Intent intent = notification.getTransactionLinkingId() != null ?
+                NotificationWithConsentDetailsActivity.getStartIntent(this, notification, enrollment) :
+                NotificationActivity.getStartIntent(this, notification, enrollment);
         startActivity(intent);
     }
 

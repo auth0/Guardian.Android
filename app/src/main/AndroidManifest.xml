@@ -36,6 +36,12 @@
 
         </activity>
 
+        <activity
+            android:name=".NotificationWithConsentDetailsActivity"
+            android:label="@string/title_notification_with_consent_details">
+
+        </activity>
+
         <!-- [START FCM services] -->
 
         <service android:name=".fcm.FcmListenerService"
