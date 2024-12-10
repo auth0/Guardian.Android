@@ -41,7 +41,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.squareup.okhttp3:logging-interceptor'
     // JWT signing/verification
-    implementation 'com.auth0:java-jwt:4.0.0'
+    implementation 'com.auth0:java-jwt:4.4.0'
 
     testImplementation 'com.squareup.okhttp3:mockwebserver'
     // Mockito
