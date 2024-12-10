@@ -1,5 +1,5 @@
-Guardian SDK for Android
-============
+# Guardian SDK for Android
+
 [![CircleCI](https://img.shields.io/circleci/project/github/auth0/Guardian.Android.svg)](https://circleci.com/gh/auth0/Guardian.Android)
 [![Coverage Status](https://img.shields.io/codecov/c/github/auth0/Guardian.Android/master.svg)](https://codecov.io/github/auth0/Guardian.Android)
 [![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org)
@@ -30,7 +30,7 @@ credentials, otherwise you would not receive any push notifications. Please read
 
 GuardianSDK is available both in [Maven Central](http://search.maven.org) and
 [JCenter](https://bintray.com/bintray/jcenter).
-To start using *GuardianSDK* add these lines to your `build.gradle` dependencies file:
+To start using _GuardianSDK_ add these lines to your `build.gradle` dependencies file:
 
 ```gradle
 implementation 'com.auth0.android:guardian:0.8.0'
@@ -113,11 +113,11 @@ guardian
 The `deviceName` and `fcmToken` are data that you must provide:
 
 - The `deviceName` is the name that you want for the enrollment. It will be displayed to the user
-when the second factor is required.
+  when the second factor is required.
 
 - The FCM token is the token for Firebase Cloud Messaging push notification service. In case your app
-is not yet using FCM or you're not familiar with it, you should check their
-[docs](https://firebase.google.com/docs/cloud-messaging/android/client#sample-register).
+  is not yet using FCM or you're not familiar with it, you should check their
+  [docs](https://firebase.google.com/docs/cloud-messaging/android/client#sample-register).
 
 ### Unenroll
 
@@ -136,8 +136,8 @@ Once you have the enrollment in place, you will receive a FCM push notification 
 has to validate his identity with MFA.
 
 Guardian provides a method to parse the `Map<String, String>` data inside the
- [RemoteMessage](https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/RemoteMessage)
- received from FCM and return a `Notification` instance ready to be used.
+[RemoteMessage](https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/RemoteMessage)
+received from FCM and return a `Notification` instance ready to be used.
 
 ```java
 // at your FCM listener you receive a RemoteMessage
@@ -154,12 +154,12 @@ public void onMessageReceived(RemoteMessage message) {
 ```
 
 > If the `RemoteMessage` you receive is not from a Guardian notification this method will return null,
- so you should always check before using it.
+> so you should always check before using it.
 
 Once you have the notification instance, you can easily allow the authentication request by using the
- `allow` method. You'll also need the enrollment that you obtained previously. In case you have more
-  than one enrollment, you'll have to find the one that has the same id as the notification (you can
-  get the enrollment id with `getEnrollmentId()`.
+`allow` method. You'll also need the enrollment that you obtained previously. In case you have more
+than one enrollment, you'll have to find the one that has the same id as the notification (you can
+get the enrollment id with `getEnrollmentId()`.
 
 ```java
 guardian
@@ -178,23 +178,54 @@ guardian
   .execute(); // or start(new Callback<> ...) asynchronously
 ```
 
+### Fetch rich consent details
+
+When you receive a push notification, the presence of the property `tranactionLinkingId` indicates a
+rich consent record may be associated to the tranaction.
+
+To fetch the rich consent details, you can use the `fetchConsent` method.
+
+```java
+if (notification.getTranactionLinkingId() != null) {
+    guardian
+      .fetchConsent(notification, enrollment)
+      .start(new Callback<Enrollment> {
+        @Override
+        void onSuccess(RichConsent consentDetails) {
+          // we have the consent details 
+        }
+
+        @Override
+        void onFailure(Throwable exception) {
+          if (exception instanceof GuardianException) {
+            GuardianException guardianException = (GuardianException) exception;
+            if (guardianException.isResourceNotFound()) {
+              // there is no consent associated with the tranaction
+            }
+          }
+          // something went wrong 
+        }
+      });
+}
+```
+
 ## What is Auth0?
 
 Auth0 helps you to:
 
-* Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders),
-either social like **Google, Facebook, Microsoft Account, LinkedIn, GitHub, Twitter, Box, Salesforce,
-among others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory,
-ADFS or any SAML Identity Provider**.
-* Add authentication through more traditional
-**[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
-* Add support for **[linking different user accounts](https://docs.auth0.com/link-accounts)** with
-the same user.
-* Support for generating signed [Json Web Tokens](https://docs.auth0.com/jwt) to call your APIs and
-**flow the user identity** securely.
-* Analytics of how, when and where users are logging in.
-* Pull data from other sources and add it to the user profile, through
-[JavaScript rules](https://docs.auth0.com/rules).
+- Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders),
+  either social like **Google, Facebook, Microsoft Account, LinkedIn, GitHub, Twitter, Box, Salesforce,
+  among others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory,
+  ADFS or any SAML Identity Provider**.
+- Add authentication through more traditional
+  **[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
+- Add support for **[linking different user accounts](https://docs.auth0.com/link-accounts)** with
+  the same user.
+- Support for generating signed [Json Web Tokens](https://docs.auth0.com/jwt) to call your APIs and
+  **flow the user identity** securely.
+- Analytics of how, when and where users are logging in.
+- Pull data from other sources and add it to the user profile, through
+  [JavaScript rules](https://docs.auth0.com/rules).
 
 ## Create a free account in Auth0
 
