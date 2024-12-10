@@ -4,7 +4,6 @@ import static com.auth0.android.guardian.sdk.oauth2.OAuth2AccessToken.getTokenHa
 
 import android.util.Base64;
 
-import com.auth0.android.guardian.sdk.model.RichConsent;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -38,7 +37,7 @@ public class RichConsentsAPIClient {
     }
 
     public GuardianAPIRequest<RichConsent> fetch(String consentId, String transactionToken) {
-        Type type = new TypeToken<RichConsent>() {
+        Type type = new TypeToken<GuardianRichConsent>() {
         }.getType();
 
         final HttpUrl url = baseUrl.newBuilder()

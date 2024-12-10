@@ -26,7 +26,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Base64;
 
-import com.auth0.android.guardian.sdk.model.RichConsent;
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.utils.MockCallback;
 import com.auth0.android.guardian.sdk.utils.MockWebService;

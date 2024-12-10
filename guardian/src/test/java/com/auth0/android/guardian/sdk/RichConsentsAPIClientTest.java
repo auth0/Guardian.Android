@@ -10,7 +10,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.MockitoAnnotations.openMocks;
 
-import com.auth0.android.guardian.sdk.model.RichConsent;
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
@@ -90,14 +89,14 @@ public class RichConsentsAPIClientTest {
         assertThat(dpopAssertion, is(notNullValue()));
         verifyDPoPAssertion(dpopAssertion);
 
-        ArgumentCaptor<RichConsent> onSuccessCaptor = ArgumentCaptor.forClass(RichConsent.class);
+        ArgumentCaptor<RichConsent> onSuccessCaptor = ArgumentCaptor.forClass(GuardianRichConsent.class);
         verify(fetchCallback, timeout(100)).onSuccess(onSuccessCaptor.capture());
 
         RichConsent capturedRichConsent = onSuccessCaptor.getValue();
-        assertThat(capturedRichConsent.id, is(equalTo(CONSENT_ID)));
-        assertThat(capturedRichConsent.requested_details.audience, is(equalTo(AUDIENCE)));
-        assertThat(capturedRichConsent.requested_details.scope[0], is(equalTo(SCOPE)));
-        assertThat(capturedRichConsent.requested_details.binding_message, is(equalTo(BINDING_MESSAGE)));
+        assertThat(capturedRichConsent.getId(), is(equalTo(CONSENT_ID)));
+        assertThat(capturedRichConsent.getRequestedDetails().getAudience(), is(equalTo(AUDIENCE)));
+        assertThat(capturedRichConsent.getRequestedDetails().getScope()[0], is(equalTo(SCOPE)));
+        assertThat(capturedRichConsent.getRequestedDetails().getBindingMessage(), is(equalTo(BINDING_MESSAGE)));
 
         verifyNoMoreInteractions(fetchCallback);
         assertThat(true, is(equalTo(true)));

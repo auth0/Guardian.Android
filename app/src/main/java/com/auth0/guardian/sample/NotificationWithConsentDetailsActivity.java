@@ -1,32 +1,9 @@
-/*
- * Copyright (c) 2016 Auth0 (http://auth0.com)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 package com.auth0.guardian.sample;
 
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -36,15 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.auth0.android.guardian.sdk.Guardian;
 import com.auth0.android.guardian.sdk.ParcelableNotification;
-import com.auth0.android.guardian.sdk.model.RichConsent;
+import com.auth0.android.guardian.sdk.RichConsent;
 import com.auth0.android.guardian.sdk.networking.Callback;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
 public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
-
-    private static final String TAG = NotificationWithConsentDetailsActivity.class.getName();
 
     private TextView bindingMessageText;
     private TextView scopeText;
@@ -57,7 +29,8 @@ public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
 
     static Intent getStartIntent(@NonNull Context context,
                                  @NonNull ParcelableNotification notification,
-                                 @NonNull ParcelableEnrollment enrollment) {
+                                 @NonNull ParcelableEnrollment enrollment,
+                                 @NonNull  ParcelableRichConsent consent) {
         if (!enrollment.getId().equals(notification.getEnrollmentId())) {
             final String message = String.format("Notification doesn't match enrollment (%s != %s)",
                     notification.getEnrollmentId(), enrollment.getId());
@@ -67,6 +40,7 @@ public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
         Intent intent = new Intent(context, NotificationWithConsentDetailsActivity.class);
         intent.putExtra(Constants.ENROLLMENT, enrollment);
         intent.putExtra(Constants.NOTIFICATION, notification);
+        intent.putExtra(Constants.CONSENT, consent);
         return intent;
     }
 
@@ -83,27 +57,10 @@ public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
         Intent intent = getIntent();
         enrollment = intent.getParcelableExtra(Constants.ENROLLMENT);
         notification = intent.getParcelableExtra(Constants.NOTIFICATION);
+        consentDetails = intent.getParcelableExtra(Constants.CONSENT);
 
         setupUI();
         updateUI();
-
-        try {
-            guardian.fetchConsent(notification, enrollment).start(new Callback<RichConsent>() {
-                @Override
-                public void onSuccess(RichConsent response) {
-                    consentDetails = response;
-                    updateUI();
-                }
-
-                @Override
-                public void onFailure(Throwable exception) {
-                    Log.e(TAG, "Error obtaining consent details", exception);
-                }
-            });
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            Log.e(TAG, "Error requesting consent details", e);
-        }
-
     }
 
     private void setupUI() {
@@ -132,8 +89,8 @@ public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
 
     private void updateUI() {
         if (consentDetails != null) {
-            bindingMessageText.setText(consentDetails.requested_details.binding_message);
-            scopeText.setText(String.join(", ", consentDetails.requested_details.scope));
+            bindingMessageText.setText(consentDetails.getRequestedDetails().getBindingMessage());
+            scopeText.setText(String.join(", ", consentDetails.getRequestedDetails().getScope()));
         } else {
             bindingMessageText.setText("N/A");
             scopeText.setText("N/A");

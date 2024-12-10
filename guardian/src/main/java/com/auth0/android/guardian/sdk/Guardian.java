@@ -28,11 +28,9 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.auth0.android.guardian.sdk.model.RichConsent;
 import com.auth0.android.guardian.sdk.otp.TOTP;
 import com.auth0.android.guardian.sdk.otp.utils.Base32;
 
-import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;

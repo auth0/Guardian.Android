@@ -260,6 +260,7 @@ public class GuardianAPIClient {
         if (guardianUrl.contains("/appliance-mfa")) {
             guardianUrl = guardianUrl.replace("/appliance-mfa", "");
         }
+        // TODO: remove .guardian.
         final HttpUrl url = HttpUrl.parse(guardianUrl);
         return new RichConsentsAPIClient(requestFactory, url, privateKey, publicKey);
     }

@@ -41,6 +41,7 @@ import android.widget.TextView;
 import com.auth0.android.guardian.sdk.Guardian;
 import com.auth0.android.guardian.sdk.GuardianException;
 import com.auth0.android.guardian.sdk.ParcelableNotification;
+import com.auth0.android.guardian.sdk.RichConsent;
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.guardian.sample.events.GuardianNotificationReceivedEvent;
 import com.auth0.guardian.sample.fcm.FcmUtils;
@@ -49,6 +50,9 @@ import com.auth0.guardian.sample.views.TOTPCodeView;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 
 public class MainActivity extends AppCompatActivity implements FcmUtils.FcmTokenListener {
 
@@ -223,10 +227,41 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
     }
 
     private void onPushNotificationReceived(ParcelableNotification notification) {
-        Intent intent = notification.getTransactionLinkingId() != null ?
-                NotificationWithConsentDetailsActivity.getStartIntent(this, notification, enrollment) :
-                NotificationActivity.getStartIntent(this, notification, enrollment);
-        startActivity(intent);
+        Context context = this;
+        Intent standardNotificationActivityIntent = NotificationActivity.getStartIntent(context, notification, enrollment);
+
+        if (notification.getTransactionLinkingId() == null) {
+            startActivity(standardNotificationActivityIntent);
+        } else {
+            try {
+                guardian.fetchConsent(notification, enrollment).start(new Callback<RichConsent>() {
+                    @Override
+                    public void onSuccess(RichConsent consent) {
+                        Intent intent = NotificationWithConsentDetailsActivity.getStartIntent(
+                                context,
+                                notification,
+                                enrollment,
+                                new ParcelableRichConsent(consent)
+                        );
+                        startActivity(intent);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable exception) {
+                        if (exception instanceof  GuardianException) {
+                            GuardianException guardianException = (GuardianException) exception;
+                            if (guardianException.isResourceNotFound()) {
+                                startActivity(standardNotificationActivityIntent);
+                            }
+                        }
+                        Log.e(TAG, "Error obtaining consent details", exception);
+
+                    }
+                });
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                Log.e(TAG, "Error requesting consent details", e);
+            }
+        }
     }
 
     @Override

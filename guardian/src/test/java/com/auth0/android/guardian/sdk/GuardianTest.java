@@ -39,8 +39,6 @@ import static org.mockito.MockitoAnnotations.openMocks;
 
 import android.net.Uri;
 
-import com.auth0.android.guardian.sdk.model.RichConsent;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,16 +49,12 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateCrtKey;
-import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
 
 @RunWith(RobolectricTestRunner.class)
