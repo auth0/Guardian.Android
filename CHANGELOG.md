@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.8.1](https://github.com/auth0/Guardian.Android/tree/0.8.1) (2024-12-11)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.8.0...0.8.1)
+
+**Changed**
+- Fix for JsonIOException when making request
+
+
 ## [0.8.0](https://github.com/auth0/Guardian.Android/tree/0.8.0) (2024-03-15)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.7.0...0.8.0)
 
