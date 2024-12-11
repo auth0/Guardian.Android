@@ -26,4 +26,5 @@ public class Constants {
 
     public static final String ENROLLMENT = "com.auth0.guardian.sample.Constants.ENROLLMENT";
     public static final String NOTIFICATION = "com.auth0.guardian.sample.Constants.NOTIFICATION";
+    public static final String CONSENT = "com.auth0.guardian.sample.Constants.CONSENT";
 }

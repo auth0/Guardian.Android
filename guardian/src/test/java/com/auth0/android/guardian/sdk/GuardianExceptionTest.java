@@ -27,11 +27,11 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
-import static org.junit.Assert.assertThat;
 
 public class GuardianExceptionTest {
 
@@ -157,6 +157,39 @@ public class GuardianExceptionTest {
         assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
         assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
         assertThat(exception.isLoginTransactionNotFound(), is(equalTo(true)));
+    }
+
+    @Test
+    public void testIsResourceNotFound() throws Exception {
+        GuardianException exception = new GuardianException(createErrorMap("not_found"));
+
+        assertThat(exception.getErrorCode(), is(equalTo("not_found")));
+
+        assertThat(exception.isResourceNotFound(), is(equalTo(true)));
+
+        assertThat(exception.isInvalidOTP(), is(equalTo(false)));
+        assertThat(exception.isInvalidToken(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
+    }
+
+    @Test
+    public void testIsResourceNotFoundWhenStatusCodeIs404() throws Exception {
+
+        GuardianException exception = new GuardianException(createErrorMap("error"), 404);
+
+        assertThat(exception.getErrorCode(), is(equalTo("error")));
+        assertThat(exception.getStatusCode(), is(equalTo(404)));
+
+        assertThat(exception.isResourceNotFound(), is(equalTo(true)));
+
+        assertThat(exception.isInvalidOTP(), is(equalTo(false)));
+        assertThat(exception.isInvalidToken(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentNotFound(), is(equalTo(false)));
+        assertThat(exception.isEnrollmentTransactionNotFound(), is(equalTo(false)));
+        assertThat(exception.isLoginTransactionNotFound(), is(equalTo(false)));
+
     }
 
     private Map<String, Object> createErrorMap(String errorCode) {

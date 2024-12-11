@@ -22,22 +22,6 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.net.Uri;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.Map;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -45,12 +29,33 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.openMocks;
+
+import android.net.Uri;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Map;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 23, manifest = Config.NONE)
@@ -71,6 +76,7 @@ public class GuardianTest {
     private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
     private static final String TRANSACTION_TOKEN = "TRANSACTION_TOKEN";
     private static final String CHALLENGE = "CHALLENGE";
+    private static final String TRANSACTION_LINKING_ID= "TRANSACTION_LINKING_ID";
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -80,6 +86,9 @@ public class GuardianTest {
 
     @Mock
     DeviceAPIClient deviceApiClient;
+
+    @Mock
+    RichConsentsAPIClient richConsentsAPIClient;
 
     @Mock
     GuardianAPIClient apiClient;
@@ -104,6 +113,8 @@ public class GuardianTest {
 
         when(notification.getTransactionToken())
                 .thenReturn(TRANSACTION_TOKEN);
+        when(notification.getTransactionLinkingId())
+                .thenReturn(TRANSACTION_LINKING_ID);
 
         keyPair = new KeyPair(publicKey, privateKey);
 
@@ -116,6 +127,9 @@ public class GuardianTest {
                 .thenReturn(deviceApiClient);
         when(apiClient.device(DEVICE_ID, USER, privateKey))
                 .thenReturn(deviceApiClient);
+
+        when(apiClient.richConsents(keyPair.getPrivate(), keyPair.getPublic()))
+                .thenReturn(richConsentsAPIClient);
 
         guardian = new Guardian(apiClient);
     }
@@ -166,6 +180,59 @@ public class GuardianTest {
         verify(apiClient, never()).device(DEVICE_ID, DEVICE_TOKEN);
         verify(apiClient).device(DEVICE_ID, USER, privateKey);
         verify(deviceApiClient).delete();
+
+        assertThat(request, is(sameInstance(mockRequest)));
+    }
+
+    @Test
+    public void shouldCallFetch() throws Exception {
+        @SuppressWarnings("unchecked")
+        GuardianAPIRequest<RichConsent> mockRequest = mock(GuardianAPIRequest.class);
+        when(richConsentsAPIClient.fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN))
+                .thenReturn(mockRequest);
+
+        GuardianAPIRequest<RichConsent> request = guardian.fetchConsent(notification, enrollment, publicKey);
+
+        verify(apiClient).richConsents(privateKey, publicKey);
+        verify(richConsentsAPIClient).fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN);
+
+        assertThat(request, is(sameInstance(mockRequest)));
+    }
+
+    @Test
+    public void shouldGetPublicKeyFromSigningKeyAndCallFetch() throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        RSAPrivateCrtKey signingKey = (RSAPrivateCrtKey) keyPair.getPrivate();
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+
+        GuardianEnrollment enrollment = new GuardianEnrollment(USER, PERIOD, DIGITS, ALGORITHM, SECRET_BASE32,
+                DEVICE_ID, currentDevice, DEVICE_TOKEN, signingKey);
+
+        when(apiClient.richConsents(any(PrivateKey.class), any(PublicKey.class)))
+                .thenReturn(richConsentsAPIClient);
+
+        @SuppressWarnings("unchecked")
+        GuardianAPIRequest<RichConsent> mockRequest = mock(GuardianAPIRequest.class);
+        when(richConsentsAPIClient.fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN))
+                .thenReturn(mockRequest);
+
+        GuardianAPIRequest<RichConsent> request = guardian.fetchConsent(notification, enrollment);
+
+        ArgumentCaptor<PrivateKey> privateKeyArgumentCaptor = ArgumentCaptor.forClass(PrivateKey.class);
+        ArgumentCaptor<RSAPublicKey> publicKeyArgumentCaptor = ArgumentCaptor.forClass(RSAPublicKey.class);
+
+        verify(apiClient).richConsents(privateKeyArgumentCaptor.capture(), publicKeyArgumentCaptor.capture());
+
+        PrivateKey capturedPrivateKey = privateKeyArgumentCaptor.getValue();
+        assertThat(capturedPrivateKey, is(sameInstance(signingKey)));
+
+        RSAPublicKey capturedPublicKey = publicKeyArgumentCaptor.getValue();
+        assertThat(capturedPublicKey.getModulus(), is(equalTo(publicKey.getModulus())));
+        assertThat(capturedPublicKey.getPublicExponent(), is(equalTo(publicKey.getPublicExponent())));
+
+        verify(richConsentsAPIClient).fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN);
 
         assertThat(request, is(sameInstance(mockRequest)));
     }
