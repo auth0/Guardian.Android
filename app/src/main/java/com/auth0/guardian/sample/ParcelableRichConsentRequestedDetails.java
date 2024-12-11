@@ -51,11 +51,13 @@ public class ParcelableRichConsentRequestedDetails implements RichConsentRequest
         return JSON.toJson(this);
     }
 
+    @NonNull
     @Override
     public String getAudience() {
         return audience;
     }
 
+    @NonNull
     @Override
     public String[] getScope() {
         return scope;

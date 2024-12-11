@@ -4,6 +4,9 @@ import static com.auth0.android.guardian.sdk.oauth2.OAuth2AccessToken.getTokenHa
 
 import android.util.Base64;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -21,61 +24,30 @@ import java.util.UUID;
 
 import okhttp3.HttpUrl;
 
+/**
+ * Rich Consents API client.
+ * <p>
+ * Use this client to fetch the consent details when the transaction has a linking id associated.
+ */
 public class RichConsentsAPIClient {
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
+    private final ClientInfo clientInfo;
 
     RichConsentsAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, PrivateKey privateKey, PublicKey publicKey) {
+        this(requestFactory, baseUrl, privateKey, publicKey, null);
+    }
+
+    RichConsentsAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, PrivateKey privateKey, PublicKey publicKey, @Nullable ClientInfo.TelemetryInfo telemetryInfo) {
         this.requestFactory = requestFactory;
         this.baseUrl = baseUrl.newBuilder()
                 .addPathSegments("rich-consents")
                 .build();
         this.privateKey = privateKey;
         this.publicKey = publicKey;
-    }
-
-    public GuardianAPIRequest<RichConsent> fetch(String consentId, String transactionToken) {
-        Type type = new TypeToken<GuardianRichConsent>() {
-        }.getType();
-
-        final HttpUrl url = baseUrl.newBuilder()
-                .addPathSegment(consentId)
-                .build();
-
-        final String dpopAssertion = createProofOfPossessionAssertion(
-                url,
-                privateKey,
-                publicKey,
-                transactionToken
-        );
-
-        return requestFactory
-                .<RichConsent>newRequest("GET", url, type)
-                .setHeader("Authorization", "MFA-DPoP ".concat(transactionToken))
-                .setHeader("MFA-DPoP", dpopAssertion);
-    }
-
-    private String createProofOfPossessionAssertion(HttpUrl url, PrivateKey privateKey, PublicKey publicKey, String transactionToken) {
-        long currentTime = new Date().getTime() / 1000L;
-        Map<String, Object> headers = new HashMap<>();
-        headers.put("alg", "RS256");
-        headers.put("typ", "dpop+jwt");
-        headers.put("jwk", exportJWK(publicKey));
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("htu", url.toString());
-        claims.put("htm", "GET");
-        claims.put("ath", getTokenHash(transactionToken));
-        claims.put("jti", UUID.randomUUID().toString());
-        claims.put("iat", currentTime);
-
-        Algorithm alg = Algorithm.RSA256(null, (RSAPrivateKey) privateKey);
-        return JWT.create()
-                .withHeader(headers)
-                .withPayload(claims)
-                .sign(alg);
+        this.clientInfo = new ClientInfo(telemetryInfo);
     }
 
     private static Map<String, String> exportJWK(PublicKey publicKey) {
@@ -102,5 +74,56 @@ public class RichConsentsAPIClient {
 
     private static String base64UrlSafeEncode(byte[] bytes) {
         return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+    }
+
+    private static String createProofOfPossessionAssertion(HttpUrl url, PrivateKey privateKey, PublicKey publicKey, String transactionToken) {
+        long currentTime = new Date().getTime() / 1000L;
+        Map<String, Object> headers = new HashMap<>();
+        headers.put("alg", "RS256");
+        headers.put("typ", "dpop+jwt");
+        headers.put("jwk", exportJWK(publicKey));
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("htu", url.toString());
+        claims.put("htm", "GET");
+        claims.put("ath", getTokenHash(transactionToken));
+        claims.put("jti", UUID.randomUUID().toString());
+        claims.put("iat", currentTime);
+
+        Algorithm alg = Algorithm.RSA256(null, (RSAPrivateKey) privateKey);
+        return JWT.create()
+                .withHeader(headers)
+                .withPayload(claims)
+                .sign(alg);
+    }
+
+    /**
+     * Fetches the consent details.
+     *
+     * @param consentId Consent ID, a.k.a. transactionLinkingId.
+     * @param transactionToken Transaction token received in the push notification
+     *
+     * @return A GuardianAPIRequest that should be started/executed.
+     */
+    public GuardianAPIRequest<RichConsent> fetch(@NonNull String consentId, @NonNull String transactionToken) {
+        final Type type = new TypeToken<GuardianRichConsent>() {
+        }.getType();
+
+        final HttpUrl url = baseUrl.newBuilder()
+                .addPathSegment(consentId)
+                .build();
+
+        final String dpopAssertion = createProofOfPossessionAssertion(
+                url,
+                privateKey,
+                publicKey,
+                transactionToken
+        );
+
+        return requestFactory
+                .<RichConsent>newRequest("GET", url, type)
+                .setHeader("Auth0-Client", this.clientInfo.toBase64())
+                .setHeader("Authorization", "MFA-DPoP ".concat(transactionToken))
+                .setHeader("MFA-DPoP", dpopAssertion);
     }
 }

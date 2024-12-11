@@ -1,5 +1,7 @@
 package com.auth0.android.guardian.sdk;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 public class GuardianRichConsent implements RichConsent {
@@ -19,21 +21,25 @@ public class GuardianRichConsent implements RichConsent {
     }
 
 
+    @NonNull
     @Override
     public String getId() {
         return id;
     }
 
+    @NonNull
     @Override
     public RichConsentRequestedDetails getRequestedDetails() {
         return requestedDetails;
     }
 
+    @NonNull
     @Override
     public String getCreatedAt() {
         return createdAt;
     }
 
+    @NonNull
     @Override
     public String getExpiresAt() {
         return expiresAt;

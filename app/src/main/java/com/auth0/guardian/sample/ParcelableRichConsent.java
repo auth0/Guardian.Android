@@ -57,21 +57,25 @@ public class ParcelableRichConsent implements RichConsent, Parcelable {
         return JSON.toJson(this);
     }
 
+    @NonNull
     @Override
     public String getId() {
         return id;
     }
 
+    @NonNull
     @Override
     public RichConsentRequestedDetails getRequestedDetails() {
         return requestedDetails;
     }
 
+    @NonNull
     @Override
     public String getCreatedAt() {
         return createdAt;
     }
 
+    @NonNull
     @Override
     public String getExpiresAt() {
         return expiresAt;

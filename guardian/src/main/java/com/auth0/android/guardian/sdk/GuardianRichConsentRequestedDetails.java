@@ -1,5 +1,7 @@
 package com.auth0.android.guardian.sdk;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 public class GuardianRichConsentRequestedDetails implements RichConsentRequestedDetails {
@@ -18,11 +20,13 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
     }
 
 
+    @NonNull
     @Override
     public String getAudience() {
         return audience;
     }
 
+    @NonNull
     @Override
     public String[] getScope() {
         return scope;
