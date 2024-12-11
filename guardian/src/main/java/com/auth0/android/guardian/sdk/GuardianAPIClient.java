@@ -24,9 +24,10 @@ package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
 import android.os.Build;
+import android.util.Base64;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.google.gson.Gson;
@@ -82,6 +83,35 @@ public class GuardianAPIClient {
         this.clientInfo = new ClientInfo(telemetryInfo);
     }
 
+    private static Map<String, String> createJWK(@NonNull PublicKey publicKey) {
+        if (!(publicKey instanceof RSAPublicKey)) {
+            throw new IllegalArgumentException("Only RSA keys are supported");
+        }
+        RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
+        Map<String, String> jwk = new HashMap<>(5);
+        jwk.put("kty", "RSA");
+        jwk.put("alg", "RS256");
+        jwk.put("use", "sig");
+        jwk.put("e", base64UrlSafeEncode(rsaPublicKey.getPublicExponent().toByteArray()));
+        jwk.put("n", base64UrlSafeEncode(rsaPublicKey.getModulus().toByteArray()));
+        return jwk;
+    }
+
+    private static String base64UrlSafeEncode(byte[] bytes) {
+        return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+    }
+
+    static Map<String, String> createPushCredentials(@Nullable String gcmToken) {
+        if (gcmToken == null) {
+            return null;
+        }
+
+        Map<String, String> pushCredentials = new HashMap<>(2);
+        pushCredentials.put("service", "GCM");
+        pushCredentials.put("token", gcmToken);
+        return pushCredentials;
+    }
+
     String getUrl() {
         return baseUrl.toString();
     }
@@ -121,35 +151,6 @@ public class GuardianAPIClient {
                 .setParameter("name", deviceName)
                 .setParameter("push_credentials", createPushCredentials(gcmToken))
                 .setParameter("public_key", createJWK(publicKey));
-    }
-
-    private static Map<String, String> createJWK(@NonNull PublicKey publicKey) {
-        if (!(publicKey instanceof RSAPublicKey)) {
-            throw new IllegalArgumentException("Only RSA keys are supported");
-        }
-        RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
-        Map<String, String> jwk = new HashMap<>(5);
-        jwk.put("kty", "RSA");
-        jwk.put("alg", "RS256");
-        jwk.put("use", "sig");
-        jwk.put("e", base64UrlSafeEncode(rsaPublicKey.getPublicExponent().toByteArray()));
-        jwk.put("n", base64UrlSafeEncode(rsaPublicKey.getModulus().toByteArray()));
-        return jwk;
-    }
-
-    private static String base64UrlSafeEncode(byte[] bytes) {
-        return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
-    }
-
-    static Map<String, String> createPushCredentials(@Nullable String gcmToken) {
-        if (gcmToken == null) {
-            return null;
-        }
-
-        Map<String, String> pushCredentials = new HashMap<>(2);
-        pushCredentials.put("service", "GCM");
-        pushCredentials.put("token", gcmToken);
-        return pushCredentials;
     }
 
     /**
@@ -245,22 +246,23 @@ public class GuardianAPIClient {
     /**
      * Returns an API client to fetch transaction's rich consent record.
      *
-     * @param privateKey    the enrollment signing key
-     * @param publicKey     the enrollment public key
+     * @param privateKey the enrollment signing key
+     * @param publicKey  the enrollment public key
      * @return an API client for rich consents
      */
     public RichConsentsAPIClient richConsents(PrivateKey privateKey, PublicKey publicKey) {
         // According to the Guardian SDK guidelines, developers must provide either the Guardian domain
         // or the canonical domain including the `/appliance-mfa` path. However, since Rich Consents is
         // not an MFA API endpoint, preserving this path will not work.
-        // As a temporary solution, the `/appliance-mfa` path is stripped from the base URL.
-        // IMPORTANT: Rich Consents will not function correctly when using the Guardian domain until
-        // a long term solution is implemented.
+        // As a temporary solution, the guardian subdomain and the `/appliance-mfa` path are stripped from the
+        // base URL.
         String guardianUrl = baseUrl.toString();
         if (guardianUrl.contains("/appliance-mfa")) {
             guardianUrl = guardianUrl.replace("/appliance-mfa", "");
+        } else {
+            // If path is not /appliance-mfa, '.guardian.' subdomain is stripped
+            guardianUrl = guardianUrl.replace(".guardian.", ".");
         }
-        // TODO: remove .guardian.
         final HttpUrl url = HttpUrl.parse(guardianUrl);
         return new RichConsentsAPIClient(requestFactory, url, privateKey, publicKey);
     }
@@ -337,6 +339,7 @@ public class GuardianAPIClient {
      */
     public static class Builder {
 
+        ClientInfo clientInfo = new ClientInfo();
         private HttpUrl url;
         private boolean loggingEnabled = false;
 
@@ -387,8 +390,6 @@ public class GuardianAPIClient {
             return this;
         }
 
-        ClientInfo clientInfo = new ClientInfo();
-
         public Builder setTelemetryInfo(String appName, String appVersion) {
             this.clientInfo.telemetryInfo = new ClientInfo.TelemetryInfo(appName, appVersion);
             return this;
@@ -438,7 +439,7 @@ public class GuardianAPIClient {
 
             RequestFactory requestFactory = new RequestFactory(gson, client);
 
-            if(clientInfo.telemetryInfo != null) {
+            if (clientInfo.telemetryInfo != null) {
                 return new GuardianAPIClient(requestFactory, url, clientInfo.telemetryInfo);
             }
 
