@@ -180,13 +180,13 @@ guardian
 
 ### Fetch rich consent details
 
-When you receive a push notification, the presence of the property `tranactionLinkingId` indicates a
-rich consent record may be associated to the tranaction.
+When you receive a push notification, the presence of the property `transactionLinkingId` indicates a
+rich consent record may be associated to the transaction.
 
 To fetch the rich consent details, you can use the `fetchConsent` method.
 
 ```java
-if (notification.getTranactionLinkingId() != null) {
+if (notification.getTransctionLinkingId() != null) {
     guardian
       .fetchConsent(notification, enrollment)
       .start(new Callback<Enrollment> {
@@ -200,7 +200,7 @@ if (notification.getTranactionLinkingId() != null) {
           if (exception instanceof GuardianException) {
             GuardianException guardianException = (GuardianException) exception;
             if (guardianException.isResourceNotFound()) {
-              // there is no consent associated with the tranaction
+              // there is no consent associated with the transaction
             }
           }
           // something went wrong 
