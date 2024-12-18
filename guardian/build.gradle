@@ -3,11 +3,9 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
-
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 30
+        minSdkVersion 26
+        targetSdkVersion 34
         buildConfigField "String", "VERSION_NAME", "\"${project.version}\""
     }
     buildTypes {
