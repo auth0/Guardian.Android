@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 
 /**
  * The representation of a Guardian Enrollment
@@ -128,4 +129,7 @@ public interface Enrollment {
      */
     @NonNull
     PrivateKey getSigningKey();
+
+    @NonNull
+    PublicKey getPublicKey();
 }

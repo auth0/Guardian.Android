@@ -104,6 +104,6 @@ class EnrollRequest implements GuardianAPIRequest<Enrollment> {
         }
 
         return new GuardianEnrollment(userId, totpPeriod, totpDigits, totpAlgorithm,
-                totpSecret, enrollmentId, device, deviceToken, deviceKeyPair.getPrivate());
+                totpSecret, enrollmentId, device, deviceToken, deviceKeyPair.getPrivate(), deviceKeyPair.getPublic());
     }
 }

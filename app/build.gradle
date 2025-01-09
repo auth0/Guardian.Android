@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.auth0.guardian.sample"
-        minSdkVersion 22
+        minSdkVersion 26
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
@@ -40,4 +40,6 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.3.1'
     // ZXing QR decoder deps
     implementation 'com.google.zxing:core:3.5.0'
+
+    implementation 'org.bouncycastle:bcprov-jdk15to18:1.76'
 }

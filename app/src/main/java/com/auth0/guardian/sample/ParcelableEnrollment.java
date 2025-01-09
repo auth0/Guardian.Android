@@ -28,15 +28,28 @@ import androidx.annotation.NonNull;
 import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.Enrollment;
+import com.google.android.gms.common.util.Strings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
+import com.google.zxing.common.StringUtils;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPrivateCrtKeySpec;
+import java.security.spec.RSAPublicKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 public class ParcelableEnrollment implements Enrollment, Parcelable {
 
@@ -73,6 +86,9 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     @SerializedName("privateKey")
     private final String privateKey;
 
+    @SerializedName("publicKey")
+    private final String publicKey;
+
     public ParcelableEnrollment(Enrollment enrollment) {
         this.userId = enrollment.getUserId();
         this.period = enrollment.getPeriod();
@@ -85,6 +101,7 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         this.deviceGCMToken = enrollment.getNotificationToken();
         this.deviceToken = enrollment.getDeviceToken();
         this.privateKey = Base64.encodeToString(enrollment.getSigningKey().getEncoded(), Base64.DEFAULT);
+        this.publicKey = Base64.encodeToString(enrollment.getPublicKey().getEncoded(), Base64.DEFAULT);
     }
 
     @NonNull
@@ -155,6 +172,43 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         }
     }
 
+    @NonNull
+    @Override
+    public PublicKey getPublicKey() {
+        try {
+            if (publicKey == null || publicKey.isEmpty()) {
+                // For backwards-compatibility with enrollments encoded without a public key in
+                // version 0.8.1 and before of the Guardian.Android SDK
+                return getPublicKeyFromSigningKey();
+            }
+
+            byte[] key = Base64.decode(publicKey, Base64.DEFAULT);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(key);
+            return keyFactory.generatePublic(keySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
+            throw new IllegalStateException("Invalid public key!");
+        }
+    }
+
+    private PublicKey getPublicKeyFromSigningKey() throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
+        // BouncyCastleProvider is used in order to ensure capability when targeting Android API Level 32
+        // and lower due to changes to how the default provider handles decoding of RSA keys across versions
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA", new BouncyCastleProvider());
+
+        byte[] signingKeyBytes = Base64.decode(privateKey, Base64.DEFAULT);
+        PKCS8EncodedKeySpec signingKeySpec = new PKCS8EncodedKeySpec(signingKeyBytes);
+        PrivateKey signingKey = keyFactory.generatePrivate(signingKeySpec);
+
+        if (signingKey instanceof RSAPrivateCrtKey) {
+            RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey) signingKey;
+            RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
+            return keyFactory.generatePublic(publicKeySpec);
+        } else {
+            throw new IllegalArgumentException("Not an RSA private key.");
+        }
+    }
+
     // PARCELABLE
     protected ParcelableEnrollment(Parcel in) {
         id = in.readString();
@@ -168,6 +222,7 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         deviceGCMToken = in.readString();
         deviceToken = in.readString();
         privateKey = in.readString();
+        publicKey = in.readString();
     }
 
     @Override
@@ -188,6 +243,7 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
         dest.writeString(deviceGCMToken);
         dest.writeString(deviceToken);
         dest.writeString(privateKey);
+        dest.writeString(publicKey);
     }
 
     @SuppressWarnings("unused")

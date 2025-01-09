@@ -155,21 +155,7 @@ public class Guardian {
      * @return the request
      */
     public GuardianAPIRequest<RichConsent> fetchConsent(@NonNull Notification notification, @NonNull Enrollment enrollment) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        PublicKey publicKey = getPublicKeyFromSigningKey(enrollment.getSigningKey());
-        return fetchConsent(notification, enrollment, publicKey);
-    }
-
-    /**
-     * Fetches the rich consent record linked to the transaction.
-     *
-     * @param notification the push notification
-     * @param enrollment   the device enrollment
-     * @param publicKey    the enrollment public key
-     *
-     * @return  the rich consents api request
-     */
-    public GuardianAPIRequest<RichConsent> fetchConsent(@NonNull Notification notification, @NonNull Enrollment enrollment, @NonNull PublicKey publicKey) {
-        return client.richConsents(enrollment.getSigningKey(), publicKey)
+        return client.richConsents(enrollment.getSigningKey(), enrollment.getPublicKey())
                 .fetch(notification.getTransactionLinkingId(), notification.getTransactionToken());
     }
 
@@ -231,17 +217,6 @@ public class Guardian {
         } catch (Base32.DecodingException e) {
             throw new IllegalArgumentException(
                     "Enrollment's secret is not a valid Base32 encoded TOTP secret", e);
-        }
-    }
-
-    private PublicKey getPublicKeyFromSigningKey(PrivateKey signingKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        if (signingKey instanceof RSAPrivateCrtKey) {
-            RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey) signingKey;
-            RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
-            return keyFactory.generatePublic(publicKeySpec);
-        } else {
-            throw new IllegalArgumentException("Not an RSA private key.");
         }
     }
 

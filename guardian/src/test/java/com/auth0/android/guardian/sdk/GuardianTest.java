@@ -121,7 +121,7 @@ public class GuardianTest {
         currentDevice = new CurrentDevice(GCM_TOKEN, DEVICE_NAME, DEVICE_IDENTIFIER);
 
         enrollment = new GuardianEnrollment(USER, PERIOD, DIGITS, ALGORITHM, SECRET_BASE32,
-                DEVICE_ID, currentDevice, DEVICE_TOKEN, privateKey);
+                DEVICE_ID, currentDevice, DEVICE_TOKEN, privateKey, publicKey);
 
         when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
                 .thenReturn(deviceApiClient);
@@ -191,7 +191,7 @@ public class GuardianTest {
         when(richConsentsAPIClient.fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN))
                 .thenReturn(mockRequest);
 
-        GuardianAPIRequest<RichConsent> request = guardian.fetchConsent(notification, enrollment, publicKey);
+        GuardianAPIRequest<RichConsent> request = guardian.fetchConsent(notification, enrollment);
 
         verify(apiClient).richConsents(privateKey, publicKey);
         verify(richConsentsAPIClient).fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN);
@@ -208,7 +208,7 @@ public class GuardianTest {
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
 
         GuardianEnrollment enrollment = new GuardianEnrollment(USER, PERIOD, DIGITS, ALGORITHM, SECRET_BASE32,
-                DEVICE_ID, currentDevice, DEVICE_TOKEN, signingKey);
+                DEVICE_ID, currentDevice, DEVICE_TOKEN, signingKey, publicKey);
 
         when(apiClient.richConsents(any(PrivateKey.class), any(PublicKey.class)))
                 .thenReturn(richConsentsAPIClient);
