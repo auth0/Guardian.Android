@@ -132,7 +132,7 @@ public interface Enrollment {
 
     /**
      * The public key used for enrollment.
-     * @since Guardian SDK Version 1.9.0
+     * @since Guardian SDK Version 0.9.0
      * @see <a href="https://github.com/auth0/Guardian.Android#a-note-about-key-generation">A note about key generation</a>
      *
      * @return the RSA public key

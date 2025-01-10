@@ -127,7 +127,7 @@ OEM-specific builds. The example given above and that used in the sample applica
 which may not be suitable for production applications. It is recommended that you follow [OWASP guidelines
 for Android Cryptographic APIs](https://mas.owasp.org/MASTG/0x05e-Testing-Cryptography/) for your implementation.
 
-As of version 1.9.0 the public key used for enrollment was added to the Enrollment Interface as it is
+As of version 0.9.0 the public key used for enrollment was added to the Enrollment Interface as it is
 required for [fetching rich-consent details](#fetch-rich-consent-details). For new installs,
 this is not a a concern. For enrollments created prior to this version, depending on implementation, 
 this key may or may not have been stored with the enrollment information. If this key was discarded, 

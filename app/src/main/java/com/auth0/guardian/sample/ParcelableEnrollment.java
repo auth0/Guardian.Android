@@ -171,8 +171,8 @@ public class ParcelableEnrollment implements Enrollment, Parcelable {
     public PublicKey getPublicKey() {
         try {
             if (publicKey == null || publicKey.isEmpty()) {
-                // For backwards-compatibility with enrollments encoded without a public key in
-                // version 1.8.1 and before of the Guardian.Android SDK
+                // For backwards-compatibility with enrollments encoded without a public key
+                // prior to version 0.9.0 of the Guardian.Android SDK
                 return getPublicKeyFromSigningKey();
             }
 
