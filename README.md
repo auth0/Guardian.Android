@@ -119,6 +119,22 @@ The `deviceName` and `fcmToken` are data that you must provide:
   is not yet using FCM or you're not familiar with it, you should check their
   [docs](https://firebase.google.com/docs/cloud-messaging/android/client#sample-register).
 
+#### A note about key generation
+
+The Guardian SDK does not provided methods for generating and storing cryptographic keys used for enrollment,
+as this is an application specific concern and could vary between targeted versions of Android and the 
+OEM-specific builds. The example given above and that used in the sample application is a naive implementation 
+which may not be suitable for production applications. It is recommended that you follow [OWASP guidelines
+for Android Cryptographic APIs](https://mas.owasp.org/MASTG/0x05e-Testing-Cryptography/) for your implementation.
+
+As of version 1.9.0 the public key used for enrollment was added to the Enrollment Interface as it is
+required for [fetching rich-consent details](#fetch-rich-consent-details). For new installs,
+this is not a a concern. For enrollments created prior to this version, depending on implementation, 
+this key may or may not have been stored with the enrollment information. If this key was discarded, 
+it may be possible to reconstruct from the stored signing key. The sample app provides 
+[an example](app/src/main/java/com/auth0/guardian/sample/ParcelableEnrollment.java#L194) of this. If 
+this is not possible, devices will require re-enrollment to make use of this functionality.
+
 ### Unenroll
 
 If you want to delete an enrollment -for example if you want to disable MFA- you can make the
