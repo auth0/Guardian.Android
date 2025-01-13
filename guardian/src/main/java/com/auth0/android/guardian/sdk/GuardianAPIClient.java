@@ -64,23 +64,16 @@ public class GuardianAPIClient {
 
     private static final int ACCESS_APPROVAL_JWT_EXP_SECS = 30;
     private static final int BASIC_JWT_EXP_SECS = 60 * 60 * 2; // 2 hours
+    private static final String PATH = "appliance-mfa";
 
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
-
     private final ClientInfo clientInfo;
 
-
-    GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl) {
+    GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, ClientInfo clientInfo) {
         this.requestFactory = requestFactory;
-        this.baseUrl = baseUrl;
-        this.clientInfo = new ClientInfo(null);
-    }
-
-    GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, ClientInfo.TelemetryInfo telemetryInfo) {
-        this.requestFactory = requestFactory;
-        this.baseUrl = baseUrl;
-        this.clientInfo = new ClientInfo(telemetryInfo);
+        this.baseUrl = appendingPathComponentIfNeeded(baseUrl, PATH);
+        this.clientInfo = clientInfo;
     }
 
     private static Map<String, String> createJWK(@NonNull PublicKey publicKey) {
@@ -243,30 +236,6 @@ public class GuardianAPIClient {
         return new DeviceAPIClient(requestFactory, baseUrl, deviceIdentifier, token);
     }
 
-    /**
-     * Returns an API client to fetch transaction's rich consent record.
-     *
-     * @param privateKey the enrollment signing key
-     * @param publicKey  the enrollment public key
-     * @return an API client for rich consents
-     */
-    public RichConsentsAPIClient richConsents(@NonNull PrivateKey privateKey, @NonNull PublicKey publicKey) {
-        // According to the Guardian SDK guidelines, developers must provide either the Guardian domain
-        // or the canonical domain including the `/appliance-mfa` path. However, since Rich Consents is
-        // not an MFA API endpoint, preserving this path will not work.
-        // As a temporary solution, the guardian subdomain and the `/appliance-mfa` path are stripped from the
-        // base URL.
-        String guardianUrl = baseUrl.toString();
-        if (guardianUrl.contains("/appliance-mfa")) {
-            guardianUrl = guardianUrl.replace("/appliance-mfa", "");
-        } else {
-            // If path is not /appliance-mfa, '.guardian.' subdomain is stripped
-            guardianUrl = guardianUrl.replace(".guardian.", ".");
-        }
-        final HttpUrl url = HttpUrl.parse(guardianUrl);
-        return new RichConsentsAPIClient(requestFactory, url, privateKey, publicKey, clientInfo.telemetryInfo);
-    }
-
     private String createBasicJWT(@NonNull PrivateKey privateKey,
                                   @NonNull String audience,
                                   @NonNull String deviceIdentifier,
@@ -321,6 +290,29 @@ public class GuardianAPIClient {
         }
     }
 
+    private HttpUrl appendingPathComponentIfNeeded(HttpUrl url, String pathComponent){
+        String lastPathSegment = url.pathSegments().get(url.pathSize() -1);
+        if(lastPathSegment.equals(pathComponent)){
+            return url;
+        }
+
+        if(url.encodedPath().contains("/" + pathComponent)){
+            return url;
+        }
+
+        if(url.host().endsWith("guardian.auth0.com")){
+            return url;
+        }
+
+        if(url.host().matches(".*guardian\\.[^.]*\\.auth0\\.com.*")){
+            return url;
+        }
+
+        return url.newBuilder()
+                .addPathSegment(pathComponent)
+                .build();
+    }
+
     /**
      * Returns an API client to create, update or delete an enrollment's device data
      *
@@ -339,13 +331,13 @@ public class GuardianAPIClient {
      */
     public static class Builder {
 
-        ClientInfo clientInfo = new ClientInfo();
         private HttpUrl url;
-        private boolean loggingEnabled = false;
+        private ClientInfo clientInfo;
+        private RequestFactory requestFactory;
 
         /**
          * Set the URL of the Guardian server.
-         * For example {@code https://tenant.guardian.auth0.com/}
+         * For example {@code https://tenant.region.auth0.com/}
          *
          * @param url the url
          * @return itself
@@ -361,7 +353,7 @@ public class GuardianAPIClient {
 
         /**
          * Set the domain of the Guardian server.
-         * For example {@code tenant.guardian.auth0.com}
+         * For example {@code tenant.region.auth0.com}
          *
          * @param domain the domain name
          * @return itself
@@ -378,20 +370,13 @@ public class GuardianAPIClient {
             return this;
         }
 
-        /**
-         * Enables the logging of all HTTP requests to the console.
-         * <p>
-         * Should only be used during development, on debug builds
-         *
-         * @return itself
-         */
-        public Builder enableLogging() {
-            this.loggingEnabled = true;
+        public Builder setClientInfo(ClientInfo clientInfo) {
+            this.clientInfo = clientInfo;
             return this;
         }
 
-        public Builder setTelemetryInfo(String appName, String appVersion) {
-            this.clientInfo.telemetryInfo = new ClientInfo.TelemetryInfo(appName, appVersion);
+        public Builder setRequestFactory(RequestFactory requestFactory) {
+            this.requestFactory = requestFactory;
             return this;
         }
 
@@ -406,44 +391,11 @@ public class GuardianAPIClient {
                 throw new IllegalStateException("You must set either a domain or an url");
             }
 
-            final OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
-            final String encodedClientInfo = this.clientInfo.toBase64();
-
-            builder.addInterceptor(new Interceptor() {
-                @Override
-                public Response intercept(Chain chain) throws IOException {
-                    okhttp3.Request originalRequest = chain.request();
-                    okhttp3.Request requestWithUserAgent = originalRequest.newBuilder()
-                            .header("Accept-Language",
-                                    Locale.getDefault().toString())
-                            .header("User-Agent",
-                                    String.format("GuardianSDK/%s Android %s",
-                                            BuildConfig.VERSION_NAME,
-                                            Build.VERSION.RELEASE))
-                            .header("Auth0-Client", encodedClientInfo)
-                            .build();
-                    return chain.proceed(requestWithUserAgent);
-                }
-            });
-
-            if (loggingEnabled) {
-                final HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor()
-                        .setLevel(HttpLoggingInterceptor.Level.BODY);
-                builder.addInterceptor(loggingInterceptor);
+            if (requestFactory == null) {
+                throw new IllegalStateException("RequestFactory cannot be null");
             }
 
-            OkHttpClient client = builder.build();
-
-            Gson gson = new GsonBuilder().create();
-
-            RequestFactory requestFactory = new RequestFactory(gson, client);
-
-            if (clientInfo.telemetryInfo != null) {
-                return new GuardianAPIClient(requestFactory, url, clientInfo.telemetryInfo);
-            }
-
-            return new GuardianAPIClient(requestFactory, url);
+            return new GuardianAPIClient(requestFactory, url, clientInfo);
         }
     }
 }

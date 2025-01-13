@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
         eventBus.register(this);
 
         guardian = new Guardian.Builder()
-                .url(Uri.parse(getString(R.string.guardian_url)))
+                .url(Uri.parse(getString(R.string.tenant_url)))
                 .enableLogging()
                 .build();
 

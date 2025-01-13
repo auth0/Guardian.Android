@@ -169,7 +169,7 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
         }
 
         guardian = new Guardian.Builder()
-                .url(Uri.parse(getString(R.string.guardian_url)))
+                .url(Uri.parse(getString(R.string.tenant_url)))
                 .enableLogging()
                 .build();
     }

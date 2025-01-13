@@ -50,7 +50,7 @@ public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_notification_with_consent_details);
 
         guardian = new Guardian.Builder()
-                .url(Uri.parse(getString(R.string.guardian_url)))
+                .url(Uri.parse(getString(R.string.tenant_url)))
                 .enableLogging()
                 .build();
 

@@ -2,10 +2,10 @@ package com.auth0.android.guardian.sdk;
 
 import static com.auth0.android.guardian.sdk.oauth2.OAuth2AccessToken.getTokenHash;
 
+import android.net.Uri;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.auth0.jwt.JWT;
@@ -32,22 +32,13 @@ import okhttp3.HttpUrl;
 public class RichConsentsAPIClient {
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
-    private final PrivateKey privateKey;
-    private final PublicKey publicKey;
     private final ClientInfo clientInfo;
 
-    RichConsentsAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, PrivateKey privateKey, PublicKey publicKey) {
-        this(requestFactory, baseUrl, privateKey, publicKey, null);
-    }
 
-    RichConsentsAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, PrivateKey privateKey, PublicKey publicKey, @Nullable ClientInfo.TelemetryInfo telemetryInfo) {
+    RichConsentsAPIClient(RequestFactory requestFactory, Uri url, ClientInfo clientInfo) {
         this.requestFactory = requestFactory;
-        this.baseUrl = baseUrl.newBuilder()
-                .addPathSegments("rich-consents")
-                .build();
-        this.privateKey = privateKey;
-        this.publicKey = publicKey;
-        this.clientInfo = new ClientInfo(telemetryInfo);
+        this.baseUrl = buildBaseUrl(url);
+        this.clientInfo = clientInfo;
     }
 
     private static Map<String, String> exportJWK(PublicKey publicKey) {
@@ -102,10 +93,12 @@ public class RichConsentsAPIClient {
      *
      * @param consentId Consent ID, a.k.a. transactionLinkingId.
      * @param transactionToken Transaction token received in the push notification
-     *
+     * @param privateKey RSA private key, which can be obtained from enrollment object using enrollment.getSigningKey() used to sign the requests to allow/reject an authentication request
+     * @param publicKey The public key used for enrollment, which can be obtained from enrollment object using enrollment.getPublicKey()
      * @return A GuardianAPIRequest that should be started/executed.
      */
-    public GuardianAPIRequest<RichConsent> fetch(@NonNull String consentId, @NonNull String transactionToken) {
+
+    public GuardianAPIRequest<RichConsent> fetch(@NonNull String consentId, @NonNull String transactionToken, PrivateKey privateKey, PublicKey publicKey) {
         final Type type = new TypeToken<GuardianRichConsent>() {
         }.getType();
 
@@ -125,5 +118,12 @@ public class RichConsentsAPIClient {
                 .setHeader("Auth0-Client", this.clientInfo.toBase64())
                 .setHeader("Authorization", "MFA-DPoP ".concat(transactionToken))
                 .setHeader("MFA-DPoP", dpopAssertion);
+    }
+
+    private HttpUrl buildBaseUrl(Uri url) {
+        HttpUrl httpUrl = HttpUrl.parse(url.toString());
+        return httpUrl.newBuilder()
+                .addPathSegments("rich-consents")
+                .build();
     }
 }

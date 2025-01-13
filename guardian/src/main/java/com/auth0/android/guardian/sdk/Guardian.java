@@ -23,14 +23,19 @@
 package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.auth0.android.guardian.sdk.otp.TOTP;
 import com.auth0.android.guardian.sdk.otp.utils.Base32;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
+import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -39,7 +44,13 @@ import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.Locale;
 import java.util.Map;
+
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * Guardian is the core of the Guardian SDK.
@@ -48,10 +59,12 @@ import java.util.Map;
  */
 public class Guardian {
 
-    private final GuardianAPIClient client;
+    private final GuardianAPIClient guardianAPIClient;
+    private final RichConsentsAPIClient richConsentsAPIClient;
 
-    Guardian(@NonNull GuardianAPIClient client) {
-        this.client = client;
+    Guardian(@NonNull GuardianAPIClient guardianAPIClient, @NonNull RichConsentsAPIClient richConsentsAPIClient) {
+        this.guardianAPIClient = guardianAPIClient;
+        this.richConsentsAPIClient = richConsentsAPIClient;
     }
 
     /**
@@ -78,7 +91,7 @@ public class Guardian {
         } else {
             ticket = enrollmentData;
         }
-        final GuardianAPIRequest<Map<String, Object>> request = client
+        final GuardianAPIRequest<Map<String, Object>> request = guardianAPIClient
                 .enroll(ticket, device.getIdentifier(), device.getName(),
                         device.getNotificationToken(), deviceKeyPair.getPublic());
         return new EnrollRequest(request, device, deviceKeyPair);
@@ -93,7 +106,7 @@ public class Guardian {
      */
     @NonNull
     public GuardianAPIRequest<Void> delete(@NonNull Enrollment enrollment) {
-        return client
+        return guardianAPIClient
                 .device(enrollment.getId(), enrollment.getUserId(), enrollment.getSigningKey())
                 .delete();
     }
@@ -108,7 +121,7 @@ public class Guardian {
     @NonNull
     public GuardianAPIRequest<Void> allow(@NonNull Notification notification,
                                           @NonNull Enrollment enrollment) {
-        return client
+        return guardianAPIClient
                 .allow(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
                         notification.getChallenge(), enrollment.getSigningKey());
     }
@@ -126,7 +139,7 @@ public class Guardian {
     public GuardianAPIRequest<Void> reject(@NonNull Notification notification,
                                            @NonNull Enrollment enrollment,
                                            @Nullable String reason) {
-        return client
+        return guardianAPIClient
                 .reject(notification.getTransactionToken(), enrollment.getDeviceIdentifier(),
                         notification.getChallenge(), enrollment.getSigningKey(), reason);
     }
@@ -155,12 +168,11 @@ public class Guardian {
      * @return the request
      */
     public GuardianAPIRequest<RichConsent> fetchConsent(@NonNull Notification notification, @NonNull Enrollment enrollment) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        return client.richConsents(enrollment.getSigningKey(), enrollment.getPublicKey())
-                .fetch(notification.getTransactionLinkingId(), notification.getTransactionToken());
+        return richConsentsAPIClient.fetch(notification.getTransactionLinkingId(), notification.getTransactionToken(), enrollment.getSigningKey(), enrollment.getPublicKey());
     }
 
     GuardianAPIClient getAPIClient() {
-        return client;
+        return guardianAPIClient;
     }
 
     /**
@@ -224,13 +236,13 @@ public class Guardian {
      * A {@link Guardian} Builder
      */
     public static class Builder {
-
+        private final ClientInfo clientInfo = new ClientInfo();
         private Uri url;
         private boolean loggingEnabled = false;
 
         /**
          * Set the URL of the Guardian server.
-         * For example {@code https://tenant.guardian.auth0.com/}
+         * For example {@code https://tenant.region.auth0.com/}
          *
          * @param url the url
          * @return itself
@@ -246,7 +258,7 @@ public class Guardian {
 
         /**
          * Set the domain of the Guardian server.
-         * For example {@code tenant.guardian.auth0.com}
+         * For example {@code tenant.region.auth0.com}
          *
          * @param domain the domain name
          * @return itself
@@ -275,10 +287,8 @@ public class Guardian {
             return this;
         }
 
-        private ClientInfo.TelemetryInfo telemetryInfo;
-
         public Builder setTelemetryInfo(String appName, String appVersion) {
-            this.telemetryInfo = new ClientInfo.TelemetryInfo(appName, appVersion);
+            clientInfo.telemetryInfo = new ClientInfo.TelemetryInfo(appName, appVersion);
             return this;
         }
 
@@ -293,18 +303,54 @@ public class Guardian {
                 throw new IllegalStateException("You must set either a domain or an url");
             }
 
-            GuardianAPIClient.Builder builder = new GuardianAPIClient.Builder()
-                    .url(url);
+            OkHttpClient okHttpClient = provideOkHttpClient();
+            RequestFactory requestFactory = provideRequestFactory(okHttpClient);
+
+            GuardianAPIClient guardianAPIClient= new GuardianAPIClient.Builder()
+                    .url(url)
+                    .setClientInfo(clientInfo)
+                    .setRequestFactory(requestFactory)
+                    .build();
+
+            RichConsentsAPIClient richConsentsAPIClient = new RichConsentsAPIClient(requestFactory, url, clientInfo);
+
+            return new Guardian(guardianAPIClient, richConsentsAPIClient);
+        }
+
+        private OkHttpClient provideOkHttpClient(){
+
+            final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            final String encodedClientInfo = clientInfo.toBase64();
+
+            builder.addInterceptor(new Interceptor() {
+                @Override
+                public Response intercept(Chain chain) throws IOException {
+                    okhttp3.Request originalRequest = chain.request();
+                    okhttp3.Request requestWithUserAgent = originalRequest.newBuilder()
+                            .header("Accept-Language",
+                                    Locale.getDefault().toString())
+                            .header("User-Agent",
+                                    String.format("GuardianSDK/%s Android %s",
+                                            BuildConfig.VERSION_NAME,
+                                            Build.VERSION.RELEASE))
+                            .header("Auth0-Client", encodedClientInfo)
+                            .build();
+                    return chain.proceed(requestWithUserAgent);
+                }
+            });
 
             if (loggingEnabled) {
-                builder.enableLogging();
+                final HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor()
+                        .setLevel(HttpLoggingInterceptor.Level.BODY);
+                builder.addInterceptor(loggingInterceptor);
             }
 
-            if (telemetryInfo != null) {
-                builder.setTelemetryInfo(telemetryInfo.appName, telemetryInfo.appVersion);
-            }
+            return builder.build();
+        }
 
-            return new Guardian(builder.build());
+        private RequestFactory provideRequestFactory(OkHttpClient okHttpClient){
+            Gson gson = new GsonBuilder().create();
+            return new RequestFactory(gson, okHttpClient);
         }
     }
 }

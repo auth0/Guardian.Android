@@ -42,7 +42,7 @@ implementation 'com.auth0.android:guardian:0.8.1'
 tenant/url.
 
 ```java
-Uri url = Uri.parse("https://<AUTH0_TENANT_DOMAIN>/appliance-mfa");
+Uri url = Uri.parse("https://<tenant>.<region>.auth0.com");
 
 Guardian guardian = new Guardian.Builder()
         .url(url)
@@ -52,7 +52,7 @@ Guardian guardian = new Guardian.Builder()
 alternatively you can use the custom domain if you configured one
 
 ```java
-Uri url = Uri.parse("https://<CUSTOM_DOMAIN>/appliance-mfa");
+Uri url = Uri.parse("<custom>");
 
 Guardian guardian = new Guardian.Builder()
         .url(url)

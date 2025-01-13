@@ -10,6 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.MockitoAnnotations.openMocks;
 
+import android.net.Uri;
+
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
@@ -66,9 +68,8 @@ public class RichConsentsAPIClientTest {
         RequestFactory requestFactory = new RequestFactory(gson, new OkHttpClient());
 
         richConsentsAPIClient = new RichConsentsAPIClient(requestFactory,
-                HttpUrl.parse(domain),
-                keyPair.getPrivate(),
-                keyPair.getPublic());
+                Uri.parse(domain),
+                new ClientInfo());
     }
 
     @Test
@@ -76,7 +77,7 @@ public class RichConsentsAPIClientTest {
         mockAPI.willReturnRichConsent(CONSENT_ID, AUDIENCE, SCOPE, BINDING_MESSAGE);
 
         richConsentsAPIClient
-                .fetch(CONSENT_ID, TRANSACTION_TOKEN)
+                .fetch(CONSENT_ID, TRANSACTION_TOKEN, keyPair.getPrivate(), keyPair.getPublic())
                 .start(fetchCallback);
 
         RecordedRequest request = mockAPI.takeRequest();

@@ -22,11 +22,34 @@
 
 package com.auth0.android.guardian.sdk;
 
+import static com.auth0.android.guardian.sdk.utils.CallbackMatcher.hasNoError;
+import static org.hamcrest.Matchers.blankOrNullString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
+
 import android.net.Uri;
 import android.os.Build;
 import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.networking.Callback;
+import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.auth0.android.guardian.sdk.utils.MockCallback;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
 import com.auth0.jwt.JWT;
@@ -68,28 +91,10 @@ import java.util.Locale;
 import java.util.Map;
 
 import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
 import okhttp3.mockwebserver.RecordedRequest;
-
-import static com.auth0.android.guardian.sdk.utils.CallbackMatcher.hasNoError;
-import static org.hamcrest.Matchers.blankOrNullString;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 23, manifest = Config.NONE)
@@ -140,6 +145,8 @@ public class GuardianAPIClientTest {
     MockWebService mockAPI;
     GuardianAPIClient apiClient;
     KeyPair keyPair;
+    RequestFactory requestFactory;
+    RichConsentsAPIClient richConsentsAPIClient;
 
     @Before
     public void setUp() throws Exception {
@@ -157,9 +164,42 @@ public class GuardianAPIClientTest {
         mockAPI = new MockWebService();
         final String domain = mockAPI.getDomain();
 
+        requestFactory = provideRequestFactory(provideOkHttpClient());
+
         apiClient = new GuardianAPIClient.Builder()
                 .url(Uri.parse(domain))
+                .setRequestFactory(requestFactory)
+                .setClientInfo(new ClientInfo())
                 .build();
+
+        richConsentsAPIClient = new RichConsentsAPIClient(requestFactory, Uri.parse(domain), new ClientInfo());
+    }
+
+    private OkHttpClient provideOkHttpClient() {
+        final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+        builder.addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                okhttp3.Request originalRequest = chain.request();
+                okhttp3.Request requestWithUserAgent = originalRequest.newBuilder()
+                        .header("Accept-Language",
+                                Locale.getDefault().toString())
+                        .header("User-Agent",
+                                String.format("GuardianSDK/%s Android %s",
+                                        BuildConfig.VERSION_NAME,
+                                        Build.VERSION.RELEASE))
+                        .build();
+                return chain.proceed(requestWithUserAgent);
+            }
+        });
+
+        return builder.build();
+    }
+
+    private RequestFactory provideRequestFactory(OkHttpClient okHttpClient) {
+        Gson gson = new GsonBuilder().create();
+        return new RequestFactory(gson, okHttpClient);
     }
 
     @After
@@ -168,19 +208,10 @@ public class GuardianAPIClientTest {
     }
 
     @Test
-    public void shouldBuildWithUrl() throws Exception {
-        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
-                .url(Uri.parse("https://example.guardian.auth0.com"))
-                .build();
-
-        assertThat(apiClient.getUrl(),
-                is(equalTo("https://example.guardian.auth0.com/")));
-    }
-
-    @Test
     public void shouldBuildWithDomain() throws Exception {
         GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
                 .domain("example.guardian.auth0.com")
+                .setRequestFactory(requestFactory)
                 .build();
 
         assertThat(apiClient.getUrl(),
@@ -194,6 +225,7 @@ public class GuardianAPIClientTest {
         new GuardianAPIClient.Builder()
                 .domain("example.guardian.auth0.com")
                 .url(Uri.parse("https://example.guardian.auth0.com"))
+                .setRequestFactory(requestFactory)
                 .build();
     }
 
@@ -204,6 +236,7 @@ public class GuardianAPIClientTest {
         new GuardianAPIClient.Builder()
                 .url(Uri.parse("https://example.guardian.auth0.com"))
                 .domain("example.guardian.auth0.com")
+                .setRequestFactory(requestFactory)
                 .build();
     }
 
@@ -212,7 +245,74 @@ public class GuardianAPIClientTest {
         exception.expect(IllegalStateException.class);
 
         new GuardianAPIClient.Builder()
+                .setRequestFactory(requestFactory)
                 .build();
+    }
+
+    @Test
+    public void shouldNotAddPathComponentToUrlWithGuardianAuth0Suffix() {
+        Uri inputUrl = Uri.parse("https://samples.guardian.auth0.com");
+        String expectedUrl = "https://samples.guardian.auth0.com/";
+
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .url(inputUrl)
+                .setRequestFactory(requestFactory)
+                .build();
+
+        assertEquals(expectedUrl, apiClient.getUrl());
+    }
+
+
+    @Test
+    public void shouldNotAddPathComponentToUrlWithGuardianRegionAuth0Com() {
+        Uri inputUrl = Uri.parse("https://samples.guardian.en.auth0.com");
+        String expectedUrl = "https://samples.guardian.en.auth0.com/";
+
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .url(inputUrl)
+                .setRequestFactory(requestFactory)
+                .build();
+
+        assertEquals(expectedUrl, apiClient.getUrl());
+    }
+
+    @Test
+    public void shouldNotAddPathComponentToCustomUrlWithoutGuardianWithAlreadyAddedPathComponent() {
+        Uri inputUrl = Uri.parse("https://samples.auth0.com/appliance-mfa");
+        String expectedUrl = "https://samples.auth0.com/appliance-mfa";
+
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .url(inputUrl)
+                .setRequestFactory(requestFactory)
+                .build();
+
+        assertEquals(expectedUrl, apiClient.getUrl());
+    }
+
+    @Test
+    public void shouldAddPathComponentToCustomUrlWithoutGuardianWithoutAlreadyAddedPathComponent() {
+        Uri inputUrl = Uri.parse("https://samples.auth0.com");
+        String expectedUrl = "https://samples.auth0.com/appliance-mfa";
+
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .url(inputUrl)
+                .setRequestFactory(requestFactory)
+                .build();
+
+        assertEquals(expectedUrl, apiClient.getUrl());
+    }
+
+    @Test
+    public void shouldAddPathComponentToCustomUrlWithGuardianWithoutAlreadyAddedPathComponent() {
+        Uri inputUrl = Uri.parse("https://samples.guardian.some.thing.auth0.com");
+        String expectedUrl = "https://samples.guardian.some.thing.auth0.com/appliance-mfa";
+
+        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
+                .url(inputUrl)
+                .setRequestFactory(requestFactory)
+                .build();
+
+        assertEquals(expectedUrl, apiClient.getUrl());
     }
 
     @Test
@@ -245,10 +345,14 @@ public class GuardianAPIClientTest {
 
         final String STUB_APP_NAME = "SomeCoolApp";
         final String STUB_APP_VERSION = "1.2.3.4";
+        final ClientInfo.TelemetryInfo telemetryInfo = new ClientInfo.TelemetryInfo(STUB_APP_NAME, STUB_APP_VERSION);
+        final ClientInfo clientInfo = new ClientInfo(telemetryInfo);
+
 
         GuardianAPIClient testApiClient = new GuardianAPIClient.Builder()
                 .url(Uri.parse(this.mockAPI.getDomain()))
-                .setTelemetryInfo(STUB_APP_NAME, STUB_APP_VERSION)
+                .setClientInfo(clientInfo)
+                .setRequestFactory(requestFactory)
                 .build();
 
         testApiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
@@ -284,6 +388,8 @@ public class GuardianAPIClientTest {
 
         GuardianAPIClient testApiClient = new GuardianAPIClient.Builder()
                 .url(Uri.parse(this.mockAPI.getDomain()))
+                .setRequestFactory(requestFactory)
+                .setClientInfo(new ClientInfo())
                 .build();
 
         testApiClient.enroll(ENROLLMENT_TICKET, DEVICE_IDENTIFIER, DEVICE_NAME, GCM_TOKEN, publicKey)
@@ -316,7 +422,7 @@ public class GuardianAPIClientTest {
                 .start(enrollCallback);
 
         RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo("/api/enroll")));
+        assertThat(request.getPath(), is(equalTo("/appliance-mfa/api/enroll")));
         assertThat(request.getMethod(), is(equalTo("POST")));
         assertThat(request.getHeader("Authorization"), is(equalTo("Ticket id=\"" + ENROLLMENT_TICKET + "\"")));
 
@@ -353,6 +459,8 @@ public class GuardianAPIClientTest {
         final String domain = newMockWebService.getDomain();
         GuardianAPIClient apiClientPSaaS = new GuardianAPIClient.Builder()
                 .url(Uri.parse(domain + "appliance-mfa"))
+                .setRequestFactory(requestFactory)
+                .setClientInfo(new ClientInfo())
                 .build();
 
         newMockWebService.willReturnEnrollment(ENROLLMENT_ID, PSAAS_ENROLLMENT_URL, ENROLLMENT_ISSUER, ENROLLMENT_USER,
@@ -374,6 +482,8 @@ public class GuardianAPIClientTest {
         final String domain = newMockWebService.getDomain();
         GuardianAPIClient apiClientPSaaS = new GuardianAPIClient.Builder()
                 .url(Uri.parse(domain + "appliance-mfa/"))
+                .setRequestFactory(requestFactory)
+                .setClientInfo(new ClientInfo())
                 .build();
 
         newMockWebService.willReturnEnrollment(ENROLLMENT_ID, PSAAS_ENROLLMENT_URL, ENROLLMENT_ISSUER, ENROLLMENT_USER,
@@ -409,7 +519,7 @@ public class GuardianAPIClientTest {
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo("/api/resolve-transaction")));
+        assertThat(request.getPath(), is(equalTo("/appliance-mfa/api/resolve-transaction")));
         assertThat(request.getMethod(), is(equalTo("POST")));
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
 
@@ -432,7 +542,7 @@ public class GuardianAPIClientTest {
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo("/api/resolve-transaction")));
+        assertThat(request.getPath(), is(equalTo("/appliance-mfa/api/resolve-transaction")));
         assertThat(request.getMethod(), is(equalTo("POST")));
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
 
@@ -455,7 +565,7 @@ public class GuardianAPIClientTest {
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo("/api/resolve-transaction")));
+        assertThat(request.getPath(), is(equalTo("/appliance-mfa/api/resolve-transaction")));
         assertThat(request.getMethod(), is(equalTo("POST")));
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + TX_TOKEN)));
 
@@ -479,7 +589,7 @@ public class GuardianAPIClientTest {
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo(String.format("/api/device-accounts/%s", ENROLLMENT_ID))));
+        assertThat(request.getPath(), is(equalTo(String.format("/appliance-mfa/api/device-accounts/%s", ENROLLMENT_ID))));
         assertThat(request.getMethod(), is(equalTo("DELETE")));
         assertThat(request.getHeader("Authorization"), is(equalTo("Bearer " + DEVICE_ACCOUNT_TOKEN)));
     }
@@ -495,7 +605,7 @@ public class GuardianAPIClientTest {
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
-        assertThat(request.getPath(), is(equalTo(String.format("/api/device-accounts/%s", ENROLLMENT_ID))));
+        assertThat(request.getPath(), is(equalTo(String.format("/appliance-mfa/api/device-accounts/%s", ENROLLMENT_ID))));
         assertThat(request.getMethod(), is(equalTo("DELETE")));
         String authorization = request.getHeader("Authorization");
         assertThat(authorization, Matchers.startsWith("Bearer "));
@@ -505,17 +615,12 @@ public class GuardianAPIClientTest {
 
     @Test
     public void shouldCreateValidRichConsentsAPI() throws Exception {
-        GuardianAPIClient apiClient = new GuardianAPIClient.Builder()
-                .url(Uri.parse(mockAPI.getDomain() + "appliance-mfa"))
-                .build();
         String consentId = "cns_00000001";
-
         mockAPI.willReturnRichConsent(consentId, "https://api", "openid", "test");
 
         final MockCallback<RichConsent> callback = new MockCallback<>();
 
-        apiClient.richConsents(keyPair.getPrivate(), keyPair.getPublic())
-                .fetch(consentId, "token")
+        richConsentsAPIClient.fetch(consentId, "token", keyPair.getPrivate(), keyPair.getPublic())
                 .start(callback);
 
         RecordedRequest request = mockAPI.takeRequest();
@@ -530,7 +635,7 @@ public class GuardianAPIClientTest {
     }
 
     private void verifyBasicJWT(String jwt) throws SignatureException, NoSuchAlgorithmException, JWTVerificationException, InvalidKeyException, IOException {
-        final String audience = HttpUrl.parse(apiClient.getUrl()).resolve("api/device-accounts").toString();
+        final String audience = HttpUrl.parse(apiClient.getUrl()).resolve("/appliance-mfa/api/device-accounts").toString();
         DecodedJWT payload = verifyJWT(jwt, ENROLLMENT_ID, audience, TWO_HOURS_IN_SECONDS * 1000L);
         assertThat(payload.getSubject(), is(equalTo(ENROLLMENT_USER)));
         assertThat(payload.getClaim("auth0_guardian_accepted").isMissing(), is(equalTo(true)));
@@ -539,7 +644,7 @@ public class GuardianAPIClientTest {
     }
 
     private void verifyAccessApprovalJWT(String jwt, boolean accepted, String rejectReason) throws NoSuchAlgorithmException, SignatureException, JWTVerificationException, InvalidKeyException, IOException {
-        final String audience = HttpUrl.parse(apiClient.getUrl()).resolve("api/resolve-transaction").toString();
+        final String audience = HttpUrl.parse(apiClient.getUrl()).resolve("/appliance-mfa/api/resolve-transaction").toString();
         DecodedJWT payload = verifyJWT(jwt, DEVICE_IDENTIFIER, audience, THIRTY_SECONDS * 1000L);
         assertThat(payload.getSubject(), is(equalTo(CHALLENGE)));
         assertThat(payload.getClaim("auth0_guardian_accepted").asBoolean(), is(equalTo(accepted)));
