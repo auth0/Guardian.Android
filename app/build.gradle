@@ -21,6 +21,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    namespace 'com.auth0.guardian.sample'
 }
 
 dependencies {
@@ -39,4 +40,6 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.3.1'
     // ZXing QR decoder deps
     implementation 'com.google.zxing:core:3.5.0'
+
+    implementation 'org.bouncycastle:bcprov-jdk15to18:1.78'
 }

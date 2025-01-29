@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 
 class GuardianEnrollment implements Enrollment {
 
@@ -40,6 +41,7 @@ class GuardianEnrollment implements Enrollment {
     private final String notificationToken;
     private final String deviceToken;
     private final PrivateKey privateKey;
+    private final PublicKey publicKey;
 
     GuardianEnrollment(@NonNull String userId,
                        @Nullable Integer period,
@@ -49,7 +51,8 @@ class GuardianEnrollment implements Enrollment {
                        @NonNull String enrollmentId,
                        @NonNull CurrentDevice device,
                        @NonNull String deviceToken,
-                       @NonNull PrivateKey privateKey) {
+                       @NonNull PrivateKey privateKey,
+                       @NonNull PublicKey publicKey) {
         this.userId = userId;
         this.period = period;
         this.digits = digits;
@@ -61,6 +64,7 @@ class GuardianEnrollment implements Enrollment {
         this.notificationToken = device.getNotificationToken();
         this.deviceToken = deviceToken;
         this.privateKey = privateKey;
+        this.publicKey = publicKey;
     }
 
     @NonNull
@@ -127,5 +131,11 @@ class GuardianEnrollment implements Enrollment {
     @Override
     public PrivateKey getSigningKey() {
         return privateKey;
+    }
+
+    @NonNull
+    @Override
+    public PublicKey getPublicKey() {
+        return publicKey;
     }
 }

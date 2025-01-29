@@ -22,22 +22,6 @@
 
 package com.auth0.android.guardian.sdk;
 
-import android.net.Uri;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.Map;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -45,12 +29,33 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.openMocks;
+
+import android.net.Uri;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Map;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 23, manifest = Config.NONE)
@@ -71,6 +76,7 @@ public class GuardianTest {
     private static final String ENROLLMENT_TX_ID = "ENROLLMENT_TX_ID";
     private static final String TRANSACTION_TOKEN = "TRANSACTION_TOKEN";
     private static final String CHALLENGE = "CHALLENGE";
+    private static final String TRANSACTION_LINKING_ID= "TRANSACTION_LINKING_ID";
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -82,7 +88,9 @@ public class GuardianTest {
     DeviceAPIClient deviceApiClient;
 
     @Mock
-    GuardianAPIClient apiClient;
+    RichConsentsAPIClient richConsentsAPIClient;
+    @Mock
+    GuardianAPIClient guardianAPIClient;
 
     @Mock
     Notification notification;
@@ -104,27 +112,29 @@ public class GuardianTest {
 
         when(notification.getTransactionToken())
                 .thenReturn(TRANSACTION_TOKEN);
+        when(notification.getTransactionLinkingId())
+                .thenReturn(TRANSACTION_LINKING_ID);
 
         keyPair = new KeyPair(publicKey, privateKey);
 
         currentDevice = new CurrentDevice(GCM_TOKEN, DEVICE_NAME, DEVICE_IDENTIFIER);
 
         enrollment = new GuardianEnrollment(USER, PERIOD, DIGITS, ALGORITHM, SECRET_BASE32,
-                DEVICE_ID, currentDevice, DEVICE_TOKEN, privateKey);
+                DEVICE_ID, currentDevice, DEVICE_TOKEN, privateKey, publicKey);
 
-        when(apiClient.device(DEVICE_ID, DEVICE_TOKEN))
+        when(guardianAPIClient.device(DEVICE_ID, DEVICE_TOKEN))
                 .thenReturn(deviceApiClient);
-        when(apiClient.device(DEVICE_ID, USER, privateKey))
+        when(guardianAPIClient.device(DEVICE_ID, USER, privateKey))
                 .thenReturn(deviceApiClient);
 
-        guardian = new Guardian(apiClient);
+        guardian = new Guardian(guardianAPIClient, richConsentsAPIClient);
     }
 
     @Test
     public void shouldReturnEnrollRequestUsingFullEnrollmentUri() throws Exception {
         String enrollmentUri = createEnrollmentUri();
 
-        when(apiClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(publicKey)))
+        when(guardianAPIClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(publicKey)))
                 .thenReturn(mockEnrollRequest);
 
         GuardianAPIRequest<Enrollment> request = guardian
@@ -140,7 +150,7 @@ public class GuardianTest {
 
     @Test
     public void shouldReturnEnrollRequestUsingOnlyEnrollmentTicket() throws Exception {
-        when(apiClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(publicKey)))
+        when(guardianAPIClient.enroll(eq(ENROLLMENT_TX_ID), eq(DEVICE_IDENTIFIER), eq(DEVICE_NAME), eq(GCM_TOKEN), eq(publicKey)))
                 .thenReturn(mockEnrollRequest);
 
         GuardianAPIRequest<Enrollment> request = guardian
@@ -163,10 +173,23 @@ public class GuardianTest {
 
         GuardianAPIRequest<Void> request = guardian.delete(enrollment);
 
-        verify(apiClient, never()).device(DEVICE_ID, DEVICE_TOKEN);
-        verify(apiClient).device(DEVICE_ID, USER, privateKey);
+        verify(guardianAPIClient, never()).device(DEVICE_ID, DEVICE_TOKEN);
+        verify(guardianAPIClient).device(DEVICE_ID, USER, privateKey);
         verify(deviceApiClient).delete();
 
+        assertThat(request, is(sameInstance(mockRequest)));
+    }
+
+    @Test
+    public void shouldCallFetch() throws Exception {
+        @SuppressWarnings("unchecked")
+        GuardianAPIRequest<RichConsent> mockRequest = mock(GuardianAPIRequest.class);
+        when(richConsentsAPIClient.fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN, privateKey, publicKey))
+                .thenReturn(mockRequest);
+
+        GuardianAPIRequest<RichConsent> request = guardian.fetchConsent(notification, enrollment);
+
+        verify(richConsentsAPIClient).fetch(TRANSACTION_LINKING_ID, TRANSACTION_TOKEN, privateKey, publicKey);
         assertThat(request, is(sameInstance(mockRequest)));
     }
 
@@ -177,12 +200,12 @@ public class GuardianTest {
 
         @SuppressWarnings("unchecked")
         GuardianAPIRequest<Void> mockRequest = mock(GuardianAPIRequest.class);
-        when(apiClient.allow(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey))
+        when(guardianAPIClient.allow(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey))
                 .thenReturn(mockRequest);
 
         GuardianAPIRequest<Void> request = guardian.allow(notification, enrollment);
 
-        verify(apiClient)
+        verify(guardianAPIClient)
                 .allow(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey);
 
         assertThat(request, is(sameInstance(mockRequest)));
@@ -195,12 +218,12 @@ public class GuardianTest {
 
         @SuppressWarnings("unchecked")
         GuardianAPIRequest<Void> mockRequest = mock(GuardianAPIRequest.class);
-        when(apiClient.reject(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey, null))
+        when(guardianAPIClient.reject(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey, null))
                 .thenReturn(mockRequest);
 
         GuardianAPIRequest<Void> request = guardian.reject(notification, enrollment);
 
-        verify(apiClient)
+        verify(guardianAPIClient)
                 .reject(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey,  null);
 
         assertThat(request, is(sameInstance(mockRequest)));
@@ -213,12 +236,12 @@ public class GuardianTest {
 
         @SuppressWarnings("unchecked")
         GuardianAPIRequest<Void> mockRequest = mock(GuardianAPIRequest.class);
-        when(apiClient.reject(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey, "reason"))
+        when(guardianAPIClient.reject(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey, "reason"))
                 .thenReturn(mockRequest);
 
         GuardianAPIRequest<Void> request = guardian.reject(notification, enrollment, "reason");
 
-        verify(apiClient)
+        verify(guardianAPIClient)
                 .reject(TRANSACTION_TOKEN, DEVICE_IDENTIFIER, CHALLENGE, privateKey, "reason");
 
         assertThat(request, is(sameInstance(mockRequest)));

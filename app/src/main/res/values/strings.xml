@@ -3,6 +3,7 @@
     <string name="title_main">Guardian SDK</string>
     <string name="title_enroll">Enroll account</string>
     <string name="title_notification">Authentication request</string>
+    <string name="title_notification_with_consent_details">Authentication With Consent Details request</string>
     <string name="progress_title_please_wait">Please wait</string>
     <string name="progress_message_unenroll">Trying to unenroll your account…</string>
     <string name="progress_message_reject">Trying to reject the authentication request…</string>

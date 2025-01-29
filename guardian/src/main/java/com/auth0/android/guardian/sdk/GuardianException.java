@@ -37,24 +37,37 @@ public class GuardianException extends RuntimeException {
 
     private final Map<String, Object> errorResponse;
     private final String errorCode;
+    private final int statusCode;
 
     public GuardianException(String detailMessage) {
         super(detailMessage);
+        this.statusCode = -1;
         this.errorCode = null;
         this.errorResponse = null;
     }
 
-    public GuardianException(String detailMessage, Throwable throwable) {
+    public GuardianException(String detailMessage, int statusCode, Throwable throwable) {
         super(detailMessage, throwable);
         this.errorCode = null;
         this.errorResponse = null;
+        this.statusCode = statusCode;
     }
 
-    public GuardianException(Map<String, Object> errorResponse) {
+    public GuardianException(String detailMessage, Throwable throwable) {
+        this(detailMessage, -1, throwable);
+    }
+
+    public GuardianException(Map<String, Object> errorResponse, int statusCode) {
         super((String) errorResponse.get("error"));
         this.errorCode = (String) errorResponse.get("errorCode");
         this.errorResponse = errorResponse;
+        this.statusCode = statusCode;
     }
+
+    public GuardianException(Map<String, Object> errorResponse) {
+        this(errorResponse, -1);
+    }
+
 
     /**
      * Returns the `errorCode` value, if available.
@@ -64,6 +77,15 @@ public class GuardianException extends RuntimeException {
     @Nullable
     public String getErrorCode() {
         return errorCode;
+    }
+
+    /**
+     * Returns the HTTP code of the error response, if available
+     *
+     * @return the http status code, or -1
+     */
+    public int getStatusCode() {
+        return statusCode;
     }
 
     /**
@@ -90,8 +112,7 @@ public class GuardianException extends RuntimeException {
      * @return true if the error is caused by the enrollment being invalid or not found
      */
     public boolean isEnrollmentNotFound() {
-        return ERROR_DEVICE_ACCOUNT_NOT_FOUND.equals(errorCode)
-                || ERROR_ENROLLMENT_NOT_FOUND.equals(errorCode);
+        return ERROR_DEVICE_ACCOUNT_NOT_FOUND.equals(errorCode) || ERROR_ENROLLMENT_NOT_FOUND.equals(errorCode);
     }
 
     /**
@@ -110,6 +131,15 @@ public class GuardianException extends RuntimeException {
      */
     public boolean isLoginTransactionNotFound() {
         return ERROR_LOGIN_TRANSACTION_NOT_FOUND.equals(errorCode);
+    }
+
+    /**
+     * Whether the error is caused by the requested resource being not found.
+     *
+     * @return true if error is caused by the requested resource being not found.
+     */
+    public boolean isResourceNotFound() {
+        return statusCode == 404 || (errorCode != null && errorCode.matches("(?i).*not_found.*"));
     }
 
     @Override

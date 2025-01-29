@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 
 /**
  * The representation of a Guardian Enrollment
@@ -128,4 +129,14 @@ public interface Enrollment {
      */
     @NonNull
     PrivateKey getSigningKey();
+
+    /**
+     * The public key used for enrollment.
+     * @since Guardian SDK Version 0.9.0
+     * @see <a href="https://github.com/auth0/Guardian.Android#a-note-about-key-generation">A note about key generation</a>
+     *
+     * @return the RSA public key
+     */
+    @NonNull
+    PublicKey getPublicKey();
 }

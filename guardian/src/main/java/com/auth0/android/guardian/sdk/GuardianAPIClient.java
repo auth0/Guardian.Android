@@ -24,9 +24,10 @@ package com.auth0.android.guardian.sdk;
 
 import android.net.Uri;
 import android.os.Build;
+import android.util.Base64;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.google.gson.Gson;
@@ -63,23 +64,45 @@ public class GuardianAPIClient {
 
     private static final int ACCESS_APPROVAL_JWT_EXP_SECS = 30;
     private static final int BASIC_JWT_EXP_SECS = 60 * 60 * 2; // 2 hours
+    private static final String PATH = "appliance-mfa";
 
     private final RequestFactory requestFactory;
     private final HttpUrl baseUrl;
-
     private final ClientInfo clientInfo;
 
-
-    GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl) {
+    GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, ClientInfo clientInfo) {
         this.requestFactory = requestFactory;
-        this.baseUrl = baseUrl;
-        this.clientInfo = new ClientInfo(null);
+        this.baseUrl = appendingPathComponentIfNeeded(baseUrl, PATH);
+        this.clientInfo = clientInfo;
     }
 
-    GuardianAPIClient(RequestFactory requestFactory, HttpUrl baseUrl, ClientInfo.TelemetryInfo telemetryInfo) {
-        this.requestFactory = requestFactory;
-        this.baseUrl = baseUrl;
-        this.clientInfo = new ClientInfo(telemetryInfo);
+    private static Map<String, String> createJWK(@NonNull PublicKey publicKey) {
+        if (!(publicKey instanceof RSAPublicKey)) {
+            throw new IllegalArgumentException("Only RSA keys are supported");
+        }
+        RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
+        Map<String, String> jwk = new HashMap<>(5);
+        jwk.put("kty", "RSA");
+        jwk.put("alg", "RS256");
+        jwk.put("use", "sig");
+        jwk.put("e", base64UrlSafeEncode(rsaPublicKey.getPublicExponent().toByteArray()));
+        jwk.put("n", base64UrlSafeEncode(rsaPublicKey.getModulus().toByteArray()));
+        return jwk;
+    }
+
+    private static String base64UrlSafeEncode(byte[] bytes) {
+        return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+    }
+
+    static Map<String, String> createPushCredentials(@Nullable String gcmToken) {
+        if (gcmToken == null) {
+            return null;
+        }
+
+        Map<String, String> pushCredentials = new HashMap<>(2);
+        pushCredentials.put("service", "GCM");
+        pushCredentials.put("token", gcmToken);
+        return pushCredentials;
     }
 
     String getUrl() {
@@ -121,35 +144,6 @@ public class GuardianAPIClient {
                 .setParameter("name", deviceName)
                 .setParameter("push_credentials", createPushCredentials(gcmToken))
                 .setParameter("public_key", createJWK(publicKey));
-    }
-
-    private static Map<String, String> createJWK(@NonNull PublicKey publicKey) {
-        if (!(publicKey instanceof RSAPublicKey)) {
-            throw new IllegalArgumentException("Only RSA keys are supported");
-        }
-        RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
-        Map<String, String> jwk = new HashMap<>(5);
-        jwk.put("kty", "RSA");
-        jwk.put("alg", "RS256");
-        jwk.put("use", "sig");
-        jwk.put("e", base64UrlSafeEncode(rsaPublicKey.getPublicExponent().toByteArray()));
-        jwk.put("n", base64UrlSafeEncode(rsaPublicKey.getModulus().toByteArray()));
-        return jwk;
-    }
-
-    private static String base64UrlSafeEncode(byte[] bytes) {
-        return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
-    }
-
-    static Map<String, String> createPushCredentials(@Nullable String gcmToken) {
-        if (gcmToken == null) {
-            return null;
-        }
-
-        Map<String, String> pushCredentials = new HashMap<>(2);
-        pushCredentials.put("service", "GCM");
-        pushCredentials.put("token", gcmToken);
-        return pushCredentials;
     }
 
     /**
@@ -296,6 +290,29 @@ public class GuardianAPIClient {
         }
     }
 
+    private HttpUrl appendingPathComponentIfNeeded(HttpUrl url, String pathComponent){
+        String lastPathSegment = url.pathSegments().get(url.pathSize() -1);
+        if(lastPathSegment.equals(pathComponent)){
+            return url;
+        }
+
+        if(url.encodedPath().contains("/" + pathComponent)){
+            return url;
+        }
+
+        if(url.host().endsWith("guardian.auth0.com")){
+            return url;
+        }
+
+        if(url.host().matches(".*guardian\\.[^.]*\\.auth0\\.com.*")){
+            return url;
+        }
+
+        return url.newBuilder()
+                .addPathSegment(pathComponent)
+                .build();
+    }
+
     /**
      * Returns an API client to create, update or delete an enrollment's device data
      *
@@ -315,11 +332,12 @@ public class GuardianAPIClient {
     public static class Builder {
 
         private HttpUrl url;
-        private boolean loggingEnabled = false;
+        private ClientInfo clientInfo;
+        private RequestFactory requestFactory;
 
         /**
          * Set the URL of the Guardian server.
-         * For example {@code https://tenant.guardian.auth0.com/}
+         * For example {@code https://tenant.region.auth0.com/}
          *
          * @param url the url
          * @return itself
@@ -335,7 +353,7 @@ public class GuardianAPIClient {
 
         /**
          * Set the domain of the Guardian server.
-         * For example {@code tenant.guardian.auth0.com}
+         * For example {@code tenant.region.auth0.com}
          *
          * @param domain the domain name
          * @return itself
@@ -352,22 +370,13 @@ public class GuardianAPIClient {
             return this;
         }
 
-        /**
-         * Enables the logging of all HTTP requests to the console.
-         * <p>
-         * Should only be used during development, on debug builds
-         *
-         * @return itself
-         */
-        public Builder enableLogging() {
-            this.loggingEnabled = true;
+        public Builder setClientInfo(ClientInfo clientInfo) {
+            this.clientInfo = clientInfo;
             return this;
         }
 
-        ClientInfo clientInfo = new ClientInfo();
-
-        public Builder setTelemetryInfo(String appName, String appVersion) {
-            this.clientInfo.telemetryInfo = new ClientInfo.TelemetryInfo(appName, appVersion);
+        public Builder setRequestFactory(RequestFactory requestFactory) {
+            this.requestFactory = requestFactory;
             return this;
         }
 
@@ -382,44 +391,11 @@ public class GuardianAPIClient {
                 throw new IllegalStateException("You must set either a domain or an url");
             }
 
-            final OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
-            final String encodedClientInfo = this.clientInfo.toBase64();
-
-            builder.addInterceptor(new Interceptor() {
-                @Override
-                public Response intercept(Chain chain) throws IOException {
-                    okhttp3.Request originalRequest = chain.request();
-                    okhttp3.Request requestWithUserAgent = originalRequest.newBuilder()
-                            .header("Accept-Language",
-                                    Locale.getDefault().toString())
-                            .header("User-Agent",
-                                    String.format("GuardianSDK/%s Android %s",
-                                            BuildConfig.VERSION_NAME,
-                                            Build.VERSION.RELEASE))
-                            .header("Auth0-Client", encodedClientInfo)
-                            .build();
-                    return chain.proceed(requestWithUserAgent);
-                }
-            });
-
-            if (loggingEnabled) {
-                final HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor()
-                        .setLevel(HttpLoggingInterceptor.Level.BODY);
-                builder.addInterceptor(loggingInterceptor);
+            if (requestFactory == null) {
+                throw new IllegalStateException("RequestFactory cannot be null");
             }
 
-            OkHttpClient client = builder.build();
-
-            Gson gson = new GsonBuilder().create();
-
-            RequestFactory requestFactory = new RequestFactory(gson, client);
-
-            if(clientInfo.telemetryInfo != null) {
-                return new GuardianAPIClient(requestFactory, url, clientInfo.telemetryInfo);
-            }
-
-            return new GuardianAPIClient(requestFactory, url);
+            return new GuardianAPIClient(requestFactory, url, clientInfo);
         }
     }
 }

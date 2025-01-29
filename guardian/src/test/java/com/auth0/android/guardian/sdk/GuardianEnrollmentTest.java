@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -50,6 +51,9 @@ public class GuardianEnrollmentTest {
     @Mock
     PrivateKey privateKey;
 
+    @Mock
+    PublicKey publicKey;
+
     @Before
     public void setUp() throws Exception {
         initMocks(this);
@@ -60,7 +64,7 @@ public class GuardianEnrollmentTest {
         CurrentDevice device = new CurrentDevice(DEVICE_GCM_TOKEN, DEVICE_NAME, DEVICE_LOCAL_IDENTIFIER);
 
         Enrollment enrollment = new GuardianEnrollment(USER, PERIOD, DIGITS, ALGORITHM,
-                SECRET_BASE32, DEVICE_ID, device, DEVICE_TOKEN, privateKey);
+                SECRET_BASE32, DEVICE_ID, device, DEVICE_TOKEN, privateKey, publicKey);
 
         assertThat(enrollment.getUserId(), is(equalTo(USER)));
         assertThat(enrollment.getPeriod(), is(equalTo(PERIOD)));
@@ -73,5 +77,6 @@ public class GuardianEnrollmentTest {
         assertThat(enrollment.getNotificationToken(), is(equalTo(DEVICE_GCM_TOKEN)));
         assertThat(enrollment.getDeviceToken(), is(equalTo(DEVICE_TOKEN)));
         assertThat(enrollment.getSigningKey(), is(sameInstance(privateKey)));
+        assertThat(enrollment.getPublicKey(), is(sameInstance(publicKey)));
     }
 }
