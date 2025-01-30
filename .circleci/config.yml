@@ -5,7 +5,7 @@ orbs:
 parameters:
   docker_image:
     type: string
-    default: circleci/android:api-30
+    default: cimg/android:2025.01.1
 
 jobs:
   build:
