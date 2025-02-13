@@ -10,6 +10,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 public class ParcelableRichConsentRequestedDetails implements RichConsentRequestedDetails, Parcelable {
     public static final Creator<ParcelableRichConsentRequestedDetails> CREATOR = new Creator<ParcelableRichConsentRequestedDetails>() {
         @Override
@@ -30,11 +34,14 @@ public class ParcelableRichConsentRequestedDetails implements RichConsentRequest
     private final String[] scope;
     @SerializedName("bindingMessage")
     private final String bindingMessage;
+    @SerializedName("authorizationDetails")
+    private List<Map<String, Object>> authorizationDetails;
 
     public ParcelableRichConsentRequestedDetails(RichConsentRequestedDetails requestedDetails) {
         audience = requestedDetails.getAudience();
         scope = requestedDetails.getScope();
         bindingMessage = requestedDetails.getBindingMessage();
+        authorizationDetails = requestedDetails.getAuthorizationDetails();
     }
 
     protected ParcelableRichConsentRequestedDetails(Parcel in) {
@@ -69,6 +76,11 @@ public class ParcelableRichConsentRequestedDetails implements RichConsentRequest
     }
 
     @Override
+    public List<Map<String, Object>> getAuthorizationDetails() {
+        return authorizationDetails;
+    }
+
+    @Override
     public int describeContents() {
         return 0;
     }
@@ -78,5 +90,6 @@ public class ParcelableRichConsentRequestedDetails implements RichConsentRequest
         dest.writeString(audience);
         dest.writeStringArray(scope);
         dest.writeString(bindingMessage);
+        dest.writeList(authorizationDetails);
     }
 }

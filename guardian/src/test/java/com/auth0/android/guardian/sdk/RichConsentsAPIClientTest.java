@@ -31,6 +31,9 @@ import org.robolectric.annotation.Config;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAKey;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -100,7 +103,32 @@ public class RichConsentsAPIClientTest {
         assertThat(capturedRichConsent.getRequestedDetails().getBindingMessage(), is(equalTo(BINDING_MESSAGE)));
 
         verifyNoMoreInteractions(fetchCallback);
-        assertThat(true, is(equalTo(true)));
+    }
+
+    @Test
+    public void shouldFetchRichConsentWithRichAuthorizationDetails() throws Exception {
+        Map<String, Object> testDetails = new HashMap<>();
+        testDetails.put("type", "test-type");
+        List<Map<String, Object>> expectedAuthorizationDetails = List.of(testDetails);
+
+        mockAPI.willReturnRichConsent(CONSENT_ID, AUDIENCE, SCOPE, BINDING_MESSAGE, expectedAuthorizationDetails);
+
+        richConsentsAPIClient
+                .fetch(CONSENT_ID, TRANSACTION_TOKEN, keyPair.getPrivate(), keyPair.getPublic())
+                .start(fetchCallback);
+
+        // RecordedRequest request = mockAPI.takeRequest();
+
+        ArgumentCaptor<RichConsent> onSuccessCaptor = ArgumentCaptor.forClass(GuardianRichConsent.class);
+        verify(fetchCallback, timeout(100)).onSuccess(onSuccessCaptor.capture());
+
+        RichConsent capturedRichConsent = onSuccessCaptor.getValue();
+        List<Map<String, Object>> authorizationDetails = capturedRichConsent.getRequestedDetails().getAuthorizationDetails();
+        assertThat(authorizationDetails, is(notNullValue()));
+        assertThat(authorizationDetails.isEmpty(), is(equalTo(false)));
+        assertThat(authorizationDetails.get(0).get("type"), is(equalTo(expectedAuthorizationDetails.get(0).get("type"))));
+
+        verifyNoMoreInteractions(fetchCallback);
     }
 
     private void verifyDPoPAssertion(String assertion) {

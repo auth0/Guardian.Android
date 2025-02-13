@@ -22,8 +22,13 @@
 
 package com.auth0.android.guardian.sdk.utils;
 
+import com.google.gson.Gson;
+
 import java.io.IOException;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -125,20 +130,27 @@ public class MockWebService {
         return this;
     }
 
-    public MockWebService willReturnRichConsent(String id, String audience, String scope, String binding_message) {
-        String json = "" +
-                "{" +
-                "   \"id\": \"" + id + "\"" +
-                "  ,\"created_at\": " + Instant.now().minusSeconds(10).getEpochSecond() +
-                "  ,\"expires_at\": " + Instant.now().plusSeconds(290).getEpochSecond() +
-                "  ,\"requested_details\": {" +
-                "       \"audience\": \"" + audience + "\"" +
-                "      ,\"scope\": [\"" + scope + "\"]" +
-                "      ,\"binding_message\": \"" + binding_message + "\"" +
-                "   }" +
-                "}";
-        server.enqueue(responseWithJSON(json, 200));
+    public MockWebService willReturnRichConsent(String id, String audience, String scope, String binding_message, List<Map<String, Object>> authorizationDetails) {
+        Gson gson = new Gson();
+        Map<String, Object> consentObject = new HashMap<>();
+        Map<String, Object> requestedDetailsObject = new HashMap<>();
+        consentObject.put("id", id);
+        consentObject.put("created_at",Instant.now().minusSeconds(10).getEpochSecond() );
+        consentObject.put("expires_at",Instant.now().plusSeconds(290).getEpochSecond() );
+        requestedDetailsObject.put("audience", audience);
+        requestedDetailsObject.put("scope", List.of(scope));
+        requestedDetailsObject.put("binding_message", binding_message);
+        if (authorizationDetails != null && !authorizationDetails.isEmpty()) {
+            requestedDetailsObject.put("authorization_details", authorizationDetails);
+        }
+        consentObject.put("requested_details", requestedDetailsObject);
+
+        server.enqueue(responseWithJSON(gson.toJson(consentObject), 200));
         return this;
+    }
+
+    public MockWebService willReturnRichConsent(String id, String audience, String scope, String binding_message) {
+        return willReturnRichConsent(id, audience, scope, binding_message, null);
     }
 
     public MockWebService willReturnServerError(int statusCode, String errorCode, String error, String message) {
