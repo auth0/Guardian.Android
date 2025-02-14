@@ -27,4 +27,12 @@ public interface RichConsentRequestedDetails {
      * Rich Authorization Details
      */
     List<Map<String, Object>> getAuthorizationDetails();
+
+    /**
+     * Authorization Details Type
+     * @param type
+     * @param clazz
+     * @return
+     */
+    <T> List<T> getAuthorizationDetails(String type, Class<T> clazz);
 }

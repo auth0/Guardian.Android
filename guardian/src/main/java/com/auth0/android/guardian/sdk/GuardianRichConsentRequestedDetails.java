@@ -2,10 +2,16 @@ package com.auth0.android.guardian.sdk;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
+import java.sql.Array;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class GuardianRichConsentRequestedDetails implements RichConsentRequestedDetails {
     private final String audience;
@@ -48,5 +54,18 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
     @Override
     public List<Map<String, Object>> getAuthorizationDetails() {
         return authorizationDetails;
+    }
+
+    @Override
+    public <T> List<T> getAuthorizationDetails(String type, Class<T> clazz) {
+        final Gson gson = new Gson();
+        List<T> types = new ArrayList<>();
+
+        for (Map<String, Object> item : authorizationDetails) {
+           if (Objects.equals(item.get("type"), type)) {
+               types.add(gson.fromJson(gson.toJson(gson.toJsonTree(item)), clazz));
+           }
+        }
+        return types;
     }
 }
