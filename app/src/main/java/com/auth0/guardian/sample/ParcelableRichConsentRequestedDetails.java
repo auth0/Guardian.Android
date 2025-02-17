@@ -6,13 +6,16 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 
 import com.auth0.android.guardian.sdk.RichConsentRequestedDetails;
+import com.auth0.guardian.sample.parcel.utils.ParcelableEntry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class ParcelableRichConsentRequestedDetails implements RichConsentRequestedDetails, Parcelable {
     public static final Creator<ParcelableRichConsentRequestedDetails> CREATOR = new Creator<ParcelableRichConsentRequestedDetails>() {
@@ -48,6 +51,17 @@ public class ParcelableRichConsentRequestedDetails implements RichConsentRequest
         audience = in.readString();
         scope = in.createStringArray();
         bindingMessage = in.readString();
+
+        List<ParcelableEntry> authorizationDetailsEntries = new ArrayList<>();
+        in.readList(authorizationDetailsEntries, ParcelableEntry.class.getClassLoader());
+        if (!authorizationDetailsEntries.isEmpty()) {
+            authorizationDetails = new ArrayList<>();
+            for (ParcelableEntry entry : authorizationDetailsEntries) {
+                Map<String, Object> detail = new HashMap<>();
+                detail.put(entry.getKey(), entry.getValue());
+                authorizationDetails.add(detail);
+            }
+        }
     }
 
     public static ParcelableEnrollment fromJSON(String json) {
@@ -78,6 +92,17 @@ public class ParcelableRichConsentRequestedDetails implements RichConsentRequest
     @Override
     public List<Map<String, Object>> getAuthorizationDetails() {
         return authorizationDetails;
+    }
+
+    @Override
+    public <T> List<T> getAuthorizationDetails(String type, Class<T> clazz) {
+        List<T> types = new ArrayList<>();
+        for (Map<String, Object> item : authorizationDetails) {
+            if (Objects.equals(item.get("type"), type)) {
+                types.add(JSON.fromJson(JSON.toJsonTree(item), clazz));
+            }
+        }
+        return types;
     }
 
     @Override

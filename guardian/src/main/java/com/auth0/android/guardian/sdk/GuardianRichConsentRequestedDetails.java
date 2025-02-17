@@ -4,10 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +60,7 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
 
         for (Map<String, Object> item : authorizationDetails) {
            if (Objects.equals(item.get("type"), type)) {
-               types.add(gson.fromJson(gson.toJson(gson.toJsonTree(item)), clazz));
+               types.add(gson.fromJson(gson.toJsonTree(item), clazz));
            }
         }
         return types;

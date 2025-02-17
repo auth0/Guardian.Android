@@ -29,10 +29,11 @@ public interface RichConsentRequestedDetails {
     List<Map<String, Object>> getAuthorizationDetails();
 
     /**
-     * Authorization Details Type
-     * @param type
-     * @param clazz
-     * @return
+     * Rich Authorization Details Type
+     *
+     * @param type  Type key
+     * @param clazz Class to cast the item
+     * @return The list of types found by the provided key. If none found, returns an empty list.
      */
     <T> List<T> getAuthorizationDetails(String type, Class<T> clazz);
 }
