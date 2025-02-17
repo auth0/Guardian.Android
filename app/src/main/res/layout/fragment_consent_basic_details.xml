@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/richConsentBasicDetails"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    tools:context=".NotificationWithConsentDetailsActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Binding Message"
+        android:textSize="12sp"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/bindingMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:textSize="12sp"
+        android:theme="@style/Label"
+        tools:text="ABC-123-DEF" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Requested scope"
+        android:textSize="12sp"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/scope"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:textSize="12sp"
+        android:theme="@style/Label"
+        tools:text="read:foo" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Date"
+        android:textSize="12sp"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/dateText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="36dp"
+        android:textSize="12sp"
+        android:theme="@style/Label"
+        tools:text="Today at 18:56:21" />
+</LinearLayout>

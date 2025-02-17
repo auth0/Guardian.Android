@@ -1,11 +1,14 @@
 package com.auth0.guardian.sample;
 
+import static android.view.View.VISIBLE;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -15,13 +18,10 @@ import com.auth0.android.guardian.sdk.Guardian;
 import com.auth0.android.guardian.sdk.ParcelableNotification;
 import com.auth0.android.guardian.sdk.RichConsent;
 import com.auth0.android.guardian.sdk.networking.Callback;
+import com.auth0.guardian.sample.fragments.consent.ConsentBasicDetailsFragment;
+import com.auth0.guardian.sample.payments.PaymentInitiationDetails;
 
 public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
-
-    private TextView bindingMessageText;
-    private TextView scopeText;
-    private TextView dateText;
-
     private Guardian guardian;
     private ParcelableEnrollment enrollment;
     private ParcelableNotification notification;
@@ -30,7 +30,7 @@ public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
     static Intent getStartIntent(@NonNull Context context,
                                  @NonNull ParcelableNotification notification,
                                  @NonNull ParcelableEnrollment enrollment,
-                                 @NonNull  ParcelableRichConsent consent) {
+                                 @NonNull ParcelableRichConsent consent) {
         if (!enrollment.getId().equals(notification.getEnrollmentId())) {
             final String message = String.format("Notification doesn't match enrollment (%s != %s)",
                     notification.getEnrollmentId(), enrollment.getId());
@@ -58,15 +58,24 @@ public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
         enrollment = intent.getParcelableExtra(Constants.ENROLLMENT);
         notification = intent.getParcelableExtra(Constants.NOTIFICATION);
         consentDetails = intent.getParcelableExtra(Constants.CONSENT);
-
+//        paymentInitiationDetails = consentDetails
+//                .getRequestedDetails()
+//                .getAuthorizationDetails("payment_initiation", PaymentInitiationDetails.class).get(0);
+//
         setupUI();
         updateUI();
     }
 
     private void setupUI() {
-        bindingMessageText = (TextView) findViewById(R.id.bindingMessage);
-        scopeText = (TextView) findViewById(R.id.scope);
-        dateText = (TextView) findViewById(R.id.dateText);
+//        bindingMessageText = (TextView) findViewById(R.id.bindingMessage);
+//        scopeText = (TextView) findViewById(R.id.scope);
+//        dateText = (TextView) findViewById(R.id.dateText);
+//        authorizationDetailsBlock = (LinearLayout) findViewById(R.id.richConsentPaymentInitiationDetails);
+//
+//        if (paymentInitiationDetails != null) {
+//            authorizationDetailsBlock.setVisibility(VISIBLE);
+//
+//        }
 
         Button rejectButton = (Button) findViewById(R.id.rejectButton);
         assert rejectButton != null;
@@ -88,14 +97,15 @@ public class NotificationWithConsentDetailsActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        if (consentDetails != null) {
-            bindingMessageText.setText(consentDetails.getRequestedDetails().getBindingMessage());
-            scopeText.setText(String.join(", ", consentDetails.getRequestedDetails().getScope()));
-        } else {
-            bindingMessageText.setText("N/A");
-            scopeText.setText("N/A");
-        }
-        dateText.setText(notification.getDate().toString());
+        ConsentBasicDetailsFragment fragment = ConsentBasicDetailsFragment.newInstance(
+                consentDetails.getRequestedDetails().getBindingMessage(),
+                consentDetails.getRequestedDetails().getScope(),
+                notification.getDate().toString()
+        );
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.consentDetailsFragmentContainer, fragment)
+                .commit();
     }
 
     private void rejectRequested() {
