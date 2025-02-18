@@ -1,27 +1,32 @@
 version: 2.1
+
 orbs:
-  ship: auth0/ship@0.1.0
   codecov: codecov/codecov@3
-parameters:
-  docker_image:
-    type: string
-    default: circleci/android:api-30
 
 jobs:
   build:
+    environment:
+      GRADLE_OPTS: -Dkotlin.compiler.execution.strategy=in-process
     docker:
-      - image: << pipeline.parameters.docker_image >>
+      - image: cimg/android:2022.03.1
+
     steps:
-    - checkout
-    - restore_cache:
-        keys:
-        - dep-{{ checksum "./guardian/build.gradle" }}-{{ checksum "./app/build.gradle" }}
-        - dep-
-    - run: ./gradlew clean test jacocoTestReport --continue --console=plain --max-workers 4
-    - save_cache:
-        key: dep-{{ checksum "./guardian/build.gradle" }}-{{ checksum "./app/build.gradle" }}
-        paths:
-        - ~/.gradle
-        - ~/.android
-        - /usr/local/android-sdk-linux/extras
-    - codecov/upload
+      - checkout
+
+      - run:
+          name: Run checks
+          command: ./gradlew clean test jacocoTestReport lint --continue --console=plain --max-workers=1 --no-daemon
+
+      - store_artifacts:
+          path: auth0/build/reports
+          destination: reports
+
+      - store_test_results:
+          path: auth0/build/test-results
+
+      - codecov/upload
+
+workflows:
+  build-and-test:
+    jobs:
+      - build

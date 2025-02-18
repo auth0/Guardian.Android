@@ -2,6 +2,12 @@ plugins {
     id 'com.android.library'
 }
 
+apply from: rootProject.file('gradle/versioning.gradle')
+
+version = getVersionFromFile()
+
+logger.lifecycle("Using version ${version} for ${name}")
+
 android {
     defaultConfig {
         compileSdk 33
@@ -53,3 +59,6 @@ dependencies {
     testImplementation 'org.robolectric:robolectric:4.14'
     testImplementation 'junit:junit:4.13.2'
 }
+
+apply from: rootProject.file('gradle/jacoco.gradle')
+apply from: rootProject.file('gradle/maven-publish.gradle')
