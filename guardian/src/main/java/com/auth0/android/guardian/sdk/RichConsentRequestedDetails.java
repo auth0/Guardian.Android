@@ -24,15 +24,17 @@ public interface RichConsentRequestedDetails {
     String getBindingMessage();
 
     /**
-     * Rich Authorization Details
+     * Rich Authorization Details ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)).
+     * If the consent record did not include authorization details, it returns `null`.
      */
     List<Map<String, Object>> getAuthorizationDetails();
 
     /**
-     * Rich Authorization Details Type
+     * Rich Authorization Details ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) filtered
+     * by the provided type key and converted to the provided class.
      *
-     * @param type  Type key
-     * @param clazz Class to cast the item
+     * @param type  Type key.
+     * @param clazz Class to convert the item into.
      * @return The list of types found by the provided key. If none found, returns an empty list.
      */
     <T> List<T> getAuthorizationDetails(String type, Class<T> clazz);
