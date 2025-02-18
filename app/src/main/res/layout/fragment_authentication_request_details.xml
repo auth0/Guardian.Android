@@ -4,61 +4,75 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    tools:context=".fragments.consent.ConsentBasicDetailsFragment">
-
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="30sp"
-        android:text="Do you approve this transaction?"
-        android:textSize="34sp" />
+    tools:context=".fragments.AuthenticationRequestDetailsFragment">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Binding Message"
-        android:textSize="12sp"
+        android:text="User"
         android:theme="@style/Label.Header" />
 
     <TextView
-        android:id="@+id/bindingMessage"
+        android:id="@+id/userText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:textSize="12sp"
         android:theme="@style/Label"
-        tools:text="ABC-123-DEF" />
+        tools:text="nicolas.ulrich@auth0.com" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Requested scope"
-        android:textSize="12sp"
+        android:text="Browser"
         android:theme="@style/Label.Header" />
 
     <TextView
-        android:id="@+id/scope"
+        android:id="@+id/browserText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:textSize="12sp"
         android:theme="@style/Label"
-        tools:text="read:foo" />
+        tools:text="Safari 10.45" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="OS"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/osText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:theme="@style/Label"
+        tools:text="Windows 98" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Location"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/locationText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:theme="@style/Label"
+        tools:text="Buenos Aires, Argentina" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Date"
-        android:textSize="12sp"
         android:theme="@style/Label.Header" />
 
     <TextView
         android:id="@+id/dateText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="36dp"
-        android:textSize="12sp"
+        android:layout_marginBottom="12dp"
         android:theme="@style/Label"
         tools:text="Today at 18:56:21" />
 </LinearLayout>

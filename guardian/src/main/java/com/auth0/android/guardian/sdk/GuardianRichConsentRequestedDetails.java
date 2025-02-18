@@ -58,9 +58,13 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
         final Gson gson = new Gson();
         List<T> types = new ArrayList<>();
 
+        if (authorizationDetails == null) {
+            return types;
+        }
+
         for (Map<String, Object> item : authorizationDetails) {
            if (Objects.equals(item.get("type"), type)) {
-               types.add(gson.fromJson(gson.toJsonTree(item), clazz));
+               types.add(gson.fromJson(gson.toJson(item), clazz));
            }
         }
         return types;
