@@ -3,6 +3,7 @@ package com.auth0.android.guardian.sdk;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
@@ -11,6 +12,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class GuardianRichConsentRequestedDetails implements RichConsentRequestedDetails {
+    private static final Gson JSON = new GsonBuilder().create();
+
     private final String audience;
     private final String[] scope;
     @SerializedName("binding_message")
@@ -23,7 +26,7 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
             String[] scope,
             String bindingMessage,
             List<Map<String, Object>> authorizationDetails
-            ) {
+    ) {
         this.bindingMessage = bindingMessage;
         this.audience = audience;
         this.scope = scope;
@@ -55,7 +58,6 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
 
     @Override
     public <T> List<T> getAuthorizationDetails(String type, Class<T> clazz) {
-        final Gson gson = new Gson();
         List<T> types = new ArrayList<>();
 
         if (authorizationDetails == null) {
@@ -63,9 +65,9 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
         }
 
         for (Map<String, Object> item : authorizationDetails) {
-           if (Objects.equals(item.get("type"), type)) {
-               types.add(gson.fromJson(gson.toJson(item), clazz));
-           }
+            if (Objects.equals(item.get("type"), type)) {
+                types.add(JSON.fromJson(JSON.toJson(item), clazz));
+            }
         }
         return types;
     }
