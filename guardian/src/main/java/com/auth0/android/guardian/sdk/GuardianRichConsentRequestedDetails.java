@@ -53,6 +53,9 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
 
     @Override
     public List<Map<String, Object>> getAuthorizationDetails() {
+        if(authorizationDetails == null){
+            return List.of();
+        }
         return authorizationDetails;
     }
 

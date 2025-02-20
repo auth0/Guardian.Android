@@ -102,6 +102,7 @@ public class RichConsentsAPIClientTest {
         assertThat(capturedRichConsent.getRequestedDetails().getAudience(), is(equalTo(AUDIENCE)));
         assertThat(capturedRichConsent.getRequestedDetails().getScope()[0], is(equalTo(SCOPE)));
         assertThat(capturedRichConsent.getRequestedDetails().getBindingMessage(), is(equalTo(BINDING_MESSAGE)));
+        assertThat(capturedRichConsent.getRequestedDetails().getAuthorizationDetails().isEmpty(), is(equalTo(true)));
 
         verifyNoMoreInteractions(fetchCallback);
     }
