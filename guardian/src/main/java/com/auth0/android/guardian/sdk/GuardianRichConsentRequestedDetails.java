@@ -4,8 +4,11 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,20 +22,20 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
     @SerializedName("binding_message")
     private final String bindingMessage;
     @SerializedName("authorization_details")
-    private final List<Map<String, Object>> authorizationDetails;
+    private final List<JsonObject> rawAuthorizationDetails;
+    private transient List<Map<String, Object>> authorizationDetails;
 
     public GuardianRichConsentRequestedDetails(
             String audience,
             String[] scope,
             String bindingMessage,
-            List<Map<String, Object>> authorizationDetails
+            List<JsonObject> rawAuthorizationDetails
     ) {
         this.bindingMessage = bindingMessage;
         this.audience = audience;
         this.scope = scope;
-        this.authorizationDetails = authorizationDetails;
+        this.rawAuthorizationDetails = rawAuthorizationDetails;
     }
-
 
     @NonNull
     @Override
@@ -53,8 +56,19 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
 
     @Override
     public List<Map<String, Object>> getAuthorizationDetails() {
-        if(authorizationDetails == null){
+        if(rawAuthorizationDetails == null){
             return List.of();
+        }
+
+        if (authorizationDetails != null) {
+            return authorizationDetails;
+        }
+
+        authorizationDetails = new ArrayList<>();
+        final Type type = new TypeToken<Map<String, Object>>(){}.getType();
+
+        for (JsonObject item : rawAuthorizationDetails) {
+            authorizationDetails.add(JSON.fromJson(item, type));
         }
         return authorizationDetails;
     }
@@ -63,13 +77,13 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
     public <T> List<T> getAuthorizationDetails(String type, Class<T> clazz) {
         List<T> types = new ArrayList<>();
 
-        if (authorizationDetails == null) {
+        if (rawAuthorizationDetails == null) {
             return types;
         }
 
-        for (Map<String, Object> item : authorizationDetails) {
-            if (Objects.equals(item.get("type"), type)) {
-                types.add(JSON.fromJson(JSON.toJson(item), clazz));
+        for (JsonObject item : rawAuthorizationDetails) {
+            if (Objects.equals(item.get("type").getAsString(), type)) {
+                types.add(JSON.fromJson(item, clazz));
             }
         }
         return types;
