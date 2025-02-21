@@ -242,9 +242,10 @@ void onSuccess(Rich consentDetails) {
 }
 ```
 
-Or, if you prefer to work with typed objects, you can pass a type key and a class.
+Or, if you prefer to work with typed objects, you can pass a Class that has been annotated with `@AuthorizationDetailsType("[type]")`.
 
 ```java
+@AuthorizationDetailsType("payment")
 class PaymentDetails {
     private String type;
     private int amount;
@@ -268,7 +269,7 @@ class PaymentDetails {
 void onSuccess(Rich consentDetails) {
     List<PaymentDetails> authorizationDetails = consentDetails
         .getRequestedDetails()
-        .getAuthorizationDetails("payment", PaymentDetails.class);
+        .getAuthorizationDetails(PaymentDetails.class);
 
     int amount = authorizationDetails.get(0).getAmount();
     ...

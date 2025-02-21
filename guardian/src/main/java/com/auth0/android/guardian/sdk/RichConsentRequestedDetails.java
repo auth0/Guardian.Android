@@ -33,9 +33,8 @@ public interface RichConsentRequestedDetails {
      * Rich Authorization Details ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) filtered
      * by the provided type key and converted to the provided class.
      *
-     * @param type  Type key.
-     * @param clazz Class to convert the item into.
-     * @return The list of types found by the provided key. If none found, returns an empty list.
+     * @param clazz Class annotated with @AuthorizationDetailsType to convert the item into.
+     * @return The list of types found by the provided type. If none found, returns an empty list.
      */
-    <T> List<T> getAuthorizationDetails(String type, Class<T> clazz);
+    <T> List<T> getAuthorizationDetails(@NonNull Class<T> clazz);
 }

@@ -131,7 +131,7 @@ public class RichConsentsAPIClientTest {
 
         PaymentIntentTestingAuthorizationDetailsType paymentIntent = capturedRichConsent
                 .getRequestedDetails()
-                .getAuthorizationDetails("payment-intent", PaymentIntentTestingAuthorizationDetailsType.class)
+                .getAuthorizationDetails(PaymentIntentTestingAuthorizationDetailsType.class)
                 .get(0);
 
         assertThat(paymentIntent, is(notNullValue()));

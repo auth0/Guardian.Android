@@ -1,5 +1,8 @@
 package com.auth0.guardian.sample.payments;
 
+import com.auth0.android.guardian.sdk.annotations.AuthorizationDetailsType;
+
+@AuthorizationDetailsType("payment_initiation")
 public class PaymentInitiationDetails {
     private final InstructedAmount instructedAmount;
     private final String creditorName;

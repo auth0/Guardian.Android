@@ -2,6 +2,7 @@ package com.auth0.android.guardian.sdk;
 
 import androidx.annotation.NonNull;
 
+import com.auth0.android.guardian.sdk.annotations.AuthorizationDetailsType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -56,7 +57,7 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
 
     @Override
     public List<Map<String, Object>> getAuthorizationDetails() {
-        if(rawAuthorizationDetails == null){
+        if (rawAuthorizationDetails == null) {
             return List.of();
         }
 
@@ -65,7 +66,8 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
         }
 
         authorizationDetails = new ArrayList<>();
-        final Type type = new TypeToken<Map<String, Object>>(){}.getType();
+        final Type type = new TypeToken<Map<String, Object>>() {
+        }.getType();
 
         for (JsonObject item : rawAuthorizationDetails) {
             authorizationDetails.add(JSON.fromJson(item, type));
@@ -74,14 +76,20 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
     }
 
     @Override
-    public <T> List<T> getAuthorizationDetails(String type, Class<T> clazz) {
+    public <T> List<T> getAuthorizationDetails(@NonNull Class<T> clazz) {
         List<T> types = new ArrayList<>();
+
+        if (!clazz.isAnnotationPresent(AuthorizationDetailsType.class)) {
+            throw new GuardianException(clazz.getName() +
+                    " must be annotated with @AuthorizationDetailsType to used as authorization details item type.");
+        }
 
         if (rawAuthorizationDetails == null) {
             return types;
         }
 
         for (JsonObject item : rawAuthorizationDetails) {
+            String type = Objects.requireNonNull(clazz.getAnnotation(AuthorizationDetailsType.class)).value();
             if (Objects.equals(item.get("type").getAsString(), type)) {
                 types.add(JSON.fromJson(item, clazz));
             }
