@@ -40,7 +40,7 @@ public class GuardianRichConsentRequestedDetailsTest {
 
     @Test(expected = GuardianException.class)
     public void getAuthorizationDetailsShouldFailWhenUsedWithANonAnnotatedType() {
-        subject.getAuthorizationDetails(NotAnnotatedPaymentIntentTestingAuthorizationDetailsType.class);
+        subject.filterAuthorizationDetailsByType(NotAnnotatedPaymentIntentTestingAuthorizationDetailsType.class);
     }
 
 }

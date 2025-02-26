@@ -242,7 +242,10 @@ void onSuccess(Rich consentDetails) {
 }
 ```
 
-Or, if you prefer to work with typed objects, you can pass a Class that has been annotated with `@AuthorizationDetailsType("[type]")`.
+Or, if you prefer to work with typed objects, you can use the filter helper passing a Class that has been annotated with `@AuthorizationDetailsType("[type]")`.
+
+> [!WARNING]
+> When using the filter helper, you still need to check if there are other authorization details in the rich consent record to prevent the user giving consent to something they didn't see rendered. 
 
 ```java
 @AuthorizationDetailsType("payment")
@@ -269,7 +272,7 @@ class PaymentDetails {
 void onSuccess(Rich consentDetails) {
     List<PaymentDetails> authorizationDetails = consentDetails
         .getRequestedDetails()
-        .getAuthorizationDetails(PaymentDetails.class);
+        .filterAuthorizationDetailsByType(PaymentDetails.class);
 
     int amount = authorizationDetails.get(0).getAmount();
     ...

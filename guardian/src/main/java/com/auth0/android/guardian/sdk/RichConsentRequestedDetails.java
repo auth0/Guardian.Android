@@ -36,5 +36,5 @@ public interface RichConsentRequestedDetails {
      * @param clazz Class annotated with @AuthorizationDetailsType to convert the item into.
      * @return The list of types found by the provided type. If none found, returns an empty list.
      */
-    <T> List<T> getAuthorizationDetails(@NonNull Class<T> clazz);
+    <T> List<T> filterAuthorizationDetailsByType(@NonNull Class<T> clazz);
 }

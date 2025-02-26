@@ -159,7 +159,7 @@ public class NotificationActivity extends AppCompatActivity {
         } else {
             List<PaymentInitiationDetails> paymentInitiationDetailsList = richConsent
                     .getRequestedDetails()
-                    .getAuthorizationDetails(PaymentInitiationDetails.class);
+                    .filterAuthorizationDetailsByType(PaymentInitiationDetails.class);
 
             if (paymentInitiationDetailsList.isEmpty()) {
                 fragment = ConsentBasicDetailsFragment.newInstance(

@@ -76,7 +76,7 @@ public class GuardianRichConsentRequestedDetails implements RichConsentRequested
     }
 
     @Override
-    public <T> List<T> getAuthorizationDetails(@NonNull Class<T> clazz) {
+    public <T> List<T> filterAuthorizationDetailsByType(@NonNull Class<T> clazz) {
         List<T> types = new ArrayList<>();
 
         if (!clazz.isAnnotationPresent(AuthorizationDetailsType.class)) {
