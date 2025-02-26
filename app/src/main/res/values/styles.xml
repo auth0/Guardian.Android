@@ -31,4 +31,7 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
+    <style name="Label.Small" parent="Label">
+        <item name="android:textSize">12sp</item>
+    </style>
 </resources>

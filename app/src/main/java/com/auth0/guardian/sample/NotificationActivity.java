@@ -42,6 +42,7 @@ import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.guardian.sample.fragments.AuthenticationRequestDetailsFragment;
 import com.auth0.guardian.sample.fragments.consent.ConsentBasicDetailsFragment;
 import com.auth0.guardian.sample.fragments.consent.ConsentPaymentInitiationFragment;
+import com.auth0.guardian.sample.fragments.consent.DynamicAuthorizationDetailsFragment;
 import com.auth0.guardian.sample.payments.PaymentInitiationDetails;
 
 import java.security.NoSuchAlgorithmException;
@@ -157,25 +158,33 @@ public class NotificationActivity extends AppCompatActivity {
                     notification.getDate().toString()
             );
         } else {
-            List<PaymentInitiationDetails> paymentInitiationDetailsList = richConsent
-                    .getRequestedDetails()
-                    .filterAuthorizationDetailsByType(PaymentInitiationDetails.class);
-
-            if (paymentInitiationDetailsList.isEmpty()) {
+            if (richConsent.getRequestedDetails().getAuthorizationDetails().isEmpty()) {
                 fragment = ConsentBasicDetailsFragment.newInstance(
                         richConsent.getRequestedDetails().getBindingMessage(),
                         richConsent.getRequestedDetails().getScope(),
                         notification.getDate().toString()
                 );
             } else {
-                PaymentInitiationDetails paymentDetails = paymentInitiationDetailsList.get(0);
-                fragment = ConsentPaymentInitiationFragment.newInstance(
-                        richConsent.getRequestedDetails().getBindingMessage(),
-                        paymentDetails.getRemittanceInformation(),
-                        paymentDetails.getCreditorAccount().getAccountNumber(),
-                        paymentDetails.getInstructedAmount().getCurrency(),
-                        paymentDetails.getInstructedAmount().getAmount()
-                );
+                List<PaymentInitiationDetails> paymentInitiationDetailsList = richConsent
+                        .getRequestedDetails()
+                        .filterAuthorizationDetailsByType(PaymentInitiationDetails.class);
+                if (!paymentInitiationDetailsList.isEmpty()) {
+                    PaymentInitiationDetails paymentDetails = paymentInitiationDetailsList.get(0);
+                    fragment = ConsentPaymentInitiationFragment.newInstance(
+                            richConsent.getRequestedDetails().getBindingMessage(),
+                            paymentDetails.getRemittanceInformation(),
+                            paymentDetails.getCreditorAccount().getAccountNumber(),
+                            paymentDetails.getInstructedAmount().getCurrency(),
+                            paymentDetails.getInstructedAmount().getAmount()
+                    );
+                } else {
+                    fragment = DynamicAuthorizationDetailsFragment.newInstance(
+                            richConsent.getRequestedDetails().getBindingMessage(),
+                            notification.getDate().toString(),
+                            // For simplicity, in this example we render one single type
+                            richConsent.getRequestedDetails().getAuthorizationDetails().get(0)
+                    );
+                }
             }
         }
 
