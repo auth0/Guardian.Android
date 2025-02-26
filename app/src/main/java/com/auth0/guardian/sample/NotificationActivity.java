@@ -144,54 +144,73 @@ public class NotificationActivity extends AppCompatActivity {
     private void updateUI() {
         Fragment fragment;
         if (richConsent == null) {
-            fragment = AuthenticationRequestDetailsFragment.newInstance(
-                    enrollment.getUserId(),
-
-                    String.format("%s, %s",
-                            notification.getBrowserName(),
-                            notification.getBrowserVersion()),
-                    String.format("%s, %s",
-                            notification.getOsName(),
-                            notification.getOsVersion()),
-
-                    notification.getLocation(),
-                    notification.getDate().toString()
-            );
+            fragment = getStandardAuthenticationFragment();
+        } else if (richConsent.getRequestedDetails().getAuthorizationDetails().isEmpty()) {
+            fragment = getBasicConsentFragment();
         } else {
-            if (richConsent.getRequestedDetails().getAuthorizationDetails().isEmpty()) {
-                fragment = ConsentBasicDetailsFragment.newInstance(
-                        richConsent.getRequestedDetails().getBindingMessage(),
-                        richConsent.getRequestedDetails().getScope(),
-                        notification.getDate().toString()
-                );
+            List<PaymentInitiationDetails> paymentInitiationDetailsList = richConsent
+                    .getRequestedDetails()
+                    .filterAuthorizationDetailsByType(PaymentInitiationDetails.class);
+            if (!paymentInitiationDetailsList.isEmpty()) {
+                // For simplicity, in this example we render one single type
+                fragment = getPaymentInitiationConsentFragment(paymentInitiationDetailsList.get(0));
             } else {
-                List<PaymentInitiationDetails> paymentInitiationDetailsList = richConsent
-                        .getRequestedDetails()
-                        .filterAuthorizationDetailsByType(PaymentInitiationDetails.class);
-                if (!paymentInitiationDetailsList.isEmpty()) {
-                    PaymentInitiationDetails paymentDetails = paymentInitiationDetailsList.get(0);
-                    fragment = ConsentPaymentInitiationFragment.newInstance(
-                            richConsent.getRequestedDetails().getBindingMessage(),
-                            paymentDetails.getRemittanceInformation(),
-                            paymentDetails.getCreditorAccount().getAccountNumber(),
-                            paymentDetails.getInstructedAmount().getCurrency(),
-                            paymentDetails.getInstructedAmount().getAmount()
-                    );
-                } else {
-                    fragment = DynamicAuthorizationDetailsFragment.newInstance(
-                            richConsent.getRequestedDetails().getBindingMessage(),
-                            notification.getDate().toString(),
-                            // For simplicity, in this example we render one single type
-                            richConsent.getRequestedDetails().getAuthorizationDetails().get(0)
-                    );
-                }
+                fragment = getDynamicAuthorizationDetailsConsentFragment();
             }
+
         }
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.authenticationDetailsFragmentContainer, fragment)
                 .commit();
 
+    }
+
+    @NonNull
+    private DynamicAuthorizationDetailsFragment getDynamicAuthorizationDetailsConsentFragment() {
+        return DynamicAuthorizationDetailsFragment.newInstance(
+                richConsent.getRequestedDetails().getBindingMessage(),
+                notification.getDate().toString(),
+                // For simplicity, in this example we render one single type
+                richConsent.getRequestedDetails().getAuthorizationDetails().get(0)
+        );
+    }
+
+    @NonNull
+    private ConsentPaymentInitiationFragment getPaymentInitiationConsentFragment(PaymentInitiationDetails paymentDetails) {
+        return ConsentPaymentInitiationFragment.newInstance(
+                richConsent.getRequestedDetails().getBindingMessage(),
+                paymentDetails.getRemittanceInformation(),
+                paymentDetails.getCreditorAccount().getAccountNumber(),
+                paymentDetails.getInstructedAmount().getCurrency(),
+                paymentDetails.getInstructedAmount().getAmount()
+        );
+    }
+
+    @NonNull
+    private ConsentBasicDetailsFragment getBasicConsentFragment() {
+        return ConsentBasicDetailsFragment.newInstance(
+                richConsent.getRequestedDetails().getBindingMessage(),
+                richConsent.getRequestedDetails().getScope(),
+                notification.getDate().toString()
+        );
+    }
+
+    @NonNull
+    private AuthenticationRequestDetailsFragment getStandardAuthenticationFragment() {
+        return AuthenticationRequestDetailsFragment.newInstance(
+                enrollment.getUserId(),
+
+                String.format("%s, %s",
+                        notification.getBrowserName(),
+                        notification.getBrowserVersion()),
+                String.format("%s, %s",
+                        notification.getOsName(),
+                        notification.getOsVersion()),
+
+                notification.getLocation(),
+                notification.getDate().toString()
+        );
     }
 
     private void rejectRequested() {
