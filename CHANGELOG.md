@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.9.0](https://github.com/auth0/Guardian.Android/tree/0.9.0) (2025-01-29)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.8.1...0.9.0)
+
+**Changed**
+- Add support for fetching rich consents
+
 ## [0.8.1](https://github.com/auth0/Guardian.Android/tree/0.8.1) (2024-12-11)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.8.0...0.8.1)
 
