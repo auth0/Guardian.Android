@@ -2,6 +2,15 @@ plugins {
     id 'com.android.library'
 }
 
+
+
+apply from: rootProject.file('gradle/versioning.gradle')
+
+version = getVersionFromFile()
+
+logger.lifecycle("Using version ${version} for ${name}")
+
+
 android {
     defaultConfig {
         compileSdk 33
@@ -28,6 +37,9 @@ android {
     }
     namespace 'com.auth0.android.guardian.sdk'
 }
+
+apply from: rootProject.file('gradle/maven-publish.gradle')
+
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
