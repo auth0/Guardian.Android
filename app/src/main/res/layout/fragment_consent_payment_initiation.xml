@@ -11,16 +11,15 @@
         android:id="@+id/textView3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30sp"
-        android:text="Do you approve this payment?"
-        android:textSize="34sp" />
+        android:layout_marginBottom="36dp"
+        android:text="@string/approve_payment_transaction_question"
+        android:theme="@style/TextAppearance.AppCompat.Display1" />
 
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Binding Message"
-        android:textSize="12sp"
+        android:text="@string/binding_message_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -28,15 +27,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:textSize="12sp"
-        android:theme="@style/Label"
+        android:theme="@style/Label.Small"
         tools:text="ABC-123-DEF" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="PAYMENT DETAILS"
-        android:textSize="12sp"
+        android:text="@string/payment_details_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -44,15 +41,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:textSize="12sp"
-        android:theme="@style/Label"
-        tools:text="Payment information" />
+        android:theme="@style/Label.Small"
+        tools:text="@string/payment_information_sample" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ACCOUNT"
-        android:textSize="12sp"
+        android:text="@string/account_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -60,15 +55,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:textSize="12sp"
-        android:theme="@style/Label"
-        tools:text="Account" />
+        android:theme="@style/Label.Small"
+        tools:text="@string/account_sample" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="AMOUNT"
-        android:textSize="12sp"
+        android:text="@string/amount_label"
         android:theme="@style/Label.Header" />
 
     <LinearLayout
@@ -80,19 +73,15 @@
             android:id="@+id/paymentAmountCurrencyText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="6dp"
-            android:textSize="24sp"
+            android:layout_marginEnd="6dp"
             android:theme="@style/Label"
-            tools:text="CUR" />
+            tools:text="@string/currency_sample" />
 
         <TextView
             android:id="@+id/paymentAmountText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="24sp"
             android:theme="@style/Label"
-            tools:text="00.00" />
-
-
+            tools:text="@string/payment_amount_sample" />
     </LinearLayout>
 </LinearLayout>

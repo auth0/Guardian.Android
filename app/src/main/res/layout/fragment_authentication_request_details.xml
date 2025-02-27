@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="User"
+        android:text="@string/user_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -18,12 +18,12 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
         android:theme="@style/Label"
-        tools:text="nicolas.ulrich@auth0.com" />
+        tools:text="@string/user_sample" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Browser"
+        android:text="@string/browser_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -32,12 +32,12 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
         android:theme="@style/Label"
-        tools:text="Safari 10.45" />
+        tools:text="@string/browser_sample" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="OS"
+        android:text="@string/os_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -46,12 +46,12 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
         android:theme="@style/Label"
-        tools:text="Windows 98" />
+        tools:text="@string/os_sample" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Location"
+        android:text="@string/location_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -60,12 +60,12 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
         android:theme="@style/Label"
-        tools:text="Buenos Aires, Argentina" />
+        tools:text="@string/location_sample" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Date"
+        android:text="@string/date_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -74,5 +74,5 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
         android:theme="@style/Label"
-        tools:text="Today at 18:56:21" />
+        tools:text="@string/date_sample" />
 </LinearLayout>

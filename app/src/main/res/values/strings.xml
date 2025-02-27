@@ -13,4 +13,27 @@
     <string name="alert_message_fcm_error">Could not obtain FCM token.\nCheck your FCM configuration and internet connection and try again later</string>
     <string name="guardian_notification_title">Guardian notification received</string>
     <string name="guardian_notification_text">Click to see details</string>
+    <string name="date_sample">Today at 18:56:21</string>
+    <string name="binding_message_sample">ABC-123-DEF</string>
+    <string name="binding_message_label">Binding Message</string>
+    <string name="generic_approve_transaction_question">Do you approve this transaction?</string>
+    <string name="date_label">Date</string>
+    <string name="approve_payment_transaction_question">Do you approve this payment?</string>
+    <string name="payment_details_label">Payment details</string>
+    <string name="payment_information_sample">Payment information</string>
+    <string name="account_label">Account</string>
+    <string name="account_sample">Account</string>
+    <string name="amount_label">Amount</string>
+    <string name="currency_sample">CUR</string>
+    <string name="payment_amount_sample">00.00</string>
+    <string name="requested_scope_label">Requested scope</string>
+    <string name="requested_scope_sample">read:foo</string>
+    <string name="user_label">User</string>
+    <string name="user_sample">nicolas.ulrich@auth0.com</string>
+    <string name="browser_label">Browser</string>
+    <string name="browser_sample">Safari 10.45</string>
+    <string name="os_label">OS</string>
+    <string name="os_sample">Windows 98</string>
+    <string name="location_label">Location</string>
+    <string name="location_sample">Buenos Aires, Argentina</string>
 </resources>

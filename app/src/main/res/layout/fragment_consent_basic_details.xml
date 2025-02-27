@@ -11,14 +11,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="30sp"
-        android:text="Do you approve this transaction?"
-        android:textSize="34sp" />
+        android:text="@string/generic_approve_transaction_question"
+        android:theme="@style/TextAppearance.AppCompat.Display1" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Binding Message"
-        android:textSize="12sp"
+        android:text="@string/binding_message_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -26,15 +25,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:textSize="12sp"
-        android:theme="@style/Label"
-        tools:text="ABC-123-DEF" />
+        android:theme="@style/Label.Small"
+        tools:text="@string/binding_message_sample" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Requested scope"
-        android:textSize="12sp"
+        android:text="@string/requested_scope_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -42,15 +39,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:textSize="12sp"
-        android:theme="@style/Label"
-        tools:text="read:foo" />
+        android:theme="@style/Label.Small"
+        tools:text="@string/requested_scope_sample" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Date"
-        android:textSize="12sp"
+        android:text="@string/date_label"
         android:theme="@style/Label.Header" />
 
     <TextView
@@ -58,7 +53,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="36dp"
-        android:textSize="12sp"
-        android:theme="@style/Label"
-        tools:text="Today at 18:56:21" />
+        android:theme="@style/Label.Small"
+        tools:text="@string/date_sample" />
 </LinearLayout>
