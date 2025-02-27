@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="30sp"
         android:text="@string/generic_approve_transaction_question"
-        android:theme="@style/TextAppearance.AppCompat.Display1" />
+        android:theme="@style/Display" />
 
 
     <TextView
