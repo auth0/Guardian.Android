@@ -227,35 +227,33 @@ if (notification.getTransctionLinkingId() != null) {
 
 #### Authorization Details
 
-If the received record contains authorization details ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) you can access them at `getAuthoriationDetails()` in the requested details object.
-It returns a generic `List` of `Map` objects.
+If Rich Authorization Rich Authorization Requests are being used, the consent record will contains the `authorization_details` values from the initial authenication request ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) for rendering to the user for consent. You can access them in the `getAuthorizationDetails()` method of the requested details object which returns an array of objects containing each of the types. `authorization_details` values are essentially arbitary JSON objects but are guaranteed to have a `type` property which must be pre-registered with the Authorization Server. As such the can be queried in a dynamic manor like you might with JSON.
 
 ```java
-void onSuccess(Rich consentDetails) {
+void onSuccess(RichConsent consentDetails) {
     List<Map<String, Object>> authorizationDetails = consentDetails
         .getRequestedDetails()
         .getAuthorizationDetails();
 
     String type = (String) authorizationDetails.get(0).get("type");
     int amount = (int) authorizationDetails.get(0).get("amount");
-    ...
 }
 ```
+Typically the shape and type of `authorization_details` will be known at compile time. In such a case, `authorization_details` can be queried in a strongly-typed manor by first defining a class decorated with `@AuthorizationDetailsType("<type>")` to represent your object and making use of the `filterAuthorizationDetailsByType` helper function, which will return all authorization details that match this type. 
 
-Or, if you prefer to work with typed objects, you can use the filter helper passing a Class that has been annotated with `@AuthorizationDetailsType("[type]")`.
-
-> [!WARNING]
-> When using the filter helper, you still need to check if there are other authorization details in the rich consent record to prevent the user giving consent to something they didn't see rendered. 
+Guardian SDK uses Gson for desiariliazing JSON API responses. Although, your app is not required to depend on Gson directly, the Authorization Details Type classes you define must be compatible with Gson's [Objects deserialization rules](https://github.com/google/gson/blob/main/UserGuide.md#object-examples).
 
 ```java
 @AuthorizationDetailsType("payment")
 class PaymentDetails {
-    private String type;
-    private int amount;
+    private final String type;
+    private final int amount;
+    private final String currency;
 
-    public MyAuthorizationDetails(String type, int amount) {
+    public MyAuthorizationDetails(String type, int amount, Strinc currencty) {
         this.type = type;
         this.amount = amount;
+        this.currency = currency;
     }
 
     public String getType() {
@@ -265,19 +263,27 @@ class PaymentDetails {
     public int getAmount() {
         return amount;
     }
+
+    public String getCurrency() {
+        return currency;
+    }
 }
 
-...
 
-void onSuccess(Rich consentDetails) {
+void onSuccess(RichConsent consentDetails) {
     List<PaymentDetails> authorizationDetails = consentDetails
         .getRequestedDetails()
         .filterAuthorizationDetailsByType(PaymentDetails.class);
 
-    int amount = authorizationDetails.get(0).getAmount();
-    ...
+    PaymentDetails firstPaymentDetails = authorizationDetails.get(0);
+
+    int amount = firstPaymentDetails.getAmount();
+    String currencty = firstPaymentDetails.getCurrency();
 }
 ```
+
+> [!WARNING]
+> When using the filter helper, you still need to check if there are other authorization details in the rich consent record to prevent the user giving consent to something they didn't see rendered. 
 
 ## What is Auth0?
 
