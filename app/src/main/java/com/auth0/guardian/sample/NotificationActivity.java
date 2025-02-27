@@ -43,7 +43,7 @@ import com.auth0.guardian.sample.fragments.AuthenticationRequestDetailsFragment;
 import com.auth0.guardian.sample.fragments.consent.ConsentBasicDetailsFragment;
 import com.auth0.guardian.sample.fragments.consent.ConsentPaymentInitiationFragment;
 import com.auth0.guardian.sample.fragments.consent.DynamicAuthorizationDetailsFragment;
-import com.auth0.guardian.sample.payments.PaymentInitiationDetails;
+import com.auth0.guardian.sample.consent.authorization.details.payments.PaymentInitiationDetails;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;

@@ -1,4 +1,4 @@
-package com.auth0.guardian.sample.payments;
+package com.auth0.guardian.sample.consent.authorization.details.payments;
 
 import com.auth0.android.guardian.sdk.annotations.AuthorizationDetailsType;
 
@@ -6,6 +6,7 @@ import java.util.List;
 
 @AuthorizationDetailsType("payment_initiation")
 public class PaymentInitiationDetails {
+    private final String type;
     private final List<String> actions;
     private final List<String> locations;
     private final InstructedAmount instructedAmount;
@@ -13,7 +14,8 @@ public class PaymentInitiationDetails {
     private final CreditorAccount creditorAccount;
     private final String remittanceInformation;
 
-    public PaymentInitiationDetails(List<String> actions, List<String> locations, InstructedAmount instructedAmount, String creditorName, CreditorAccount creditorAccount, String remittanceInformation) {
+    public PaymentInitiationDetails(String type, List<String> actions, List<String> locations, InstructedAmount instructedAmount, String creditorName, CreditorAccount creditorAccount, String remittanceInformation) {
+        this.type = type;
         this.actions = actions;
         this.locations = locations;
         this.instructedAmount = instructedAmount;
@@ -23,7 +25,7 @@ public class PaymentInitiationDetails {
     }
 
     public String getType() {
-        return "payment_initiation";
+        return type;
     }
 
     public List<String> getActions() {

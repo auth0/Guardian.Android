@@ -1,4 +1,4 @@
-package com.auth0.guardian.sample.payments;
+package com.auth0.guardian.sample.consent.authorization.details.payments;
 
 public class InstructedAmount {
     private final String currency;
