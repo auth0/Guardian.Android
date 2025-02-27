@@ -76,11 +76,14 @@ public class ConsentBasicDetailsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        setupUI(view);
+        updateUI();
+    }
+
+    private void setupUI(@NonNull View view) {
         bindingMessageText = (TextView) view.findViewById(R.id.bindingMessage);
         scopeText = (TextView) view.findViewById(R.id.scope);
         dateText = (TextView) view.findViewById(R.id.dateText);
-
-        updateUI();
     }
 
     private void updateUI() {

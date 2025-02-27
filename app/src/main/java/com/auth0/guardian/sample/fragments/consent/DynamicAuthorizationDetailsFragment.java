@@ -79,10 +79,7 @@ public class DynamicAuthorizationDetailsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        layout = view.findViewById(R.id.dynamicAuthorizationDetailsLayout);
-        bindingMessageText = view.findViewById(R.id.bindingMessage);
-        dateText = view.findViewById(R.id.dateText);
-
+        setupUI(view);
         updateUI();
     }
 
@@ -97,6 +94,12 @@ public class DynamicAuthorizationDetailsFragment extends Fragment {
             bundle.putString(key, String.valueOf(value));
         }
         return bundle;
+    }
+
+    private void setupUI(@NonNull View view) {
+        layout = view.findViewById(R.id.dynamicAuthorizationDetailsLayout);
+        bindingMessageText = view.findViewById(R.id.bindingMessage);
+        dateText = view.findViewById(R.id.dateText);
     }
 
     private void updateUI() {

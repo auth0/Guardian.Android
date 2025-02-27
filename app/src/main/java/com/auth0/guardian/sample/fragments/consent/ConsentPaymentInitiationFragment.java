@@ -92,13 +92,16 @@ public class ConsentPaymentInitiationFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        setupUI(view);
+        updateUI();
+    }
+
+    private void setupUI(@NonNull View view) {
         bindingMessageText = view.findViewById(R.id.bindingMessage);
         remittanceInfoText = view.findViewById(R.id.paymentRemittanceInformationText);
         creditorAccountText = view.findViewById(R.id.paymentAccountText);
         amountCurrencyText = view.findViewById(R.id.paymentAmountCurrencyText);
         amountText = view.findViewById(R.id.paymentAmountText);
-
-        updateUI();
     }
 
     private void updateUI() {

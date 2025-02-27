@@ -97,13 +97,16 @@ public class AuthenticationRequestDetailsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        setupUI(view);
+        updateUI();
+    }
+
+    private void setupUI(@NonNull View view) {
         userText = view.findViewById(R.id.userText);
         browserText = view.findViewById(R.id.browserText);
         osText = view.findViewById(R.id.osText);
         locationText = view.findViewById(R.id.locationText);
         dateText = view.findViewById(R.id.dateText);
-
-        updateUI();
     }
 
     private void updateUI() {
