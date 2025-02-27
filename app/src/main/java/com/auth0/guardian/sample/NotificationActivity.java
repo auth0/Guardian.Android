@@ -109,15 +109,16 @@ public class NotificationActivity extends AppCompatActivity {
                             }
                         } else {
                             Log.e(TAG, "Error requesting consent details", exception);
+                            throw new RuntimeException(exception);
                         }
                     }
                 });
             } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
                 throw new RuntimeException(e);
             }
+        } else {
+            updateUI();
         }
-
-        updateUI();
     }
 
     private void setupUI() {
