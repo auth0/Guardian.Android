@@ -22,6 +22,10 @@
     <style name="AppTheme.Popup" parent="ThemeOverlay.AppCompat" />
 
     <!-- Other application styles. -->
+    <style name="Display">
+       <item name="android:textSize">36sp</item>
+    </style>
+
     <style name="Label">
         <item name="android:textSize">24sp</item>
     </style>
@@ -31,4 +35,7 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
+    <style name="Label.Small" parent="Label">
+        <item name="android:textSize">12sp</item>
+    </style>
 </resources>

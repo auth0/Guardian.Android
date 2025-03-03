@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    tools:context=".fragments.consent.ConsentBasicDetailsFragment">
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30sp"
+        android:text="@string/generic_approve_transaction_question"
+        android:theme="@style/Display" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/binding_message_label"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/bindingMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:theme="@style/Label.Small"
+        tools:text="@string/binding_message_sample" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/requested_scope_label"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/scope"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:theme="@style/Label.Small"
+        tools:text="@string/requested_scope_sample" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/date_label"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/dateText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="36dp"
+        android:theme="@style/Label.Small"
+        tools:text="@string/date_sample" />
+</LinearLayout>
