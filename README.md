@@ -33,7 +33,7 @@ GuardianSDK is available both in [Maven Central](http://search.maven.org) and
 To start using _GuardianSDK_ add these lines to your `build.gradle` dependencies file:
 
 ```gradle
-implementation 'com.auth0.android:guardian:0.8.1'
+implementation 'com.auth0.android:guardian:0.9.0'
 ```
 
 ## Usage
