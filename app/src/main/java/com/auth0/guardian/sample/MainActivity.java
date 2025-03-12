@@ -227,41 +227,7 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
     }
 
     private void onPushNotificationReceived(ParcelableNotification notification) {
-        Context context = this;
-        Intent standardNotificationActivityIntent = NotificationActivity.getStartIntent(context, notification, enrollment);
-
-        if (notification.getTransactionLinkingId() == null) {
-            startActivity(standardNotificationActivityIntent);
-        } else {
-            try {
-                guardian.fetchConsent(notification, enrollment).start(new Callback<RichConsent>() {
-                    @Override
-                    public void onSuccess(RichConsent consent) {
-                        Intent intent = NotificationWithConsentDetailsActivity.getStartIntent(
-                                context,
-                                notification,
-                                enrollment,
-                                new ParcelableRichConsent(consent)
-                        );
-                        startActivity(intent);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable exception) {
-                        if (exception instanceof  GuardianException) {
-                            GuardianException guardianException = (GuardianException) exception;
-                            if (guardianException.isResourceNotFound()) {
-                                startActivity(standardNotificationActivityIntent);
-                            }
-                        }
-                        Log.e(TAG, "Error obtaining consent details", exception);
-
-                    }
-                });
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                Log.e(TAG, "Error requesting consent details", e);
-            }
-        }
+        startActivity(NotificationActivity.getStartIntent(this, notification, enrollment));
     }
 
     @Override

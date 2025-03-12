@@ -122,17 +122,17 @@ The `deviceName` and `fcmToken` are data that you must provide:
 #### A note about key generation
 
 The Guardian SDK does not provide methods for generating and storing cryptographic keys used for enrollment
-as this is an application specific concern and could vary between targeted versions of Android and 
-OEM-specific builds. The example given above and that used in the sample application is a naive implementation 
+as this is an application specific concern and could vary between targeted versions of Android and
+OEM-specific builds. The example given above and that used in the sample application is a naive implementation
 which may not be suitable for production applications. It is recommended that you follow [OWASP guidelines
 for Android Cryptographic APIs](https://mas.owasp.org/MASTG/0x05e-Testing-Cryptography/) for your implementation.
 
 As of version 0.9.0 the public key used for enrollment was added to the Enrollment Interface as it is
 required for [fetching rich-consent details](#fetch-rich-consent-details). For new installs,
-this is not a a concern. For enrollments created prior to this version, depending on implementation, 
-this key may or may not have been stored with the enrollment information. If this key was discarded, 
-it may be possible to reconstruct from the stored signing key. The sample app provides 
-[an example](app/src/main/java/com/auth0/guardian/sample/ParcelableEnrollment.java#L188) of this. If 
+this is not a a concern. For enrollments created prior to this version, depending on implementation,
+this key may or may not have been stored with the enrollment information. If this key was discarded,
+it may be possible to reconstruct from the stored signing key. The sample app provides
+[an example](app/src/main/java/com/auth0/guardian/sample/ParcelableEnrollment.java#L188) of this. If
 this is not possible, devices will require re-enrollment to make use of this functionality.
 
 ### Unenroll
@@ -208,7 +208,7 @@ if (notification.getTransctionLinkingId() != null) {
       .start(new Callback<Enrollment> {
         @Override
         void onSuccess(RichConsent consentDetails) {
-          // we have the consent details 
+          // we have the consent details
         }
 
         @Override
@@ -219,11 +219,71 @@ if (notification.getTransctionLinkingId() != null) {
               // there is no consent associated with the transaction
             }
           }
-          // something went wrong 
+          // something went wrong
         }
       });
 }
 ```
+
+#### Authorization Details
+
+If Rich Authorization Rich Authorization Requests are being used, the consent record will contains the `authorization_details` values from the initial authenication request ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) for rendering to the user for consent. You can access them in the `getAuthorizationDetails()` method of the requested details object which returns an array of objects containing each of the types. `authorization_details` values are essentially arbitary JSON objects but are guaranteed to have a `type` property which must be pre-registered with the Authorization Server. As such the can be queried in a dynamic manor like you might with JSON.
+
+```java
+void onSuccess(RichConsent consentDetails) {
+    List<Map<String, Object>> authorizationDetails = consentDetails
+        .getRequestedDetails()
+        .getAuthorizationDetails();
+
+    String type = (String) authorizationDetails.get(0).get("type");
+    int amount = (int) authorizationDetails.get(0).get("amount");
+}
+```
+Typically the shape and type of `authorization_details` will be known at compile time. In such a case, `authorization_details` can be queried in a strongly-typed manor by first defining a class decorated with `@AuthorizationDetailsType("<type>")` to represent your object and making use of the `filterAuthorizationDetailsByType` helper function, which will return all authorization details that match this type. 
+
+Guardian SDK uses Gson for desiariliazing JSON API responses. Although, your app is not required to depend on Gson directly, the Authorization Details Type classes you define must be compatible with Gson's [Objects deserialization rules](https://github.com/google/gson/blob/main/UserGuide.md#object-examples).
+
+```java
+@AuthorizationDetailsType("payment")
+class PaymentDetails {
+    private final String type;
+    private final int amount;
+    private final String currency;
+
+    public MyAuthorizationDetails(String type, int amount, Strinc currencty) {
+        this.type = type;
+        this.amount = amount;
+        this.currency = currency;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+}
+
+
+void onSuccess(RichConsent consentDetails) {
+    List<PaymentDetails> authorizationDetails = consentDetails
+        .getRequestedDetails()
+        .filterAuthorizationDetailsByType(PaymentDetails.class);
+
+    PaymentDetails firstPaymentDetails = authorizationDetails.get(0);
+
+    int amount = firstPaymentDetails.getAmount();
+    String currencty = firstPaymentDetails.getCurrency();
+}
+```
+
+> [!WARNING]
+> When using the filter helper, you still need to check if there are other authorization details in the rich consent record to prevent the user giving consent to something they didn't see rendered. 
 
 ## What is Auth0?
 

@@ -15,6 +15,7 @@ import android.net.Uri;
 import com.auth0.android.guardian.sdk.networking.Callback;
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
 import com.auth0.android.guardian.sdk.utils.MockWebService;
+import com.auth0.android.guardian.sdk.utils.PaymentIntentTestingAuthorizationDetailsType;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.google.gson.Gson;
@@ -31,6 +32,9 @@ import org.robolectric.annotation.Config;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAKey;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -98,9 +102,43 @@ public class RichConsentsAPIClientTest {
         assertThat(capturedRichConsent.getRequestedDetails().getAudience(), is(equalTo(AUDIENCE)));
         assertThat(capturedRichConsent.getRequestedDetails().getScope()[0], is(equalTo(SCOPE)));
         assertThat(capturedRichConsent.getRequestedDetails().getBindingMessage(), is(equalTo(BINDING_MESSAGE)));
+        assertThat(capturedRichConsent.getRequestedDetails().getAuthorizationDetails().isEmpty(), is(equalTo(true)));
 
         verifyNoMoreInteractions(fetchCallback);
-        assertThat(true, is(equalTo(true)));
+    }
+
+    @Test
+    public void shouldFetchRichConsentWithRichAuthorizationDetails() throws Exception {
+        Map<String, Object> testDetails = new HashMap<>();
+        testDetails.put("type", "payment-intent");
+        testDetails.put("amount", 100);
+        List<Map<String, Object>> expectedAuthorizationDetails = List.of(testDetails);
+
+        mockAPI.willReturnRichConsent(CONSENT_ID, AUDIENCE, SCOPE, BINDING_MESSAGE, expectedAuthorizationDetails);
+
+        richConsentsAPIClient
+                .fetch(CONSENT_ID, TRANSACTION_TOKEN, keyPair.getPrivate(), keyPair.getPublic())
+                .start(fetchCallback);
+
+        ArgumentCaptor<RichConsent> onSuccessCaptor = ArgumentCaptor.forClass(GuardianRichConsent.class);
+        verify(fetchCallback, timeout(100)).onSuccess(onSuccessCaptor.capture());
+
+        RichConsent capturedRichConsent = onSuccessCaptor.getValue();
+        List<Map<String, Object>> authorizationDetails = capturedRichConsent.getRequestedDetails().getAuthorizationDetails();
+        assertThat(authorizationDetails, is(notNullValue()));
+        assertThat(authorizationDetails.isEmpty(), is(equalTo(false)));
+        assertThat(authorizationDetails.get(0).get("type"), is(equalTo("payment-intent")));
+
+        PaymentIntentTestingAuthorizationDetailsType paymentIntent = capturedRichConsent
+                .getRequestedDetails()
+                .filterAuthorizationDetailsByType(PaymentIntentTestingAuthorizationDetailsType.class)
+                .get(0);
+
+        assertThat(paymentIntent, is(notNullValue()));
+        assertThat(paymentIntent.getType(), is(equalTo("payment-intent")));
+        assertThat(paymentIntent.getAmount(), is(equalTo(100)));
+
+        verifyNoMoreInteractions(fetchCallback);
     }
 
     private void verifyDPoPAssertion(String assertion) {

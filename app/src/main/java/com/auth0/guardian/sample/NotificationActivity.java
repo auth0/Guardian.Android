@@ -26,27 +26,38 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
 import com.auth0.android.guardian.sdk.Guardian;
+import com.auth0.android.guardian.sdk.GuardianException;
 import com.auth0.android.guardian.sdk.ParcelableNotification;
+import com.auth0.android.guardian.sdk.RichConsent;
 import com.auth0.android.guardian.sdk.networking.Callback;
+import com.auth0.guardian.sample.fragments.AuthenticationRequestDetailsFragment;
+import com.auth0.guardian.sample.fragments.consent.ConsentBasicDetailsFragment;
+import com.auth0.guardian.sample.fragments.consent.ConsentPaymentInitiationFragment;
+import com.auth0.guardian.sample.fragments.consent.DynamicAuthorizationDetailsFragment;
+import com.auth0.guardian.sample.consent.authorization.details.payments.PaymentInitiationDetails;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.List;
 
 public class NotificationActivity extends AppCompatActivity {
 
-    private TextView userText;
-    private TextView browserText;
-    private TextView osText;
-    private TextView locationText;
-    private TextView dateText;
+    private static final String TAG = NotificationActivity.class.getName();
 
     private Guardian guardian;
     private ParcelableEnrollment enrollment;
     private ParcelableNotification notification;
+
+    private RichConsent richConsent;
 
     static Intent getStartIntent(@NonNull Context context,
                                  @NonNull ParcelableNotification notification,
@@ -79,16 +90,39 @@ public class NotificationActivity extends AppCompatActivity {
 
         setupUI();
 
-        updateUI();
+        if (notification.getTransactionLinkingId() != null) {
+            try {
+                guardian.fetchConsent(notification, enrollment).start(new Callback<RichConsent>() {
+                    @Override
+                    public void onSuccess(RichConsent response) {
+                        richConsent = response;
+                        updateUI();
+                    }
+
+                    @Override
+                    public void onFailure(Throwable exception) {
+                        if (exception instanceof GuardianException) {
+                            GuardianException guardianException = (GuardianException) exception;
+                            if (guardianException.isResourceNotFound()) {
+                                // Render regular authentication request details
+                                updateUI();
+                            }
+                        } else {
+                            Log.e(TAG, "Error requesting consent details", exception);
+                            throw new RuntimeException(exception);
+                        }
+                    }
+                });
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            updateUI();
+        }
     }
 
     private void setupUI() {
-        userText = (TextView) findViewById(R.id.userText);
-        browserText = (TextView) findViewById(R.id.browserText);
-        osText = (TextView) findViewById(R.id.osText);
-        locationText = (TextView) findViewById(R.id.locationText);
-        dateText = (TextView) findViewById(R.id.dateText);
-
+        // TODO: spinner fragment
         Button rejectButton = (Button) findViewById(R.id.rejectButton);
         assert rejectButton != null;
         rejectButton.setOnClickListener(new View.OnClickListener() {
@@ -109,17 +143,75 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        userText.setText(enrollment.getUserId());
-        browserText.setText(
+        Fragment fragment;
+        if (richConsent == null) {
+            fragment = getStandardAuthenticationFragment();
+        } else if (richConsent.getRequestedDetails().getAuthorizationDetails().isEmpty()) {
+            fragment = getBasicConsentFragment();
+        } else {
+            List<PaymentInitiationDetails> paymentInitiationDetailsList = richConsent
+                    .getRequestedDetails()
+                    .filterAuthorizationDetailsByType(PaymentInitiationDetails.class);
+            if (!paymentInitiationDetailsList.isEmpty()) {
+                // For simplicity, in this example we render one single type
+                fragment = getPaymentInitiationConsentFragment(paymentInitiationDetailsList.get(0));
+            } else {
+                fragment = getDynamicAuthorizationDetailsConsentFragment();
+            }
+
+        }
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.authenticationDetailsFragmentContainer, fragment)
+                .commit();
+
+    }
+
+    @NonNull
+    private DynamicAuthorizationDetailsFragment getDynamicAuthorizationDetailsConsentFragment() {
+        return DynamicAuthorizationDetailsFragment.newInstance(
+                richConsent.getRequestedDetails().getBindingMessage(),
+                notification.getDate().toString(),
+                // For simplicity, in this example we render one single type
+                richConsent.getRequestedDetails().getAuthorizationDetails().get(0)
+        );
+    }
+
+    @NonNull
+    private ConsentPaymentInitiationFragment getPaymentInitiationConsentFragment(PaymentInitiationDetails paymentDetails) {
+        return ConsentPaymentInitiationFragment.newInstance(
+                richConsent.getRequestedDetails().getBindingMessage(),
+                paymentDetails.getRemittanceInformation(),
+                paymentDetails.getCreditorAccount().getAccountNumber(),
+                paymentDetails.getInstructedAmount().getCurrency(),
+                paymentDetails.getInstructedAmount().getAmount()
+        );
+    }
+
+    @NonNull
+    private ConsentBasicDetailsFragment getBasicConsentFragment() {
+        return ConsentBasicDetailsFragment.newInstance(
+                richConsent.getRequestedDetails().getBindingMessage(),
+                richConsent.getRequestedDetails().getScope(),
+                notification.getDate().toString()
+        );
+    }
+
+    @NonNull
+    private AuthenticationRequestDetailsFragment getStandardAuthenticationFragment() {
+        return AuthenticationRequestDetailsFragment.newInstance(
+                enrollment.getUserId(),
+
                 String.format("%s, %s",
                         notification.getBrowserName(),
-                        notification.getBrowserVersion()));
-        osText.setText(
+                        notification.getBrowserVersion()),
                 String.format("%s, %s",
                         notification.getOsName(),
-                        notification.getOsVersion()));
-        locationText.setText(notification.getLocation());
-        dateText.setText(notification.getDate().toString());
+                        notification.getOsVersion()),
+
+                notification.getLocation(),
+                notification.getDate().toString()
+        );
     }
 
     private void rejectRequested() {

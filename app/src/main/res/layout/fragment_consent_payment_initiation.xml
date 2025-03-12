@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/richConsentBasicDetails"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    tools:context=".fragments.consent.ConsentPaymentInitiationFragment">
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="36dp"
+        android:text="@string/approve_payment_transaction_question"
+        android:theme="@style/Display" />
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/binding_message_label"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/bindingMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:theme="@style/Label.Small"
+        tools:text="ABC-123-DEF" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/payment_details_label"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/paymentRemittanceInformationText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:theme="@style/Label.Small"
+        tools:text="@string/payment_information_sample" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/account_label"
+        android:theme="@style/Label.Header" />
+
+    <TextView
+        android:id="@+id/paymentAccountText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:theme="@style/Label.Small"
+        tools:text="@string/account_sample" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/amount_label"
+        android:theme="@style/Label.Header" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/paymentAmountCurrencyText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:theme="@style/Label"
+            tools:text="@string/currency_sample" />
+
+        <TextView
+            android:id="@+id/paymentAmountText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/Label"
+            tools:text="@string/payment_amount_sample" />
+    </LinearLayout>
+</LinearLayout>
