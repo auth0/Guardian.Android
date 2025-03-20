@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.10.1](https://github.com/auth0/Guardian.Android/tree/0.10.1) (2025-03-20)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.10.0...0.10.1)
+
+**Changed**
+- Fix issue with unspecified dependency
+
 ## [0.10.0](https://github.com/auth0/Guardian.Android/tree/0.10.0) (2025-03-19)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.9.0...0.10.0)
 

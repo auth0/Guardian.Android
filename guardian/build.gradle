@@ -42,7 +42,6 @@ apply from: rootProject.file('gradle/maven-publish.gradle')
 
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
     // Annotations (@NonNull etc)
     implementation 'androidx.annotation:annotation:1.9.1'
     // Gson
