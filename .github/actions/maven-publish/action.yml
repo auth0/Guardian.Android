@@ -1,43 +1,62 @@
-name: Publish release to Java
+name: Manually Publish Java Release
 
-inputs:
-  java-version:
-    required: true
-  ossr-username:
-    required: true
-  ossr-token:
-    required: true
-  signing-key:
-    required: true
-  signing-password:
-    required: true
+on:
+  workflow_dispatch: # Allows manual triggering
+    # No inputs needed here if java-version is fixed and others are secrets
+    # If you still want to override java-version occasionally, you could add:
+    # inputs:
+    #   java-version-override:
+    #     description: 'Optional: Specify Java version for SDKMAN (e.g., 17.0.11-tem). Defaults to Java 17.'
+    #     required: false
+    #     default: '17.0.11-tem'
 
-runs:
-  using: composite
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release # Optional: configure an environment if you use environment-specific secrets or protection rules
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Setup Java 17
+        id: setup_java
+        shell: bash
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          # Ensure SDKMAN environment variables are available for the current shell and subsequent steps
+          # Using $HOME is generally more portable than /home/runner
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          
+          # List available Java versions (optional, for debugging)
+          sdk list java
+          
+          # Install and set Java 17 (e.g., Temurin 17.0.11)
+          # You can replace '17.0.11-tem' with the specific Java 17 distribution and version you prefer from 'sdk list java'
+          JAVA_VERSION_TO_INSTALL="17.0.11-tem" 
+          # If you added java-version-override input:
+          # JAVA_VERSION_TO_INSTALL="${{ github.event.inputs.java-version-override || '17.0.11-tem' }}"
+          
+          sdk install java "$JAVA_VERSION_TO_INSTALL"
+          sdk default java "$JAVA_VERSION_TO_INSTALL"
+          
+          INSTALLED_JAVA_HOME=$(sdk home java "$JAVA_VERSION_TO_INSTALL")
+          echo "JAVA_HOME_PATH=$INSTALLED_JAVA_HOME" >> $GITHUB_ENV
+          echo "Successfully set up Java $JAVA_VERSION_TO_INSTALL"
+          echo "JAVA_HOME is now $INSTALLED_JAVA_HOME"
+          java -version
 
-    - name: Setup Java
-      shell: bash
-      run: |
-        curl -s "https://get.sdkman.io" | bash
-        source "/home/runner/.sdkman/bin/sdkman-init.sh"
-        sdk list java
-        sdk install java ${{ inputs.java-version }} && sdk default java ${{ inputs.java-version }}
-        export JAVA_HOME=${SDKMAN_DIR}/candidates/java/current
-        echo "JAVA_HOME is set to $JAVA_HOME"
-    - uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4 # pin@1.1.0
-      env:
-        JAVA_HOME: ${{ env.JAVA_HOME }}
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@56b90f209b02bf6d1deae490e9ef18b21a389cd4 # pin@1.1.0
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_PATH }}
 
-    - name: Publish Android/Java Packages to Maven
-      shell: bash
-      run: ./gradlew publish -PisSnapshot=false --stacktrace
-      env:
-        JAVA_HOME: ${{ env.JAVA_HOME }}
-        MAVEN_USERNAME: ${{ inputs.ossr-username }}
-        MAVEN_PASSWORD: ${{ inputs.ossr-token }}
-        SIGNING_KEY: ${{ inputs.signing-key}}
-        SIGNING_PASSWORD: ${{ inputs.signing-password}}
+      - name: Publish Android/Java Packages to Maven
+        shell: bash
+        run: ./gradlew publish -PisSnapshot=false --stacktrace
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_PATH }}
+          # These should match the names of your GitHub secrets
+          MAVEN_USERNAME: ${{ secrets.OSSR_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSR_TOKEN }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }} # This might be a base64 encoded key
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
