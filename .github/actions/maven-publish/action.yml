@@ -1,4 +1,4 @@
-name: Manually Publish Java Release
+name: Publish Java Release
 
 on:
   workflow_dispatch: # Allows manual triggering
@@ -18,10 +18,45 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Verify version against branch name
+        shell: bash
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          echo "Current branch: $BRANCH_NAME"
+
+          if [[ "$BRANCH_NAME" == "master" ]]; then
+            echo "Skipping version check for master branch."
+            exit 0
+          fi
+
+          if [[ ! -f .version ]]; then
+            echo "Error: .version file not found!"
+            exit 1
+          fi
+
+          # Read the version file and trim whitespace
+          VERSION_FROM_FILE=$(cat .version | xargs)
+          
+          if [[ -z "$VERSION_FROM_FILE" ]]; then
+            echo "Error: .version file is empty or contains only whitespace!"
+            exit 1
+          fi
+          
+          echo "Version from .version file: '$VERSION_FROM_FILE'"
+          echo "Branch name: '$BRANCH_NAME'"
+
+          if [[ "$VERSION_FROM_FILE" != "$BRANCH_NAME" ]]; then
+            echo "Error: mismatched version file against branch. Version file: '$VERSION_FROM_FILE', Branch: '$BRANCH_NAME'"
+            exit 1
+          else
+            echo "Version file content matches branch name. Proceeding..."
+          fi
+
       - name: Setup Java 17
         id: setup_java
         shell: bash
         run: |
+          echo "Starting Java setup..."
           curl -s "https://get.sdkman.io" | bash
           # Ensure SDKMAN environment variables are available for the current shell and subsequent steps
           # Using $HOME is generally more portable than /home/runner
@@ -55,8 +90,7 @@ jobs:
         run: ./gradlew publish -PisSnapshot=false --stacktrace
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_PATH }}
-          # These should match the names of your GitHub secrets
           MAVEN_USERNAME: ${{ secrets.OSSR_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSR_TOKEN }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }} # This might be a base64 encoded key
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }} 
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
