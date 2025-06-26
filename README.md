@@ -1,6 +1,5 @@
 # Guardian SDK for Android
 
-[![CircleCI](https://img.shields.io/circleci/project/github/auth0/Guardian.Android.svg)](https://circleci.com/gh/auth0/Guardian.Android)
 [![Coverage Status](https://img.shields.io/codecov/c/github/auth0/Guardian.Android/master.svg)](https://codecov.io/github/auth0/Guardian.Android)
 [![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org)
 [![Maven Central](https://img.shields.io/maven-central/v/com.auth0.android/guardian.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.auth0.android%22%20AND%20a%3A%22guardian%22)
