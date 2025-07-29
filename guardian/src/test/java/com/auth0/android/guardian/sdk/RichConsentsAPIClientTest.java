@@ -5,6 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -32,6 +33,7 @@ import org.robolectric.annotation.Config;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAKey;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -155,5 +157,63 @@ public class RichConsentsAPIClientTest {
                 .withClaim("ath", getTokenHash(TRANSACTION_TOKEN))
                 .build()
                 .verify(assertion);
+    }
+
+    static class TestCase {
+        final String description;
+        final Uri input;
+        final HttpUrl expected;
+
+        TestCase(String description, String inputUrl, String expectedUrl) {
+            this.description = description;
+            this.input = Uri.parse(inputUrl);
+            this.expected = HttpUrl.parse(expectedUrl);
+        }
+    }
+
+    @Test
+    public void testBuildBaseUrl() {
+        List<TestCase> testCases = Arrays.asList(
+                new TestCase(
+                        "should handle legacy url with region",
+                        "https://samples.guardian.eu.auth0.com",
+                        "https://samples.eu.auth0.com/rich-consents"
+                ),
+                new TestCase(
+                        "should handle legacy url without region",
+                        "https://samples.guardian.auth0.com",
+                        "https://samples.auth0.com/rich-consents"
+                ),
+                new TestCase(
+                        "should handle url with additional path",
+                        "https://samples.guardian.eu.auth0.com/path/",
+                        "https://samples.eu.auth0.com/path/rich-consents"
+                ),
+                new TestCase(
+                        "should handle canonical tenant url with region",
+                        "https://samples.eu.auth0.com",
+                        "https://samples.eu.auth0.com/rich-consents"
+                ),
+                new TestCase(
+                        "should handle canonical tenant url without region",
+                        "https://samples.auth0.com",
+                        "https://samples.auth0.com/rich-consents"
+                ),
+                new TestCase(
+                        "should handle custom domain url",
+                        "https://custom-domain.com",
+                        "https://custom-domain.com/rich-consents"
+                ),
+                new TestCase(
+                        "should handle custom domain url with guardian subdomain",
+                        "https://guardian.custom-domain.com",
+                        "https://guardian.custom-domain.com/rich-consents"
+                )
+        );
+
+        for (TestCase testCase : testCases) {
+            HttpUrl result = RichConsentsAPIClient.buildBaseUrl(testCase.input);
+            assertEquals(testCase.description, testCase.expected, result);
+        }
     }
 }

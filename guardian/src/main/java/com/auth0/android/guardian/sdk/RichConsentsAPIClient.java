@@ -34,6 +34,8 @@ public class RichConsentsAPIClient {
     private final HttpUrl baseUrl;
     private final ClientInfo clientInfo;
 
+    private static final String CONSENT_PATH = "rich-consents";
+
 
     RichConsentsAPIClient(RequestFactory requestFactory, Uri url, ClientInfo clientInfo) {
         this.requestFactory = requestFactory;
@@ -120,10 +122,21 @@ public class RichConsentsAPIClient {
                 .setHeader("MFA-DPoP", dpopAssertion);
     }
 
-    private HttpUrl buildBaseUrl(Uri url) {
+    public static HttpUrl buildBaseUrl(Uri url) {
         HttpUrl httpUrl = HttpUrl.parse(url.toString());
+        if (httpUrl == null) {
+            throw new NullPointerException("Base uri cannot be null");
+        }
+
+        String host = httpUrl.host();
+
+        if (host.endsWith("auth0.com")) {
+            host = host.replace(".guardian", "");
+        }
+
         return httpUrl.newBuilder()
-                .addPathSegments("rich-consents")
+                .host(host)
+                .addPathSegments(CONSENT_PATH)
                 .build();
     }
 }
