@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.10.2](https://github.com/auth0/Guardian.Android/tree/0.10.2) (2025-08-08)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.10.1...0.10.2)
+
+**Changed**
+-  Modify Guardian.Android SDK to handle being passed a url with a .guardian. subdomain (see [PR](https://github.com/auth0/Guardian.Android/pull/135))
+
 ## [0.10.1](https://github.com/auth0/Guardian.Android/tree/0.10.1) (2025-03-20)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.10.0...0.10.1)
 
