@@ -208,6 +208,16 @@ public class RichConsentsAPIClientTest {
                         "should handle custom domain url with guardian subdomain",
                         "https://guardian.custom-domain.com",
                         "https://guardian.custom-domain.com/rich-consents"
+                ),
+                new TestCase(
+                        "should handle canonical domain url with appliance-mfa path",
+                        "https://samples.eu.auth0.com/appliance-mfa",
+                        "https://samples.eu.auth0.com/rich-consents"
+                ),
+                new TestCase(
+                        "should handle custom domain url with appliance-mfa path",
+                        "https://custom-domain.com/appliance-mfa",
+                        "https://custom-domain.com/rich-consents"
                 )
         );
 

@@ -19,6 +19,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -128,14 +129,19 @@ public class RichConsentsAPIClient {
             throw new NullPointerException("Base uri cannot be null");
         }
 
-        String host = httpUrl.host();
+        HttpUrl.Builder newUrlbuilder = httpUrl.newBuilder();
 
+        String host = httpUrl.host();
         if (host.endsWith("auth0.com")) {
-            host = host.replace(".guardian", "");
+            newUrlbuilder.host(host.replace(".guardian", ""));
         }
 
-        return httpUrl.newBuilder()
-                .host(host)
+        int applianceMfaPathIndex = httpUrl.pathSegments().indexOf("appliance-mfa");
+        if (applianceMfaPathIndex >= 0) {
+            newUrlbuilder.removePathSegment(applianceMfaPathIndex);
+        }
+
+        return newUrlbuilder
                 .addPathSegments(CONSENT_PATH)
                 .build();
     }
