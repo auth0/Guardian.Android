@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.library'
+    id "com.vanniktech.maven.publish" version "0.34.0"
 }
 
 
@@ -38,8 +39,44 @@ android {
     namespace 'com.auth0.android.guardian.sdk'
 }
 
-apply from: rootProject.file('gradle/maven-publish.gradle')
+mavenPublishing {
+    publishToMavenCentral(false)
+    signAllPublications()
 
+    coordinates(
+            project.group.toString(),
+            findProperty("POM_ARTIFACT_ID")?.toString(),
+            project.version.toString()
+    )
+
+    pom {
+        name.set(findProperty("POM_NAME")?.toString())
+        description.set(findProperty("POM_DESCRIPTION")?.toString())
+        url.set(findProperty("POM_URL")?.toString())
+
+        licenses {
+            license {
+                name.set(findProperty("POM_LICENCE_NAME")?.toString())
+                url.set(findProperty("POM_LICENCE_URL")?.toString())
+                distribution.set(findProperty("POM_LICENCE_DIST")?.toString())
+            }
+        }
+
+        developers {
+            developer {
+                id.set(findProperty("POM_DEVELOPER_ID")?.toString())
+                name.set(findProperty("POM_DEVELOPER_NAME")?.toString())
+                email.set(findProperty("POM_DEVELOPER_EMAIL")?.toString())
+            }
+        }
+
+        scm {
+            url.set(findProperty("POM_URL")?.toString())
+            connection.set(findProperty("POM_SCM_CONNECTION")?.toString())
+            developerConnection.set(findProperty("POM_SCM_DEV_CONNECTION")?.toString())
+        }
+    }
+}
 
 dependencies {
     // Annotations (@NonNull etc)
