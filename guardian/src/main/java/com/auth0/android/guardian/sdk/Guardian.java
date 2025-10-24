@@ -171,7 +171,7 @@ public class Guardian {
         return richConsentsAPIClient.fetch(notification.getTransactionLinkingId(), notification.getTransactionToken(), enrollment.getSigningKey(), enrollment.getPublicKey());
     }
 
-    GuardianAPIClient getAPIClient() {
+    public GuardianAPIClient getAPIClient() {
         return guardianAPIClient;
     }
 
