@@ -10,5 +10,5 @@ jobs:
     with:
       java-version: "17"
       pre-scan-commands: "./gradlew :guardian:dependencies --no-daemon --console=plain"
-      additional-arguments: "--file=guardian/build.gradle"
+      additional-arguments: "--exclude=app"
     secrets: inherit
