@@ -88,7 +88,9 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.squareup.okhttp3:logging-interceptor'
     // JWT signing/verification
-    implementation 'com.auth0:java-jwt:4.5.1'
+    implementation 'com.auth0:java-jwt:4.6.0'
+    // Pin patched Jackson (fixes CVEs in the version pulled transitively by java-jwt)
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.22.1')
 
     testImplementation 'com.squareup.okhttp3:mockwebserver'
     // Mockito
