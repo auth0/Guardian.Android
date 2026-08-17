@@ -8,14 +8,17 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 
 import com.auth0.android.guardian.sdk.networking.RequestFactory;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.HashMap;
@@ -84,11 +87,17 @@ public class RichConsentsAPIClient {
         claims.put("jti", UUID.randomUUID().toString());
         claims.put("iat", currentTime);
 
-        Algorithm alg = Algorithm.RSA256(null, (RSAPrivateKey) privateKey);
-        return JWT.create()
-                .withHeader(headers)
-                .withPayload(claims)
-                .sign(alg);
+        try {
+            Gson gson = new GsonBuilder().create();
+            String headerAndPayload = base64UrlSafeEncode(gson.toJson(headers).getBytes())
+                    + "." + base64UrlSafeEncode(gson.toJson(claims).getBytes());
+            Signature signer = Signature.getInstance("SHA256withRSA");
+            signer.initSign(privateKey);
+            signer.update(headerAndPayload.getBytes());
+            return headerAndPayload + "." + base64UrlSafeEncode(signer.sign());
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException exception) {
+            throw new GuardianException("Unable to generate the signed DPoP assertion", exception);
+        }
     }
 
     /**
