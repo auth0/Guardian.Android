@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -140,6 +141,21 @@ public class RichConsentsAPIClientTest {
         assertThat(paymentIntent.getType(), is(equalTo("payment-intent")));
         assertThat(paymentIntent.getAmount(), is(equalTo(100)));
 
+        verifyNoMoreInteractions(fetchCallback);
+    }
+
+    @Test
+    public void shouldFetchRichConsentWithKeystorePrivateKey() throws Exception {
+        mockAPI.willReturnRichConsent(CONSENT_ID, AUDIENCE, SCOPE, BINDING_MESSAGE);
+
+        // Regression test for PR #150 / ESD-66431: fetch() previously crashed with
+        // ClassCastException when the enrollment key was an Android Keystore-backed
+        // RSAPrivateKey. The fix uses Signature directly instead of casting.
+        richConsentsAPIClient
+                .fetch(CONSENT_ID, TRANSACTION_TOKEN, keyPair.getPrivate(), keyPair.getPublic())
+                .start(fetchCallback);
+
+        verify(fetchCallback, timeout(100)).onSuccess(any());
         verifyNoMoreInteractions(fetchCallback);
     }
 
