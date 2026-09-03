@@ -78,6 +78,10 @@ mavenPublishing {
     }
 }
 
+configurations.all {
+    resolutionStrategy.force 'org.bouncycastle:bcprov-jdk18on:1.85'
+}
+
 dependencies {
     // Annotations (@NonNull etc)
     implementation 'androidx.annotation:annotation:1.9.1'
