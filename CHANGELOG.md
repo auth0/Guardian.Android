@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.11.1](https://github.com/auth0/Guardian.Android/tree/0.11.1) (2026-08-28)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.11.0...0.11.1)
+
+**Fixed**
+- Fix `ClassCastException` when fetching a rich consent with an Android Keystore-backed enrollment key (see [PR](https://github.com/auth0/Guardian.Android/pull/151)). `RichConsentsAPIClient` signed the DPoP assertion by casting the enrollment `PrivateKey` to `java.security.interfaces.RSAPrivateKey`; hardware-backed `AndroidKeyStoreRSAPrivateKey` does not implement that interface, so `fetch()` crashed. The assertion is now signed via `java.security.Signature` ("SHA256withRSA"), which accepts any `PrivateKey` — restoring compatibility with both Keystore and plain in-memory RSA keys.
+
+## [0.11.0](https://github.com/auth0/Guardian.Android/tree/0.11.0) (2026-07-23)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.10.2...0.11.0)
+
+**Changed**
+- Handle case where consent client is created with an /appliance-mfa url (see [PR](https://github.com/auth0/Guardian.Android/pull/138))
+- Bump com.auth0:java-jwt to 4.6.0 and pin com.fasterxml.jackson:jackson-bom to 2.22.1 to fix CVEs (see [PR](https://github.com/auth0/Guardian.Android/pull/146))
+
 ## [0.10.2](https://github.com/auth0/Guardian.Android/tree/0.10.2) (2025-08-08)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.10.1...0.10.2)
 
