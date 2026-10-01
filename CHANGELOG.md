@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.11.2](https://github.com/auth0/Guardian.Android/tree/0.11.2) (2026-10-01)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.11.1...0.11.2)
+
+**Security**
+- Bump `com.auth0:java-jwt` from `4.6.0` to `4.6.1` and update the `com.fasterxml.jackson:jackson-bom` pin from `2.22.1` to `2.22.2` to address CVE-2026-68497 (High), CVE-2026-83557 (Medium), and CVE-2026-19032 (Medium) flagged in `jackson-databind` (see [PR](https://github.com/auth0/Guardian.Android/pull/157))
+
 ## [0.11.1](https://github.com/auth0/Guardian.Android/tree/0.11.1) (2026-08-28)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.11.0...0.11.1)
 
