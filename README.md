@@ -307,6 +307,30 @@ Auth0 helps you to:
 1. Go to [Auth0](https://auth0.com) and click Sign Up.
 2. Use Google, GitHub or Microsoft Account to login.
 
+## Development
+
+### CI / Toolchain maintenance
+
+Runtime versions are pinned in `.java-version` and `.ruby-version`. The
+`runtime-version-check` GitHub Actions workflow checks these monthly against
+[endoflife.date](https://endoflife.date) and opens a draft PR when a pinned
+line has gone end-of-life.
+
+**Adding a new `.*-version` file** (e.g. `.node-version`) requires no workflow
+changes — the workflow discovers all `.*-version` files automatically. The only
+case that needs a manual update is when the filename stem doesn't match the
+[endoflife.date](https://endoflife.date) product slug. Add one line to the
+`EOL_SLUG` map in `.github/workflows/runtime-version-check.yml`:
+
+```bash
+# Inside the "Check and update EOL runtime versions" step:
+EOL_SLUG[node]="nodejs"   # stem "node" → slug "nodejs"
+EOL_SLUG[java]="eclipse-temurin"  # already present
+```
+
+If the stem matches the slug directly (e.g. `.python-version` → `python`,
+`.go-version` → `go`), no entry is needed.
+
 ## Issue Reporting
 
 If you have found a bug or if you have a feature request, please report them at this repository

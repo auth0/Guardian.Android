@@ -1,0 +1,13 @@
+source "https://rubygems.org"
+
+gem "fastlane", "2.237.0"
+
+# abbrev/ostruct stopped shipping as default gems starting Ruby 3.4/4.0; fastlane and its
+# dependencies (highline, actions_helper) still require them at load-time
+gem "abbrev"
+gem "ostruct"
+
+# NOTE (SDK vs App): the App's Gemfile ends with `eval_gemfile('Pluginfile')` to load
+# fastlane-plugin-firebase_app_distribution. The Guardian SDK has no Firebase / Play
+# Store / device-cloud lanes (it publishes to Maven Central via Gradle), so there is
+# no Pluginfile here.

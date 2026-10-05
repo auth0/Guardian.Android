@@ -1,0 +1,130 @@
+name: Runtime Version Check
+
+# Neither .java-version nor .ruby-version is covered by Dependabot — its bundler/
+# github-actions ecosystems only bump gem versions and pinned Action SHAs, never JVM/Ruby runtime
+# version files. actions/setup-java's java-version-file and ruby/setup-ruby's auto-detection both
+# already resolve a bare major/major.minor to the latest available patch on every run, so "is there
+# a newer patch" is meaningless to check here — the only meaningful staleness signal is whether the
+# pinned major/minor line has gone end-of-life. This workflow checks that monthly via endoflife.date
+# and opens a draft PR (not auto-merged) with the minimal safe next line, since a runtime
+# major/minor bump can have real compatibility fallout this workflow can't verify on its own
+# (e.g. guardian/build.gradle's compileOptions, fastlane/Gemfile's bundler version pin).
+#
+# Discovery is dynamic — all .*-version files in the repo root are checked automatically.
+# Adding a new file (e.g. .node-version) requires no workflow changes. Deleting a file
+# removes it from scope automatically. Unknown runtimes (no endoflife.date entry) are skipped
+# with a warning. The only maintenance needed is updating EOL_SLUG below when a new runtime's
+# filename stem doesn't match its endoflife.date product slug.
+on:
+  schedule:
+    - cron: '0 4 1 * *'  # Monthly — EOL dates are announced well in advance, no need to check weekly
+  workflow_dispatch: {}
+
+permissions: read-all
+
+jobs:
+  check-runtime-versions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # pin@v4.4.0
+
+      - name: Check and update EOL runtime versions
+        id: check
+        run: |
+          set -euo pipefail
+
+          # Filename stem → endoflife.date product slug.
+          # Only add an entry when the stem doesn't directly match the slug.
+          # e.g. .java-version stem is "java" but the slug is "eclipse-temurin";
+          #      .ruby-version stem is "ruby" and the slug is also "ruby" — no entry needed.
+          declare -A EOL_SLUG
+          EOL_SLUG[java]="eclipse-temurin"
+          EOL_SLUG[node]="nodejs"
+
+          # Runtimes where we restrict "next version" candidates to LTS lines only.
+          # Java has a clear LTS / non-LTS split; most others don't.
+          LTS_ONLY="java"
+
+          today="$(date -u +%Y-%m-%d)"
+          any_stale=false
+
+          for version_file in ./.??*-version; do
+            [ -f "$version_file" ] || continue
+            filename="$(basename "$version_file")"
+            # Extract stem: .java-version → java
+            stem="${filename#.}"
+            stem="${stem%-version}"
+            slug="${EOL_SLUG[$stem]:-$stem}"
+            current="$(tr -d '[:space:]' < "$version_file")"
+
+            echo "→ $filename  stem=$stem  slug=$slug  current=$current"
+
+            api_data="$(curl -sf "https://endoflife.date/api/${slug}.json" || true)"
+            if [ -z "$api_data" ] || [ "$api_data" = "null" ]; then
+              echo "  ⚠ No endoflife.date data for slug '$slug' — skipping"
+              continue
+            fi
+
+            eol="$(echo "$api_data" | jq -r --arg c "$current" \
+              '.[] | select(.cycle == $c) | .eol')"
+
+            if [ -z "$eol" ]; then
+              echo "  ⚠ Cycle '$current' not found in endoflife.date for '$slug' — skipping"
+              continue
+            elif [ "$eol" = "false" ] || [[ "$eol" > "$today" ]]; then
+              echo "  ✓ $current is still supported (EOL: $eol)"
+              continue
+            fi
+
+            echo "  ✗ $current is EOL ($eol) — finding minimal safe next version"
+
+            # Restrict to LTS cycles for runtimes listed in LTS_ONLY (e.g. Java).
+            if echo "$LTS_ONLY" | grep -qw "$stem"; then
+              lts_filter='map(select(.lts == true)) |'
+            else
+              lts_filter=''
+            fi
+
+            new_version="$(echo "$api_data" | jq -r \
+              --arg cur "$current" --arg today "$today" \
+              "${lts_filter}
+               map(select((.eol == false) or (.eol > \$today)))
+               | map(select((.cycle | tonumber) > (\$cur | tonumber)))
+               | sort_by(.cycle | tonumber)
+               | .[0].cycle // empty")"
+
+            if [ -z "$new_version" ]; then
+              echo "  ⚠ $current is EOL but no newer supported cycle found for '$slug'"
+              continue
+            fi
+
+            echo "  → bumping $filename: $current → $new_version"
+            echo "$new_version" > "$version_file"
+            any_stale=true
+          done
+
+          echo "any_stale=$any_stale" >> "$GITHUB_OUTPUT"
+
+      - name: Open PR for EOL runtime bump
+        if: steps.check.outputs.any_stale == 'true'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # pin@v8.1.1
+        with:
+          commit-message: "chore(ci): bump EOL runtime version"
+          title: "chore(ci): pinned runtime version has reached end-of-life"
+          body: |
+            Automated: [endoflife.date](https://endoflife.date) reports one or more pinned
+            runtime versions (`.java-version`, `.ruby-version`, or similar `.*-version` files)
+            have reached end-of-life. This PR bumps each affected file to the nearest supported
+            line (not necessarily the newest available).
+
+            ⚠️ Needs manual review before merge — a runtime major/minor bump can affect build
+            behavior (e.g. `guardian/build.gradle`'s `compileOptions`, `fastlane/Gemfile`'s
+            bundler version pin) in ways this workflow can't verify. Not a routine dependency bump
+            like Dependabot's — test the build locally before merging.
+          branch: chore/bump-eol-runtime-version
+          draft: true
+          labels: dependencies
