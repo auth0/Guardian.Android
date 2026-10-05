@@ -68,9 +68,3 @@ jobs:
         with:
           name: reports
           path: guardian/build/reports/reports.html
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
-        if: always()
-        with:
-          name: test-results
-          path: guardian/build/test-results
