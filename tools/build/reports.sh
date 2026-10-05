@@ -380,6 +380,7 @@ generate_html() {
   local branch
   branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 
+  mkdir -p "$(dirname "$OUTPUT_HTML")"
   cat > "$OUTPUT_HTML" << 'EOF_TEMPLATE'
 <!DOCTYPE html>
 <html lang="en">

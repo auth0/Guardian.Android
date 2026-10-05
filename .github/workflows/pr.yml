@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   test:
-    name: Lint + Coverage
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
@@ -50,6 +50,7 @@ jobs:
         run: ./build.sh --buildType debug --coverage --lint --nobuild --skip-deps
         env:
           BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
 
       # Fallback: build.sh's postbuild hook generates reports.html on success and
       # then cleans up the raw jacoco/lint dirs. This step only runs on failure —
@@ -60,6 +61,7 @@ jobs:
         run: ./tools/build/reports.sh
         env:
           BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         if: always()
