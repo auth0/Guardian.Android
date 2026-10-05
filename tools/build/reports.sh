@@ -1044,6 +1044,41 @@ main() {
   echo "   Tests: $TESTS_PASSED passed, $TESTS_FAILED failed"
   echo "   Coverage: ${COVERAGE_PERCENT}%"
   echo "   Lint: ${LINT_WARNINGS} warnings, ${LINT_ERRORS} errors"
+
+  # Write a lightweight summary to the GHA job page (only on GHA — $GITHUB_STEP_SUMMARY
+  # is unset locally so this block is a no-op outside CI).
+  if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    write_github_summary
+  fi
+}
+
+# Write the key metrics to the GHA job summary so they're visible inline on the
+# run page without downloading the artifact.
+write_github_summary() {
+  local total_tests=$((TESTS_PASSED + TESTS_FAILED))
+
+  local test_icon="✅"
+  [[ $TESTS_FAILED -gt 0 ]] && test_icon="❌"
+
+  local cov_icon="✅"
+  [[ $COVERAGE_PERCENT -lt 80 ]] && cov_icon="❌"
+  [[ $COVERAGE_PERCENT -ge 60 && $COVERAGE_PERCENT -lt 80 ]] && cov_icon="⚠️"
+
+  local lint_icon="✅"
+  [[ $LINT_WARNINGS -gt 0 ]] && lint_icon="⚠️"
+  [[ $LINT_ERRORS -gt 0 ]] && lint_icon="❌"
+
+  {
+    echo "## Guardian SDK — Build Summary"
+    echo ""
+    echo "| | Result |"
+    echo "|---|---|"
+    echo "| ${test_icon} Tests | **${TESTS_PASSED}** passed, **${TESTS_FAILED}** failed (${total_tests} total) |"
+    echo "| ${cov_icon} Coverage | **${COVERAGE_PERCENT}%** line coverage (target: 80%) |"
+    echo "| ${lint_icon} Lint | **${LINT_ERRORS}** errors, **${LINT_WARNINGS}** warnings (changed files only) |"
+    echo ""
+    echo "> Full report available in the \`reports\` artifact."
+  } >> "$GITHUB_STEP_SUMMARY"
 }
 
 main "$@"
