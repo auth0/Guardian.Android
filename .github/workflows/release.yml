@@ -32,19 +32,8 @@ name: Release
 #      the staging deployment (publishToMavenCentral(false) — no auto-release).
 
 on:
-  push:
-    branches: ['release/*']  # single segment only; nested/non-version names won't match the regex below
   workflow_dispatch:
 
-# Cancel any in-progress run for the same branch when a new commit is pushed.
-# NOTE: this is safe only because validate-version/publish push with the default
-# GITHUB_TOKEN, and pushes made by GITHUB_TOKEN do NOT trigger new workflow runs —
-# so the bot's own commits never spawn a second run that this would cancel. If you
-# ever switch checkout to a PAT/deploy key (so bot pushes DO trigger CI), revisit
-# this: a self-triggered run could cancel an in-flight publish mid-upload.
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
