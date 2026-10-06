@@ -1,0 +1,311 @@
+name: Release
+
+# Triggered automatically when any commit is pushed to a release/X.Y.Z branch,
+# or manually via workflow_dispatch (select the release branch in the UI).
+#
+# The validate-version job syncs .version to the branch name if they don't match,
+# so the developer only needs to create the branch — .version is handled automatically.
+# It then outputs the SHA it ended on; test and publish check out THAT exact SHA so
+# every job runs against the same commit (including the sync) and a mid-flight push
+# to the branch can't make publish ship an untested commit.
+#
+# Required GitHub secrets — configure these as ENVIRONMENT secrets on the
+# `maven-central-release` environment (NOT repo-wide), so they are only readable
+# by the publish job after the approval gate:
+#   MAVEN_CENTRAL_USERNAME       — Maven Central Portal username
+#   MAVEN_CENTRAL_PASSWORD       — Maven Central Portal password
+#   SIGNING_KEY_ID               — GPG public key ID
+#   SIGNING_PASSWORD             — GPG secret key passphrase
+#   SIGNING_SECRET_KEY_RING_B64  — base64-encoded secring.gpg
+#                                  Generate with: base64 -i secring.gpg | pbcopy
+#
+# Required GitHub environment (Settings → Environments):
+#   maven-central-release        — add required reviewers (human approval gate) and
+#                                   the secrets above. The gate attaches to the
+#                                   publish job, which is the only job that uses them.
+#
+# Release steps:
+#   1. Create branch release/X.Y.Z — workflow triggers automatically.
+#      .version is auto-synced to the branch version if needed.
+#   2. Approve the publish job when it pauses on the maven-central-release gate.
+#   3. After publish completes: log in to central.sonatype.com and manually promote
+#      the staging deployment (publishToMavenCentral(false) — no auto-release).
+
+on:
+  push:
+    branches: ['release/*']  # single segment only; nested/non-version names won't match the regex below
+  workflow_dispatch:
+
+# Cancel any in-progress run for the same branch when a new commit is pushed.
+# NOTE: this is safe only because validate-version/publish push with the default
+# GITHUB_TOKEN, and pushes made by GITHUB_TOKEN do NOT trigger new workflow runs —
+# so the bot's own commits never spawn a second run that this would cancel. If you
+# ever switch checkout to a PAT/deploy key (so bot pushes DO trigger CI), revisit
+# this: a self-triggered run could cancel an in-flight publish mid-upload.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+
+  # ── 1. Validate and sync version ──────────────────────────────────────────
+  validate-version:
+    name: Validate version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write  # required to commit the .version sync if needed
+    outputs:
+      sha: ${{ steps.sync.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Sync .version to branch name
+        id: sync
+        run: |
+          set -euo pipefail
+          branch="${GITHUB_REF_NAME}"
+          if [[ ! "$branch" =~ ^release/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ This workflow only runs on release/X.Y.Z branches."
+            echo "   Current branch: $branch"
+            exit 1
+          fi
+          version="${branch#release/}"
+          current="$(tr -d '[:space:]' < .version)"
+          if [[ "$current" == "$version" ]]; then
+            echo "✅ .version is already $version"
+          else
+            echo "$version" > .version
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .version
+            git commit -m "chore: sync .version to $version"
+            git push origin "$branch"
+            echo "✅ Updated .version from $current to $version"
+          fi
+          # Emit the commit every later job must check out (post-sync if we committed).
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  # ── 2. Run tests ───────────────────────────────────────────────────────────
+  test:
+    name: Test
+    needs: validate-version
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # Pin to the exact commit validate-version ended on (includes the .version sync).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
+        with:
+          ref: ${{ needs.validate-version.outputs.sha }}
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # pin@v6.0.1
+        with:
+          distribution: temurin
+          java-version-file: '.java-version'
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # pin@v6.4.0
+
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # pin@v1.327.0
+        with:
+          bundler: 'Gemfile.lock'
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
+        with:
+          path: ~/vendor/bundle
+          key: bundle-v1-${{ hashFiles('fastlane/Gemfile.lock') }}
+          restore-keys: bundle-v1-
+
+      - name: Install Ruby dependencies
+        run: bundle check || bundle install --jobs 4 --retry 3
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
+
+      - name: Test
+        run: ./build.sh --buildType release --test --nobuild --nolint --nocoverage --nopublish --skip-deps
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
+
+  # ── 3. Publish ─────────────────────────────────────────────────────────────
+  # The maven-central-release environment supplies BOTH the human approval gate
+  # (required reviewers) AND the Maven/signing secrets — so approval and secret
+  # scoping attach directly to the job that uses the credentials.
+  publish:
+    name: Publish to Maven Central
+    needs: [test, validate-version]
+    runs-on: ubuntu-latest
+    # No job-level timeout — the environment approval gate counts against it, so a
+    # job timeout would cancel the job if a reviewer takes longer than the limit
+    # (e.g. cross-timezone, weekend). The environment itself has a configurable
+    # deployment timeout (Settings → Environments → maven-central-release → Timeout).
+    # Individual execution steps have their own timeout-minutes below.
+    environment: maven-central-release
+    permissions:
+      contents: write       # required for the CHANGELOG commit, git tag, and GitHub Release
+      pull-requests: write  # required to open the post-release PR to master
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
+        with:
+          ref: ${{ needs.validate-version.outputs.sha }}
+
+      # Fail BEFORE any irreversible work if this version was already released.
+      # Re-running after a partial failure must not re-upload a second staging
+      # deployment or prepend a duplicate CHANGELOG block.
+      - name: Preflight — version + idempotency guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$(tr -d '[:space:]' < .version)"
+          if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ .version is not a valid X.Y.Z version: '$tag'"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "❌ Tag '$tag' already exists on the remote — this version was already released."
+            exit 1
+          fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "❌ GitHub Release '$tag' already exists — this version was already released."
+            exit 1
+          fi
+          echo "✅ Version $tag is clean to release."
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # pin@v6.0.1
+        with:
+          distribution: temurin
+          java-version-file: '.java-version'
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # pin@v6.4.0
+
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # pin@v1.327.0
+        with:
+          bundler: 'Gemfile.lock'
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
+        with:
+          path: ~/vendor/bundle
+          key: bundle-v1-${{ hashFiles('fastlane/Gemfile.lock') }}
+          restore-keys: bundle-v1-
+
+      - name: Install Ruby dependencies
+        run: bundle check || bundle install --jobs 4 --retry 3
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
+
+      # signing.* properties contain dots → can't be expressed as env vars →
+      # must be written to ~/.gradle/gradle.properties. The delimiter is QUOTED
+      # (<<'EOF') so a secret value containing $, backtick, or $(...) is written
+      # literally and never shell-expanded. Runner is ephemeral; cleanup step
+      # removes the file defensively anyway.
+      - name: Configure signing and Maven Central credentials
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.SIGNING_SECRET_KEY_RING_B64 }}" | base64 --decode > /tmp/secring.gpg
+          mkdir -p ~/.gradle
+          cat >> ~/.gradle/gradle.properties <<'EOF'
+          mavenCentralUsername=${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          mavenCentralPassword=${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          signing.keyId=${{ secrets.SIGNING_KEY_ID }}
+          signing.password=${{ secrets.SIGNING_PASSWORD }}
+          signing.secretKeyRingFile=/tmp/secring.gpg
+          EOF
+
+      - name: Publish to Maven Central (staging)
+        timeout-minutes: 30
+        run: ./build.sh --buildType release --notest --nolint --nocoverage --publish --nobuild --skip-deps
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
+          RELEASE_CONTEXT: "true"
+
+      # After this step: log in to https://central.sonatype.com and manually promote
+      # the staging deployment. publishToMavenCentral(false) in build.gradle uploads
+      # to staging but does NOT auto-release — promotion is a deliberate manual gate.
+
+      # Generate release notes via the GitHub API, prepend them to CHANGELOG.md,
+      # and push the result to the release branch. Notes are stored in GITHUB_ENV
+      # (random delimiter — PR-title text is untrusted) for the Release step to reuse.
+      - name: Update CHANGELOG.md
+        timeout-minutes: 10
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$(tr -d '[:space:]' < .version)"
+          notes="$(gh api "repos/${{ github.repository }}/releases/generate-notes" \
+            --method POST \
+            --field tag_name="$tag" \
+            --field target_commitish="${GITHUB_REF_NAME}" \
+            --jq '.body')"
+          if [[ -z "$notes" ]]; then
+            echo "❌ generate-notes returned empty — aborting rather than shipping an empty changelog/release."
+            exit 1
+          fi
+          date="$(date -u +%Y-%m-%d)"
+          touch CHANGELOG.md   # first-release bootstrap: don't hard-fail if absent
+          {
+            printf '## %s (%s)\n\n%s\n\n' "$tag" "$date" "$notes"
+            cat CHANGELOG.md
+          } > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update CHANGELOG for $tag"
+          # Push the detached HEAD to the branch. With set -e, a non-fast-forward
+          # rejection (someone pushed to the branch mid-run) fails the job here —
+          # BEFORE we tag, so we never tag a commit that isn't on the branch.
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # Hand the notes to the Release step via a random, unguessable delimiter so
+          # a PR title equal to the delimiter can't truncate the value or inject env vars.
+          delim="EOF_$(openssl rand -hex 16)"
+          {
+            echo "RELEASE_NOTES<<${delim}"
+            echo "$notes"
+            echo "${delim}"
+          } >> "$GITHUB_ENV"
+
+      # Tag the commit that includes the updated CHANGELOG (only reached if the
+      # branch push above succeeded).
+      - name: Tag release
+        run: |
+          set -euo pipefail
+          tag="$(tr -d '[:space:]' < .version)"
+          git tag -a "$tag" -m "Release $tag"
+          git push origin "$tag"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$(tr -d '[:space:]' < .version)"
+          gh release create "$tag" \
+            --title "$tag" \
+            --notes "$RELEASE_NOTES"
+
+      - name: Open PR to master
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$(tr -d '[:space:]' < .version)"
+          gh pr create \
+            --base master \
+            --head "${GITHUB_REF_NAME}" \
+            --title "Release $tag" \
+            --body "$(printf 'Merges the release branch for **%s** into master.\n\nIncludes:\n- `.version` bump to %s\n- CHANGELOG.md update\n\n> After merging, the release/%s branch can be deleted.' "$tag" "$tag" "$tag")"
+
+      - name: Clean up credentials
+        if: always()
+        run: |
+          rm -f /tmp/secring.gpg
+          sed -i '/mavenCentralUsername\|mavenCentralPassword\|signing\./d' \
+            ~/.gradle/gradle.properties 2>/dev/null || true
