@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 
+// Test comment
 public class ClientInfo {
     final String name = "Guardian.Android";
     final String version = BuildConfig.VERSION_NAME;
