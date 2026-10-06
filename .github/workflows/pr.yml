@@ -1,0 +1,70 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [master]
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # pin@v6.0.1
+        with:
+          distribution: temurin
+          java-version-file: '.java-version'
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # pin@v6.4.0
+
+      # ruby-version intentionally omitted — reads .ruby-version automatically.
+      # bundler: 'Gemfile.lock' installs the exact version from BUNDLED WITH.
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # pin@v1.327.0
+        with:
+          bundler: 'Gemfile.lock'
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
+        with:
+          path: ~/vendor/bundle
+          key: bundle-v1-${{ hashFiles('fastlane/Gemfile.lock') }}
+          restore-keys: bundle-v1-
+
+      - name: Install Ruby dependencies
+        run: bundle check || bundle install --jobs 4 --retry 3
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
+
+      - name: Lint + Coverage
+        run: ./build.sh --buildType debug --coverage --lint --nobuild --skip-deps
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
+
+      # Fallback: build.sh's postbuild hook generates reports.html on success and
+      # then cleans up the raw jacoco/lint dirs. This step only runs on failure —
+      # re-running it on success would parse an already-cleaned tree and produce an
+      # empty dashboard, silently overwriting the correct one.
+      - name: Generate reports.html (failure fallback)
+        if: failure()
+        run: ./tools/build/reports.sh
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
+        if: always()
+        with:
+          name: reports
+          path: guardian/build/reports/reports.html

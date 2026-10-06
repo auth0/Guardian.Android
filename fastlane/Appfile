@@ -1,0 +1,8 @@
+# Intentionally minimal.
+#
+# The App's Appfile points fastlane's `supply`/`gradle` Play Store actions at a
+# Google Play service-account key + package name. The Guardian SDK is a library
+# published to Maven Central through Gradle (com.vanniktech.maven.publish), not the
+# Play Store, so there is no Play Console identity to declare here. Kept as a
+# placeholder so the fastlane/ layout matches the App and future Play-related
+# config (if ever needed) has an obvious home.

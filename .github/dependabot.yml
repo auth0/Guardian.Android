@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # Bump GHA action SHAs weekly. Dependabot updates both the SHA and the
+  # `# pin@vX.Y.Z` comment so the human-readable version stays in sync.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Bump gem versions in fastlane/Gemfile weekly (fastlane, abbrev, ostruct).
+  - package-ecosystem: bundler
+    directory: /fastlane
+    schedule:
+      interval: weekly

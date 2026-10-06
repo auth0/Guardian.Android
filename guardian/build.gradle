@@ -3,6 +3,13 @@ plugins {
     id "com.vanniktech.maven.publish" version "0.34.0"
 }
 
+// JaCoCo code-coverage for the library's unit tests. The core `jacoco` plugin
+// (not android-junit5) is used because :guardian is a Java-only module tested with
+// JUnit4 + Robolectric, so there is no per-buildType JaCoCo task to hook — we
+// define one manual report task (jacocoTestReport) below, bound to the debug unit
+// tests. Consumed by the `coverage` Fastlane lane / `./build.sh --coverage`.
+apply plugin: 'jacoco'
+
 
 
 apply from: rootProject.file('gradle/versioning.gradle')
@@ -33,10 +40,78 @@ android {
         unitTests {
             all {
                 maxHeapSize = "1024m"
+                // Robolectric runs tests under its own SandboxClassLoader; without
+                // includeNoLocationClasses JaCoCo drops classes it can't map to a
+                // source location and the report comes out empty.
+                jacoco {
+                    includeNoLocationClasses = true
+                    excludes = ['jdk.internal.*']
+                }
             }
         }
     }
     namespace 'com.auth0.android.guardian.sdk'
+}
+
+// Manual JaCoCo report for the library's debug unit tests. Bound to
+// testDebugUnitTest (the task that writes the .exec execution data).
+// See jacocoCoverageVerification below for the 80% line-coverage gate.
+tasks.register('jacocoTestReport', JacocoReport) {
+    dependsOn 'testDebugUnitTest'
+    group = 'verification'
+    description = 'Generates a JaCoCo coverage report for the debug unit tests.'
+
+    reports {
+        xml.required = true
+        html.required = true
+        // Flat, predictable path. The default nests the XML under
+        // reports/jacoco/jacocoTestReport/jacocoTestReport.xml, which reports.sh's
+        // glob would miss.
+        xml.outputLocation.set(file("$buildDir/reports/jacoco/jacocoTestReport.xml"))
+    }
+
+    // AGP 8.12 writes compiled classes here (compileDebugJavaWithJavac/classes),
+    // not under javac/debug/classes. Exclude generated/no-source classes.
+    classDirectories.setFrom(
+        fileTree(
+            dir: "$buildDir/intermediates/javac/debug/compileDebugJavaWithJavac/classes",
+            excludes: ['**/BuildConfig.class', '**/R.class', '**/R$*.class', '**/Manifest*.class']
+        )
+    )
+    sourceDirectories.setFrom(files('src/main/java'))
+    // Point at the .exec file explicitly. Passing the TaskProvider from
+    // tasks.named(...) would bind to executionData(Object...) and collect the
+    // task's declared OUTPUTS (test-results dirs), not the coverage data.
+    executionData.setFrom(files("$buildDir/jacoco/testDebugUnitTest.exec"))
+}
+
+// Enforces the 80% line-coverage gate. Runs jacocoTestReport first (for the XML/HTML
+// artefacts), then checks the threshold — fail here means coverage dropped below the
+// minimum, not that tests failed (those would have already aborted the run earlier).
+// The `coverage` Fastlane lane calls THIS task, not jacocoTestReport directly.
+tasks.register('jacocoCoverageVerification', JacocoCoverageVerification) {
+    dependsOn 'jacocoTestReport'
+    group = 'verification'
+    description = 'Fails the build if :guardian line coverage drops below 80%.'
+
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+
+    classDirectories.setFrom(
+        fileTree(
+            dir: "$buildDir/intermediates/javac/debug/compileDebugJavaWithJavac/classes",
+            excludes: ['**/BuildConfig.class', '**/R.class', '**/R$*.class', '**/Manifest*.class']
+        )
+    )
+    sourceDirectories.setFrom(files('src/main/java'))
+    executionData.setFrom(files("$buildDir/jacoco/testDebugUnitTest.exec"))
 }
 
 mavenPublishing {
