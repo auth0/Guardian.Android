@@ -18,6 +18,10 @@ out/
 # Gradle files
 .gradle/
 build/
+# ...but NOT tools/build/ — those are the build.sh helper modules (tracked), not
+# a Gradle output dir. The `build/` rule above would otherwise swallow them.
+!tools/build
+!tools/build/**
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -38,3 +42,6 @@ captures/
 
 # Keystore files
 *.jks
+
+# build.sh interactive-menu "last run" memory (local only)
+.buildsh-last

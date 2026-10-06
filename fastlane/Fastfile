@@ -1,0 +1,72 @@
+fastlane_version "2.237.0"
+
+default_platform :android
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Guardian.Android SDK — Fastfile
+#
+# This is the SDK-scoped mirror of GuardianApp.Android's Fastfile. It is
+# DELIBERATELY minimal: the SDK is a library (the `:guardian` module) published to
+# Maven Central via Gradle (com.vanniktech.maven.publish), so there are no
+# Firebase / BrowserStack / Play Store lanes and no version-computation logic — the
+# version comes from `.version` via gradle/versioning.gradle at build time.
+#
+# Layer contract (identical locally and in CI):
+#     Layer 3  CI (.github/*.yml)  ── calls ─▶  ./build.sh <flags>
+#     Layer 2  build.sh (+ tools/)   ── calls ─▶  bundle exec fastlane android <lane>
+#     Layer 1  the lanes below       ── call  ─▶  ./gradlew <task>
+#
+# LANE VOCABULARY (subset of the App's — same names, so build.sh/args.sh is shared)
+#   test       run the unit-test suite (clean + test)
+#   lint       run Android Lint on the library module (:guardian)
+#   coverage   generate the JaCoCo report for :guardian (informational, no threshold)
+#   build      assemble the library's release AAR (guardian-release.aar)
+#
+# Publishing (Maven Central) is intentionally NOT here — it is a separate task,
+# handled by Gradle + a guarded release workflow, out of scope for CI parity.
+# ─────────────────────────────────────────────────────────────────────────────
+
+platform :android do
+
+  desc "Runs all the unit tests"
+  lane :test do
+    UI.header("Test · running the unit-test suite")
+    # Separate invocations, not `gradle(task: "clean test")` — clean and test have no
+    # dependency edge, so a single parallel invocation risks clean deleting build
+    # output while a test task is still writing to it. Run clean to completion first.
+    UI.message("Cleaning previous build outputs before testing…")
+    gradle(task: "clean")
+    UI.message("Executing unit tests…")
+    gradle(task: "test")
+  end
+
+  desc "Runs Android Lint on the :guardian library module"
+  lane :lint do
+    UI.header("Lint · Android Lint (:guardian)")
+    gradle(task: ":guardian:lint")
+  end
+
+  desc "Generates a JaCoCo coverage report for :guardian (informational only, no threshold/gate)."
+  desc "Accepts an inert `build_type:` for contract-parity with the App; the SDK has a single JaCoCo task."
+  lane :coverage do |options|
+    UI.header("Coverage · generating the JaCoCo report for :guardian (informational)")
+    # The SDK's coverage config (guardian/build.gradle) defines ONE manual
+    # `jacocoTestReport` task bound to testDebugUnitTest — the library is Java-only and
+    # its tests run on JUnit4/Robolectric, so there are no per-buildType android-junit5
+    # tasks like the App has. `build_type:` is accepted (and logged) purely so the
+    # shared args.sh can pass `build_type:<bt>` without special-casing the SDK.
+    build_type = options[:build_type] || "debug"
+    UI.message("Requested build_type=#{build_type} (SDK has a single :guardian:jacocoTestReport task)")
+    gradle(task: ":guardian:jacocoCoverageVerification")
+  end
+
+  desc "Assembles the :guardian library's release AAR (guardian-release.aar)."
+  desc "Accepts an inert `build_type:` for contract-parity; a library ships a single release AAR."
+  lane :build do |options|
+    build_type = options[:build_type] || "release"
+    UI.header("Build · assembling the :guardian release AAR")
+    UI.message("Requested build_type=#{build_type} (library assembles its release AAR)")
+    gradle(task: ":guardian:assembleRelease")
+  end
+
+end
