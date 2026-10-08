@@ -1,3 +1,12 @@
+## 1.0.0 (2026-10-08)
+
+## What's Changed
+* Release/0.11.2 by @arunav-gandhi in https://github.com/auth0/Guardian.Android/pull/158
+* GHA CI/CD implementation by @arunav-gandhi in https://github.com/auth0/Guardian.Android/pull/159
+
+
+**Full Changelog**: https://github.com/auth0/Guardian.Android/compare/0.11.2...1.0.0
+
 # Change Log
 
 ## [0.11.2](https://github.com/auth0/Guardian.Android/tree/0.11.2) (2026-10-01)
