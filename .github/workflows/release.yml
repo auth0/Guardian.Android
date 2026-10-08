@@ -15,7 +15,7 @@ name: Release
 #   MAVEN_CENTRAL_USERNAME       — Maven Central Portal username
 #   MAVEN_CENTRAL_PASSWORD       — Maven Central Portal password
 #   SIGNING_KEY_ID               — GPG public key ID
-#   SIGNING_PASSWORD             — GPG secret key passphrase
+#   SIGNING_KEY_PASSWORD         — GPG secret key passphrase
 #   SIGNING_SECRET_KEY_RING_B64  — base64-encoded secring.gpg
 #                                  Generate with: base64 -i secring.gpg | pbcopy
 #
@@ -203,7 +203,7 @@ jobs:
           mavenCentralUsername=${{ secrets.MAVEN_CENTRAL_USERNAME }}
           mavenCentralPassword=${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           signing.keyId=${{ secrets.SIGNING_KEY_ID }}
-          signing.password=${{ secrets.SIGNING_PASSWORD }}
+          signing.password=${{ secrets.SIGNING_KEY_PASSWORD }}
           signing.secretKeyRingFile=/tmp/secring.gpg
           EOF
 
