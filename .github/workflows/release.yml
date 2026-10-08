@@ -203,7 +203,7 @@ jobs:
           mavenCentralUsername=${{ secrets.MAVEN_CENTRAL_USERNAME }}
           mavenCentralPassword=${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           signing.keyId=${{ secrets.SIGNING_KEY_ID }}
-          signing.password=${{ secrets.SIGNING_PASSWORD }}
+          signing.password=${{ secrets.SIGNING_KEY_PASSWORD }}
           signing.secretKeyRingFile=/tmp/secring.gpg
           EOF
 
