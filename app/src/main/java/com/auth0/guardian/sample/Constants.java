@@ -22,6 +22,7 @@
 
 package com.auth0.guardian.sample;
 
+// Test commit
 public class Constants {
 
     public static final String ENROLLMENT = "com.auth0.guardian.sample.Constants.ENROLLMENT";
