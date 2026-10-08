@@ -17,13 +17,11 @@ default_platform :android
 #     Layer 1  the lanes below       ── call  ─▶  ./gradlew <task>
 #
 # LANE VOCABULARY (subset of the App's — same names, so build.sh/args.sh is shared)
-#   test       run the unit-test suite (clean + test)
-#   lint       run Android Lint on the library module (:guardian)
-#   coverage   generate the JaCoCo report for :guardian (informational, no threshold)
-#   build      assemble the library's release AAR (guardian-release.aar)
-#
-# Publishing (Maven Central) is intentionally NOT here — it is a separate task,
-# handled by Gradle + a guarded release workflow, out of scope for CI parity.
+#   test           run the unit-test suite (clean + test)
+#   lint           run Android Lint on the library module (:guardian)
+#   coverage       generate the JaCoCo report for :guardian (informational, no threshold)
+#   build          assemble the library's release AAR (guardian-release.aar)
+#   publish_maven  upload :guardian to Maven Central staging (release pipeline only)
 # ─────────────────────────────────────────────────────────────────────────────
 
 platform :android do
@@ -67,6 +65,15 @@ platform :android do
     UI.header("Build · assembling the :guardian release AAR")
     UI.message("Requested build_type=#{build_type} (library assembles its release AAR)")
     gradle(task: ":guardian:assembleRelease")
+  end
+
+  desc "Uploads :guardian to Maven Central staging via com.vanniktech.maven.publish."
+  desc "Requires RELEASE_CONTEXT=true — only set inside the `publish` job of release.yml."
+  lane :publish_maven do
+    UI.user_error!("publish_maven must only run from the release pipeline (RELEASE_CONTEXT=true not set)") \
+      unless ENV["RELEASE_CONTEXT"] == "true"
+    UI.header("Publish · uploading :guardian to Maven Central staging")
+    gradle(task: ":guardian:publishToMavenCentral")
   end
 
 end
