@@ -14,9 +14,10 @@
 # SDK vs App: the flag surface is a SUBSET of GuardianApp.Android's build.sh. A
 # library never bundles an .aab, installs onto a device, publishes to a store, or
 # runs a localisation gate (the :guardian module ships no string resources), so
-# --aab/--install*/--publish*/--publishTarget/--l10n and the `automation` buildType
-# are all intentionally absent. What remains is the pure quality surface:
-# build (AAR) / test / lint / coverage.
+# --aab/--install*/--publishTarget/--l10n and the `automation` buildType are all
+# intentionally absent. --publish maps to the publish_maven Fastlane lane (Maven
+# Central staging via com.vanniktech.maven.publish). That lane is guarded by
+# RELEASE_CONTEXT=true, which is ONLY set inside the `publish` job of release.yml.
 
 # ─── Defaults (safe for a local run: build + test + lint, never publishes) ────
 init_defaults() {
@@ -25,6 +26,7 @@ init_defaults() {
   DO_TEST=true
   DO_LINT=true
   DO_COVERAGE=false
+  DO_PUBLISH=false       # publish to Maven Central staging — only via release.yml
   BRANCH=""              # informational only; CI does the actual checkout
   SKIP_DEPS=false        # by default, ensure gems are installed before building
   DRY_RUN=false
@@ -55,6 +57,8 @@ parse_args() {
       --nolint)         DO_LINT=false;     shift ;;
       --coverage)       DO_COVERAGE=true;  shift ;;
       --nocoverage)     DO_COVERAGE=false; shift ;;
+      --publish)        DO_PUBLISH=true;   shift ;;
+      --nopublish)      DO_PUBLISH=false;  shift ;;
       --branch)         need_value "$1" "${2:-}"; BRANCH="$2";         shift 2 ;;
       --skip-deps)      SKIP_DEPS=true;    shift ;;
       --dryRun)         DRY_RUN=true;      shift ;;
@@ -115,6 +119,10 @@ resolve_plan() {
   # gate, which only tests+lints) drops it.
   if [[ "$DO_BUILD" == true ]]; then
     LANES+=("build ${bt}")
+  fi
+
+  if [[ "$DO_PUBLISH" == true ]]; then
+    LANES+=("publish_maven")
   fi
 
   # Guard against an empty plan (e.g. --nobuild --notest --nolint --nocoverage).

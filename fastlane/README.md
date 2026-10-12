@@ -51,6 +51,16 @@ Assembles the :guardian library's release AAR (guardian-release.aar).
 
 Accepts an inert `build_type:` for contract-parity; a library ships a single release AAR.
 
+### android publish_maven
+
+```sh
+[bundle exec] fastlane android publish_maven
+```
+
+Uploads :guardian to Maven Central staging via com.vanniktech.maven.publish.
+
+Requires RELEASE_CONTEXT=true — only set inside the `publish` job of release.yml.
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
