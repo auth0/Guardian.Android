@@ -1,3 +1,16 @@
+## 1.8.1 (2026-10-13)
+
+## What's Changed
+* SEC-71727: fix bouncycastle version by @SerhiiKobezaCapgemini in https://github.com/auth0/Guardian.Android/pull/155
+* Bump java-jwt to 4.6.1 and jackson-bom to 2.22.2 to address CVEs by @arunav-gandhi in https://github.com/auth0/Guardian.Android/pull/157
+* Release/0.11.2 by @arunav-gandhi in https://github.com/auth0/Guardian.Android/pull/158
+* GHA CI/CD implementation by @arunav-gandhi in https://github.com/auth0/Guardian.Android/pull/159
+* Initial release pipeline by @arunav-gandhi in https://github.com/auth0/Guardian.Android/pull/161
+* Fix signing secret name, add coverage to release test job, remove secret debugging by @arunav-gandhi in https://github.com/auth0/Guardian.Android/pull/164
+
+
+**Full Changelog**: https://github.com/auth0/Guardian.Android/compare/0.11.1...1.8.1
+
 # Change Log
 
 ## [0.11.2](https://github.com/auth0/Guardian.Android/tree/0.11.2) (2026-10-01)
