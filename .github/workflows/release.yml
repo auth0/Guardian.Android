@@ -15,7 +15,7 @@ name: Release
 #   MAVEN_CENTRAL_USERNAME       — Maven Central Portal username
 #   MAVEN_CENTRAL_PASSWORD       — Maven Central Portal password
 #   SIGNING_KEY_ID               — GPG public key ID
-#   SIGNING_PASSWORD             — GPG secret key passphrase
+#   SIGNING_KEY_PASSWORD         — GPG secret key passphrase
 #   SIGNING_SECRET_KEY_RING_B64  — base64-encoded secring.gpg
 #                                  Generate with: base64 -i secring.gpg | pbcopy
 #
@@ -115,11 +115,28 @@ jobs:
           BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
           BUNDLE_PATH: ~/vendor/bundle
 
+      # --test + --coverage resolves to the single coverage lane: it runs the :guardian
+      # unit tests once with JaCoCo and enforces the 80% line-coverage gate.
       - name: Test
-        run: ./build.sh --buildType release --test --nobuild --nolint --nocoverage --nopublish --skip-deps
+        run: ./build.sh --buildType debug --test --coverage --nobuild --nolint --nopublish --skip-deps
         env:
           BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
           BUNDLE_PATH: ~/vendor/bundle
+
+      # build.sh's postbuild hook writes reports.html on success and then cleans the
+      # raw jacoco dirs; on failure it doesn't, so regenerate it here.
+      - name: Generate reports.html (failure fallback)
+        if: failure()
+        run: ./tools/build/reports.sh
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
+        if: always()
+        with:
+          name: reports
+          path: guardian/build/reports/reports.html
 
   # ── 3. Publish ─────────────────────────────────────────────────────────────
   # The maven-central-release environment supplies BOTH the human approval gate
@@ -203,7 +220,7 @@ jobs:
           mavenCentralUsername=${{ secrets.MAVEN_CENTRAL_USERNAME }}
           mavenCentralPassword=${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           signing.keyId=${{ secrets.SIGNING_KEY_ID }}
-          signing.password=${{ secrets.SIGNING_PASSWORD }}
+          signing.password=${{ secrets.SIGNING_KEY_PASSWORD }}
           signing.secretKeyRingFile=/tmp/secring.gpg
           EOF
 
