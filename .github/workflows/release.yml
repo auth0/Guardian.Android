@@ -8,6 +8,8 @@ name: Release
 #
 # Manual run (for example after fixing an environment problem):
 #   gh workflow run release.yml --ref master -f version=X.Y.Z
+# It releases the merge commit of the newest merged release/X.Y.Z PR, not master's
+# head, and fails if there is no such PR (Prepare release was never run or merged).
 #
 # Jobs: validate-version -> test -> publish (maven-central-release approval gate).
 # After approval, publish:
@@ -84,6 +86,19 @@ jobs:
               exit 1
             fi
             version="$INPUT_VERSION"
+            if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::'$version' is not X.Y.Z."
+              exit 1
+            fi
+            # Release exactly what was reviewed: the merge commit of the newest merged
+            # release/X.Y.Z PR (a correction PR, if there was one), never master's head,
+            # which may carry changes merged after the release PR.
+            sha="$(gh pr list --repo "$REPO" --head "release/$version" --base master --state merged \
+              --json mergeCommit,mergedAt --jq 'sort_by(.mergedAt) | last | .mergeCommit.oid // ""')"
+            if [[ -z "$sha" ]]; then
+              echo "::error::No merged release/$version PR. Run Prepare release for $version and merge its PR first."
+              exit 1
+            fi
           else
             # The squash merge of a release/X.Y.Z PR into master, or nothing to do.
             head_ref="$(gh api "repos/$REPO/commits/$sha/pulls" --jq \
