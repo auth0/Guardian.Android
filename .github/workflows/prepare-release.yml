@@ -40,7 +40,7 @@ jobs:
     permissions:
       contents: write       # create the branch and the release commit
       pull-requests: write  # open the release PR
-      actions: write        # start pr.yml on the branch (see the last step)
+      actions: write        # approve the PR checks on the release PR (see the last step)
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
@@ -187,7 +187,7 @@ jobs:
           entry = [f"## [{version}](https://github.com/{repo}/tree/{version}) ({date})"]
           if latest:
               entry.append(f"[Full Changelog](https://github.com/{repo}/compare/{latest}...{version})")
-          entry += ["", "**Changed**", *bullets, "", ""]
+          entry += ["", "**Changed**", *bullets, ""]
 
           with open("CHANGELOG.md", encoding="utf-8") as f:
               lines = f.read().split("\n")
@@ -241,9 +241,28 @@ jobs:
           echo "Opened $url"
           echo "### Release PR: $url" >> "$GITHUB_STEP_SUMMARY"
 
-      # A PR opened with GITHUB_TOKEN does not trigger pull_request workflows, so
-      # start the PR checks on the branch explicitly. Their check runs land on the
-      # PR's head commit. Later pushes to the branch trigger pr.yml as usual.
-      - name: Run the PR checks on the release branch
+      # GitHub holds the PR checks of a PR opened by github-actions[bot] at "Approval
+      # required". Approve that run so the checks show on the PR. (Starting pr.yml with
+      # workflow_dispatch instead runs the tests, but GitHub does not show the result
+      # on the PR.) Later pushes to the branch trigger pr.yml as usual.
+      - name: Start the PR checks
         if: steps.plan.outputs.mode == 'release'
-        run: gh workflow run pr.yml --repo "$REPO" --ref "$BRANCH"
+        run: |
+          set -euo pipefail
+          sha="$(gh api "repos/$REPO/git/ref/heads/$BRANCH" --jq .object.sha)"
+          for _ in $(seq 1 20); do
+            runs="$(gh api "repos/$REPO/actions/workflows/pr.yml/runs?event=pull_request&head_sha=$sha" \
+              --jq '[.workflow_runs[] | {id, conclusion}]')"
+            held="$(jq -r '[.[] | select(.conclusion == "action_required")][0].id // ""' <<<"$runs")"
+            if [[ -n "$held" ]]; then
+              gh api -X POST "repos/$REPO/actions/runs/$held/approve" >/dev/null
+              echo "Approved the PR checks (run $held)."
+              exit 0
+            fi
+            if [[ "$(jq length <<<"$runs")" != "0" ]]; then
+              echo "The PR checks are already running."
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::warning::No PR check run appeared for $BRANCH. Close and reopen the release PR to start the checks."

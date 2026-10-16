@@ -34,7 +34,7 @@ name: Release
 #   SIGNING_SECRET_KEY_RING_B64  base64-encoded secring.gpg (base64 -i secring.gpg | pbcopy)
 
 # Manual runs carry the version in their title; the superseding logic below reads it back.
-run-name: ${{ github.event_name == 'workflow_dispatch' && format('Release {0} (manual)', inputs.version) || github.event.head_commit.message }}
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('Release {0} (manual)', inputs.version) || '' }}
 
 on:
   push:
