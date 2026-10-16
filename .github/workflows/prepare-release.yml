@@ -1,9 +1,8 @@
 name: Prepare release
 
 # Step 1 of a release (see the Guardian SDK Release Guide on Confluence, AA1 1156121307).
-# Run manually on master with the version to ship:
-#
-#   gh workflow run prepare-release.yml --ref master -f version=X.Y.Z
+# Start it from the Actions tab (Prepare release, Run workflow, branch master) with
+# the version to ship.
 #
 # It creates release/X.Y.Z from master, sets .version and the README install line,
 # drafts the CHANGELOG.md entry, commits all of it as ONE verified commit (created

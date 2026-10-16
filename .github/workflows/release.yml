@@ -6,8 +6,8 @@ name: Release
 # the push rather than on the PR's "closed" event so that github.ref is master,
 # which is what an environment restricted to master expects.
 #
-# Manual run (for example after fixing an environment problem):
-#   gh workflow run release.yml --ref master -f version=X.Y.Z
+# Manual run, only to redo a release (for example after fixing an environment
+# problem): Actions tab, Release, Run workflow, branch master, with the version.
 # It releases the merge commit of the newest merged release/X.Y.Z PR, not master's
 # head, and fails if there is no such PR (Prepare release was never run or merged).
 #
