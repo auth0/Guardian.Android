@@ -285,7 +285,7 @@ jobs:
             --jq ".workflow_runs[] | select(.id > $GITHUB_RUN_ID) | [.id, .event, .head_sha, .display_title] | @tsv" \
           | while IFS=$'\t' read -r id event head_sha title; do
             if [[ "$(run_version "$event" "$head_sha" "$title")" == "$VERSION" ]]; then
-              echo "::error::A newer Release run exists for $VERSION (run $id). This run is superseded; approve the newer one."
+              echo "::error::A newer Release run exists for $VERSION (run $id). This run is superseded: approve the newer run, or if that one failed, start Release again for $VERSION from the Actions tab."
               exit 1
             fi
           done
@@ -307,9 +307,20 @@ jobs:
             echo "::error::$VERSION is already on Maven Central. Release the next version instead."
             exit 1
           fi
-          if ! state="$(gh release view "$VERSION" --repo "$REPO" --json isDraft --jq 'if .isDraft then "draft" else "published" end' 2>/dev/null)"; then
+          # Look the Release up by id rather than through `gh release view`: GitHub can
+          # give a draft an "untagged-..." tag name, so match a draft by its title too.
+          # VERSION is validated as X.Y.Z, so it is safe inside the jq filter.
+          release="$(gh api "repos/$REPO/releases?per_page=100" --jq \
+            "[.[] | select(.tag_name == \"$VERSION\" or (.draft and .name == \"$VERSION\"))][0] // {}")"
+          release_id="$(jq -r '.id // ""' <<<"$release")"
+          if [[ -z "$release_id" ]]; then
             state="none"
+          elif [[ "$(jq -r .draft <<<"$release")" == "true" ]]; then
+            state="draft"
+          else
+            state="published"
           fi
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
           if [[ "$state" == "published" ]]; then
             tag_sha="$(gh api "repos/$REPO/commits/$VERSION" --jq .sha)"
             if [[ "$tag_sha" == "$SHA" ]]; then
@@ -344,25 +355,29 @@ jobs:
       # Android consumers never resolve the tag, so moving it is safe until the
       # Portal promotion, and it keeps the tag on the commit that actually ships.
       - name: Create or update the draft GitHub Release
+        id: draft
         if: steps.preflight.outputs.action == 'publish'
         env:
           STATE: ${{ steps.preflight.outputs.state }}
+          RELEASE_ID: ${{ steps.preflight.outputs.release_id }}
         run: |
           set -euo pipefail
           if [[ "$STATE" == "moved" ]]; then
-            gh release delete "$VERSION" --repo "$REPO" --cleanup-tag --yes
+            gh api -X DELETE "repos/$REPO/releases/$RELEASE_ID"
+            gh api -X DELETE "repos/$REPO/git/refs/tags/$VERSION"
             STATE="none"
           fi
+          # Always send tag_name: updating a draft without it resets the tag name.
           if [[ "$STATE" == "draft" ]]; then
-            id="$(gh release view "$VERSION" --repo "$REPO" --json databaseId --jq .databaseId)"
-            gh api -X PATCH "repos/$REPO/releases/$id" \
-              -f target_commitish="$SHA" -F body=@/tmp/release-notes.md >/dev/null
+            id="$(gh api -X PATCH "repos/$REPO/releases/$RELEASE_ID" -f tag_name="$VERSION" \
+              -f target_commitish="$SHA" -f name="$VERSION" -F body=@/tmp/release-notes.md --jq .id)"
             echo "Reused the draft Release $VERSION, now targeting $SHA."
           else
-            gh release create "$VERSION" --repo "$REPO" --draft --target "$SHA" \
-              --title "$VERSION" --notes-file /tmp/release-notes.md
+            id="$(gh api "repos/$REPO/releases" -f tag_name="$VERSION" -f target_commitish="$SHA" \
+              -f name="$VERSION" -F body=@/tmp/release-notes.md -F draft=true --jq .id)"
             echo "Created the draft Release $VERSION targeting $SHA."
           fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # pin@v6.0.1
         if: steps.preflight.outputs.action == 'publish'
@@ -425,9 +440,17 @@ jobs:
       # reached once the upload succeeded, so a failed upload leaves just the draft.
       - name: Publish the GitHub Release (creates the tag)
         if: steps.preflight.outputs.action == 'publish'
+        env:
+          RELEASE_ID: ${{ steps.draft.outputs.id }}
         run: |
           set -euo pipefail
-          gh release edit "$VERSION" --repo "$REPO" --draft=false
+          gh api -X PATCH "repos/$REPO/releases/$RELEASE_ID" -f tag_name="$VERSION" \
+            -f target_commitish="$SHA" -F draft=false >/dev/null
+          tag_sha="$(gh api "repos/$REPO/commits/$VERSION" --jq .sha)"
+          if [[ "$tag_sha" != "$SHA" ]]; then
+            echo "::error::Tag $VERSION points at $tag_sha, expected $SHA."
+            exit 1
+          fi
           {
             echo "### $VERSION uploaded to Maven Central staging"
             echo
