@@ -1,93 +1,192 @@
 name: Release
 
-# Triggered automatically when any commit is pushed to a release/X.Y.Z branch,
-# or manually via workflow_dispatch (select the release branch in the UI).
+# Step 2 of a release (see the Guardian SDK Release Guide on Confluence, AA1 1156121307).
+# Runs on every push to master and carries on only when the pushed commit is the
+# squash merge of a release/X.Y.Z PR (opened by prepare-release.yml). It runs on
+# the push rather than on the PR's "closed" event so that github.ref is master,
+# which is what an environment restricted to master expects.
 #
-# The validate-version job syncs .version to the branch name if they don't match,
-# so the developer only needs to create the branch — .version is handled automatically.
-# It then outputs the SHA it ended on; test and publish check out THAT exact SHA so
-# every job runs against the same commit (including the sync) and a mid-flight push
-# to the branch can't make publish ship an untested commit.
+# Manual run, only to redo a release (for example after fixing an environment
+# problem): Actions tab, Release, Run workflow, branch master, with the version.
+# It releases the merge commit of the newest merged release/X.Y.Z PR, not master's
+# head, and fails if there is no such PR (Prepare release was never run or merged).
 #
-# Required GitHub secrets — configure these as ENVIRONMENT secrets on the
-# `maven-central-release` environment (NOT repo-wide), so they are only readable
-# by the publish job after the approval gate:
-#   MAVEN_CENTRAL_USERNAME       — Maven Central Portal username
-#   MAVEN_CENTRAL_PASSWORD       — Maven Central Portal password
-#   SIGNING_KEY_ID               — GPG public key ID
-#   SIGNING_KEY_PASSWORD         — GPG secret key passphrase
-#   SIGNING_SECRET_KEY_RING_B64  — base64-encoded secring.gpg
-#                                  Generate with: base64 -i secring.gpg | pbcopy
+# Jobs: validate-version -> test -> publish (maven-central-release approval gate).
+# After approval, publish:
+#   1. creates the GitHub Release X.Y.Z as a DRAFT targeting the merge commit
+#      (a draft does not create the tag), with the CHANGELOG entry as its body;
+#   2. uploads to Maven Central staging;
+#   3. publishes the draft, which creates the X.Y.Z tag on the merge commit.
+# Then promote the staging deployment by hand at https://central.sonatype.com.
 #
-# Required GitHub environment (Settings → Environments):
-#   maven-central-release        — add required reviewers (human approval gate) and
-#                                   the secrets above. The gate attaches to the
-#                                   publish job, which is the only job that uses them.
+# Re-runs never need a manual cleanup: a failed upload leaves only the draft,
+# which the next run reuses. A newer run for the same version cancels older runs
+# that have not started publishing, and publish refuses to run if a newer run for
+# its version exists, so approving a stale run does nothing.
 #
-# Release steps:
-#   1. Create branch release/X.Y.Z — workflow triggers automatically.
-#      .version is auto-synced to the branch version if needed.
-#   2. Approve the publish job when it pauses on the maven-central-release gate.
-#   3. After publish completes: log in to central.sonatype.com and manually promote
-#      the staging deployment (publishToMavenCentral(false) — no auto-release).
+# Required GitHub environment: maven-central-release, with required reviewers
+# and these ENVIRONMENT secrets (not repo-wide, so only the publish job can read
+# them, and only after approval):
+#   MAVEN_CENTRAL_USERNAME       Maven Central Portal username
+#   MAVEN_CENTRAL_PASSWORD       Maven Central Portal password
+#   SIGNING_KEY_ID               GPG public key ID
+#   SIGNING_KEY_PASSWORD         GPG secret key passphrase
+#   SIGNING_SECRET_KEY_RING_B64  base64-encoded secring.gpg (base64 -i secring.gpg | pbcopy)
+
+# Manual runs carry the version in their title; the superseding logic below reads it back.
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('Release {0} (manual)', inputs.version) || '' }}
 
 on:
+  push:
+    branches: [master]
   workflow_dispatch:
-
+    inputs:
+      version:
+        description: "Version to release (X.Y.Z). Run on master."
+        required: true
+        type: string
+      staging_dropped:
+        description: "Correction only: I dropped the earlier staging deployment for this version in the Maven Central Portal"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
 
-  # ── 1. Validate and sync version ──────────────────────────────────────────
+  # ── 1. Detect and validate the release, supersede older runs ──────────────
   validate-version:
     name: Validate version
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     permissions:
-      contents: write  # required to commit the .version sync if needed
+      contents: read
+      pull-requests: read  # map the pushed commit to its release PR
+      actions: write       # cancel superseded runs
     outputs:
-      sha: ${{ steps.sync.outputs.sha }}
+      release: ${{ steps.detect.outputs.release }}
+      version: ${{ steps.detect.outputs.version }}
+      sha: ${{ steps.detect.outputs.sha }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
-        with:
-          ref: ${{ github.ref }}
-
-      - name: Sync .version to branch name
-        id: sync
+      - name: Detect release
+        id: detect
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          branch="${GITHUB_REF_NAME}"
-          if [[ ! "$branch" =~ ^release/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "❌ This workflow only runs on release/X.Y.Z branches."
-            echo "   Current branch: $branch"
+          sha="$GITHUB_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$GITHUB_REF" != "refs/heads/master" ]]; then
+              echo "::error::Run Release on master (it ran on ${GITHUB_REF_NAME})."
+              exit 1
+            fi
+            version="$INPUT_VERSION"
+            if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::'$version' is not X.Y.Z."
+              exit 1
+            fi
+            # Release exactly what was reviewed: the merge commit of the newest merged
+            # release/X.Y.Z PR (a correction PR, if there was one), never master's head,
+            # which may carry changes merged after the release PR.
+            sha="$(gh pr list --repo "$REPO" --head "release/$version" --base master --state merged \
+              --json mergeCommit,mergedAt --jq 'sort_by(.mergedAt) | last | .mergeCommit.oid // ""')"
+            if [[ -z "$sha" ]]; then
+              echo "::error::No merged release/$version PR. Run Prepare release for $version and merge its PR first."
+              exit 1
+            fi
+          else
+            # The squash merge of a release/X.Y.Z PR into master, or nothing to do.
+            head_ref="$(gh api "repos/$REPO/commits/$sha/pulls" --jq \
+              '[.[] | select(.merged_at != null and .base.ref == "master" and (.head.ref | test("^release/[0-9]+\\.[0-9]+\\.[0-9]+$")))][0].head.ref // ""')"
+            if [[ -z "$head_ref" ]]; then
+              echo "Not a release merge; nothing to do."
+              echo "release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            version="${head_ref#release/}"
+          fi
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$version' is not X.Y.Z."
             exit 1
           fi
-          version="${branch#release/}"
-          current="$(tr -d '[:space:]' < .version)"
-          if [[ "$current" == "$version" ]]; then
-            echo "✅ .version is already $version"
-          else
-            echo "$version" > .version
-            git config user.name  "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add .version
-            git commit -m "chore: sync .version to $version"
-            git push origin "$branch"
-            echo "✅ Updated .version from $current to $version"
-          fi
-          # Emit the commit every later job must check out (post-sync if we committed).
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          {
+            echo "release=true"
+            echo "version=$version"
+            echo "sha=$sha"
+          } >> "$GITHUB_OUTPUT"
+          echo "Release $version from $sha"
 
-  # ── 2. Run tests ───────────────────────────────────────────────────────────
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
+        if: steps.detect.outputs.release == 'true'
+        with:
+          ref: ${{ steps.detect.outputs.sha }}
+
+      - name: Check the version files and the registry
+        if: steps.detect.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.detect.outputs.version }}
+        run: |
+          set -euo pipefail
+          current="$(tr -d '[:space:]' < .version)"
+          if [[ "$current" != "$VERSION" ]]; then
+            echo "::error::.version on this commit is '$current', expected $VERSION. Run Prepare release for $VERSION."
+            exit 1
+          fi
+          if ! grep -qF "## [${VERSION}](" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no entry for $VERSION."
+            exit 1
+          fi
+          pom="https://repo1.maven.org/maven2/com/auth0/android/guardian/${VERSION}/guardian-${VERSION}.pom"
+          if [[ "$(curl -s -o /dev/null -w '%{http_code}' "$pom")" == "200" ]]; then
+            echo "::error::$VERSION is already on Maven Central. Release the next version instead."
+            exit 1
+          fi
+
+      # Cancel older runs for the same version that have not started publishing:
+      # still validating or testing, or waiting at the approval gate. A run whose
+      # publish job is already executing is left alone.
+      - name: Supersede older runs for this version
+        if: steps.detect.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.detect.outputs.version }}
+        run: |
+          set -euo pipefail
+          run_version() {  # event head_sha title -> the version that run releases
+            if [[ "$1" == "workflow_dispatch" ]]; then
+              sed -nE 's/^Release ([0-9]+\.[0-9]+\.[0-9]+) \(manual\)$/\1/p' <<<"$3"
+            else
+              gh api "repos/$REPO/commits/$2/pulls" \
+                --jq '[.[] | select(.merged_at != null and (.head.ref | startswith("release/")))][0].head.ref // "" | ltrimstr("release/")'
+            fi
+          }
+          for status in queued in_progress waiting; do
+            gh api "repos/$REPO/actions/workflows/release.yml/runs?status=$status&per_page=100" \
+              --jq ".workflow_runs[] | select(.id < $GITHUB_RUN_ID) | [.id, .event, .head_sha, .display_title] | @tsv"
+          done | while IFS=$'\t' read -r id event head_sha title; do
+            [[ "$(run_version "$event" "$head_sha" "$title")" == "$VERSION" ]] || continue
+            publishing="$(gh api "repos/$REPO/actions/runs/$id/jobs" \
+              --jq '[.jobs[] | select(.name == "Publish to Maven Central" and .status == "in_progress")] | length')"
+            if [[ "$publishing" != "0" ]]; then
+              echo "Run $id is already publishing $VERSION; leaving it."
+              continue
+            fi
+            echo "Cancelling superseded run $id for $VERSION."
+            gh api -X POST "repos/$REPO/actions/runs/$id/cancel" >/dev/null || true
+          done
+
+  # ── 2. Run tests on the exact commit being released ───────────────────────
   test:
     name: Test
     needs: validate-version
+    if: needs.validate-version.outputs.release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      # Pin to the exact commit validate-version ended on (includes the .version sync).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           ref: ${{ needs.validate-version.outputs.sha }}
@@ -139,79 +238,181 @@ jobs:
           path: guardian/build/reports/reports.html
 
   # ── 3. Publish ─────────────────────────────────────────────────────────────
-  # The maven-central-release environment supplies BOTH the human approval gate
-  # (required reviewers) AND the Maven/signing secrets — so approval and secret
-  # scoping attach directly to the job that uses the credentials.
+  # The maven-central-release environment supplies BOTH the approval gate
+  # (required reviewers) AND the Maven/signing secrets, so approval and secret
+  # scoping attach to the one job that uses the credentials.
   publish:
     name: Publish to Maven Central
-    needs: [test, validate-version]
+    needs: [validate-version, test]
+    if: needs.validate-version.outputs.release == 'true'
     runs-on: ubuntu-latest
-    # No job-level timeout — the environment approval gate counts against it, so a
-    # job timeout would cancel the job if a reviewer takes longer than the limit
-    # (e.g. cross-timezone, weekend). The environment itself has a configurable
-    # deployment timeout (Settings → Environments → maven-central-release → Timeout).
-    # Individual execution steps have their own timeout-minutes below.
+    # No job-level timeout: the approval wait counts against it, so a job timeout
+    # would cancel the job if a reviewer takes longer than the limit. The
+    # environment has its own deployment timeout; the long steps have their own.
     environment: maven-central-release
+    # Never two publishes for one version at once, and never cancel one mid-flight.
+    concurrency:
+      group: maven-central-publish-${{ needs.validate-version.outputs.version }}
+      cancel-in-progress: false
     permissions:
-      contents: write       # required for the CHANGELOG commit, git tag, and GitHub Release
-      pull-requests: write  # required to open the post-release PR to master
+      contents: write       # GitHub Release and its tag
+      actions: read         # newest-run check
+      pull-requests: read   # newest-run check maps runs to their release PR
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      VERSION: ${{ needs.validate-version.outputs.version }}
+      SHA: ${{ needs.validate-version.outputs.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           ref: ${{ needs.validate-version.outputs.sha }}
 
-      # Fail BEFORE any irreversible work if this version was already released.
-      # Re-running after a partial failure must not re-upload a second staging
-      # deployment or prepend a duplicate CHANGELOG block.
-      - name: Preflight — version + idempotency guard
-        env:
-          GH_TOKEN: ${{ github.token }}
+      # Approving a stale run must do nothing: if a newer Release run exists for
+      # this version (a correction was merged), stop before anything public.
+      - name: Check this is the newest run for the version
         run: |
           set -euo pipefail
-          tag="$(tr -d '[:space:]' < .version)"
-          if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "❌ .version is not a valid X.Y.Z version: '$tag'"
+          run_version() {  # event head_sha title -> the version that run releases
+            if [[ "$1" == "workflow_dispatch" ]]; then
+              sed -nE 's/^Release ([0-9]+\.[0-9]+\.[0-9]+) \(manual\)$/\1/p' <<<"$3"
+            else
+              gh api "repos/$REPO/commits/$2/pulls" \
+                --jq '[.[] | select(.merged_at != null and (.head.ref | startswith("release/")))][0].head.ref // "" | ltrimstr("release/")'
+            fi
+          }
+          gh api "repos/$REPO/actions/workflows/release.yml/runs?per_page=100" \
+            --jq ".workflow_runs[] | select(.id > $GITHUB_RUN_ID) | [.id, .event, .head_sha, .display_title] | @tsv" \
+          | while IFS=$'\t' read -r id event head_sha title; do
+            if [[ "$(run_version "$event" "$head_sha" "$title")" == "$VERSION" ]]; then
+              echo "::error::A newer Release run exists for $VERSION (run $id). This run is superseded: approve the newer run, or if that one failed, start Release again for $VERSION from the Actions tab."
+              exit 1
+            fi
+          done
+
+      # Decide what this run has to do, from what earlier runs left behind:
+      #   nothing yet                      -> create the draft, upload, publish it
+      #   a draft Release                  -> reuse it (pointed at this commit), upload, publish it
+      #   a published Release on this SHA  -> the upload already happened: promote in the Portal
+      #   a published Release elsewhere    -> correction after an earlier upload: only once the
+      #                                       earlier staging deployment was dropped by hand
+      - name: Preflight
+        id: preflight
+        env:
+          STAGING_DROPPED: ${{ inputs.staging_dropped }}
+        run: |
+          set -euo pipefail
+          pom="https://repo1.maven.org/maven2/com/auth0/android/guardian/${VERSION}/guardian-${VERSION}.pom"
+          if [[ "$(curl -s -o /dev/null -w '%{http_code}' "$pom")" == "200" ]]; then
+            echo "::error::$VERSION is already on Maven Central. Release the next version instead."
             exit 1
           fi
-          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
-            echo "❌ Tag '$tag' already exists on the remote — this version was already released."
+          # Look the Release up by id rather than through `gh release view`: GitHub can
+          # give a draft an "untagged-..." tag name, so match a draft by its title too.
+          # VERSION is validated as X.Y.Z, so it is safe inside the jq filter.
+          release="$(gh api "repos/$REPO/releases?per_page=100" --jq \
+            "[.[] | select(.tag_name == \"$VERSION\" or (.draft and .name == \"$VERSION\"))][0] // {}")"
+          release_id="$(jq -r '.id // ""' <<<"$release")"
+          if [[ -z "$release_id" ]]; then
+            state="none"
+          elif [[ "$(jq -r .draft <<<"$release")" == "true" ]]; then
+            state="draft"
+          else
+            state="published"
+          fi
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+          if [[ "$state" == "published" ]]; then
+            tag_sha="$(gh api "repos/$REPO/commits/$VERSION" --jq .sha)"
+            if [[ "$tag_sha" == "$SHA" ]]; then
+              echo "::notice::$VERSION was already uploaded to staging from this commit. Promote it at https://central.sonatype.com; nothing to redo."
+              echo "action=skip" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [[ "$STAGING_DROPPED" != "true" ]]; then
+              echo "::error::$VERSION was already uploaded to staging from $tag_sha, and this run is for $SHA. Drop that deployment in the Maven Central Portal (Deployments, Drop), then run Release manually for $VERSION with 'staging_dropped' ticked."
+              exit 1
+            fi
+            echo "The earlier staging deployment was dropped; moving the Release and tag to $SHA."
+            state="moved"
+          fi
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+          echo "action=publish" >> "$GITHUB_OUTPUT"
+
+      - name: Extract the CHANGELOG entry
+        if: steps.preflight.outputs.action == 'publish'
+        run: |
+          set -euo pipefail
+          awk -v h="## [${VERSION}](" '
+            index($0, h) == 1 { on = 1; next }
+            on && /^## \[/    { exit }
+            on                { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+          if ! grep -q '[^[:space:]]' /tmp/release-notes.md; then
+            echo "::error::Empty CHANGELOG entry for $VERSION."
             exit 1
           fi
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "❌ GitHub Release '$tag' already exists — this version was already released."
-            exit 1
+
+      # Android consumers never resolve the tag, so moving it is safe until the
+      # Portal promotion, and it keeps the tag on the commit that actually ships.
+      - name: Create or update the draft GitHub Release
+        id: draft
+        if: steps.preflight.outputs.action == 'publish'
+        env:
+          STATE: ${{ steps.preflight.outputs.state }}
+          RELEASE_ID: ${{ steps.preflight.outputs.release_id }}
+        run: |
+          set -euo pipefail
+          if [[ "$STATE" == "moved" ]]; then
+            gh api -X DELETE "repos/$REPO/releases/$RELEASE_ID"
+            gh api -X DELETE "repos/$REPO/git/refs/tags/$VERSION"
+            STATE="none"
           fi
-          echo "✅ Version $tag is clean to release."
+          # Always send tag_name: updating a draft without it resets the tag name.
+          if [[ "$STATE" == "draft" ]]; then
+            id="$(gh api -X PATCH "repos/$REPO/releases/$RELEASE_ID" -f tag_name="$VERSION" \
+              -f target_commitish="$SHA" -f name="$VERSION" -F body=@/tmp/release-notes.md --jq .id)"
+            echo "Reused the draft Release $VERSION, now targeting $SHA."
+          else
+            id="$(gh api "repos/$REPO/releases" -f tag_name="$VERSION" -f target_commitish="$SHA" \
+              -f name="$VERSION" -F body=@/tmp/release-notes.md -F draft=true --jq .id)"
+            echo "Created the draft Release $VERSION targeting $SHA."
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # pin@v6.0.1
+        if: steps.preflight.outputs.action == 'publish'
         with:
           distribution: temurin
           java-version-file: '.java-version'
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # pin@v6.4.0
+        if: steps.preflight.outputs.action == 'publish'
 
       - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # pin@v1.327.0
+        if: steps.preflight.outputs.action == 'publish'
         with:
           bundler: 'Gemfile.lock'
 
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
+        if: steps.preflight.outputs.action == 'publish'
         with:
           path: ~/vendor/bundle
           key: bundle-v1-${{ hashFiles('fastlane/Gemfile.lock') }}
           restore-keys: bundle-v1-
 
       - name: Install Ruby dependencies
+        if: steps.preflight.outputs.action == 'publish'
         run: bundle check || bundle install --jobs 4 --retry 3
         env:
           BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
           BUNDLE_PATH: ~/vendor/bundle
 
-      # signing.* properties contain dots → can't be expressed as env vars →
-      # must be written to ~/.gradle/gradle.properties. The delimiter is QUOTED
-      # (<<'EOF') so a secret value containing $, backtick, or $(...) is written
-      # literally and never shell-expanded. Runner is ephemeral; cleanup step
-      # removes the file defensively anyway.
+      # signing.* properties contain dots, so they can't be env vars and must be
+      # written to ~/.gradle/gradle.properties. The delimiter is QUOTED (<<'EOF')
+      # so a secret containing $, a backtick or $(...) is written literally and
+      # never shell-expanded. The cleanup step removes the file afterwards.
       - name: Configure signing and Maven Central credentials
+        if: steps.preflight.outputs.action == 'publish'
         run: |
           set -euo pipefail
           echo "${{ secrets.SIGNING_SECRET_KEY_RING_B64 }}" | base64 --decode > /tmp/secring.gpg
@@ -224,7 +425,10 @@ jobs:
           signing.secretKeyRingFile=/tmp/secring.gpg
           EOF
 
+      # publishToMavenCentral(false) in guardian/build.gradle uploads to staging
+      # and does NOT release; promotion in the Portal is a deliberate manual step.
       - name: Publish to Maven Central (staging)
+        if: steps.preflight.outputs.action == 'publish'
         timeout-minutes: 30
         run: ./build.sh --buildType release --notest --nolint --nocoverage --publish --nobuild --skip-deps
         env:
@@ -232,82 +436,27 @@ jobs:
           BUNDLE_PATH: ~/vendor/bundle
           RELEASE_CONTEXT: "true"
 
-      # After this step: log in to https://central.sonatype.com and manually promote
-      # the staging deployment. publishToMavenCentral(false) in build.gradle uploads
-      # to staging but does NOT auto-release — promotion is a deliberate manual gate.
-
-      # Generate release notes via the GitHub API, prepend them to CHANGELOG.md,
-      # and push the result to the release branch. Notes are stored in GITHUB_ENV
-      # (random delimiter — PR-title text is untrusted) for the Release step to reuse.
-      - name: Update CHANGELOG.md
-        timeout-minutes: 10
+      # Publishing the draft creates the X.Y.Z tag on the merge commit. Only
+      # reached once the upload succeeded, so a failed upload leaves just the draft.
+      - name: Publish the GitHub Release (creates the tag)
+        if: steps.preflight.outputs.action == 'publish'
         env:
-          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ steps.draft.outputs.id }}
         run: |
           set -euo pipefail
-          tag="$(tr -d '[:space:]' < .version)"
-          notes="$(gh api "repos/${{ github.repository }}/releases/generate-notes" \
-            --method POST \
-            --field tag_name="$tag" \
-            --field target_commitish="${GITHUB_REF_NAME}" \
-            --jq '.body')"
-          if [[ -z "$notes" ]]; then
-            echo "❌ generate-notes returned empty — aborting rather than shipping an empty changelog/release."
+          gh api -X PATCH "repos/$REPO/releases/$RELEASE_ID" -f tag_name="$VERSION" \
+            -f target_commitish="$SHA" -F draft=false >/dev/null
+          tag_sha="$(gh api "repos/$REPO/commits/$VERSION" --jq .sha)"
+          if [[ "$tag_sha" != "$SHA" ]]; then
+            echo "::error::Tag $VERSION points at $tag_sha, expected $SHA."
             exit 1
           fi
-          date="$(date -u +%Y-%m-%d)"
-          touch CHANGELOG.md   # first-release bootstrap: don't hard-fail if absent
           {
-            printf '## %s (%s)\n\n%s\n\n' "$tag" "$date" "$notes"
-            cat CHANGELOG.md
-          } > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git commit -m "chore: update CHANGELOG for $tag"
-          # Push the detached HEAD to the branch. With set -e, a non-fast-forward
-          # rejection (someone pushed to the branch mid-run) fails the job here —
-          # BEFORE we tag, so we never tag a commit that isn't on the branch.
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-          # Hand the notes to the Release step via a random, unguessable delimiter so
-          # a PR title equal to the delimiter can't truncate the value or inject env vars.
-          delim="EOF_$(openssl rand -hex 16)"
-          {
-            echo "RELEASE_NOTES<<${delim}"
-            echo "$notes"
-            echo "${delim}"
-          } >> "$GITHUB_ENV"
-
-      # Tag the commit that includes the updated CHANGELOG (only reached if the
-      # branch push above succeeded).
-      - name: Tag release
-        run: |
-          set -euo pipefail
-          tag="$(tr -d '[:space:]' < .version)"
-          git tag -a "$tag" -m "Release $tag"
-          git push origin "$tag"
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          tag="$(tr -d '[:space:]' < .version)"
-          gh release create "$tag" \
-            --title "$tag" \
-            --notes "$RELEASE_NOTES"
-
-      - name: Open PR to master
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          tag="$(tr -d '[:space:]' < .version)"
-          gh pr create \
-            --base master \
-            --head "${GITHUB_REF_NAME}" \
-            --title "Release $tag" \
-            --body "$(printf 'Merges the release branch for **%s** into master.\n\nIncludes:\n- `.version` bump to %s\n- CHANGELOG.md update\n\n> After merging, the release/%s branch can be deleted.' "$tag" "$tag" "$tag")"
+            echo "### $VERSION uploaded to Maven Central staging"
+            echo
+            echo "Next: open https://central.sonatype.com, Deployments, check the com.auth0.android:guardian $VERSION deployment (files and POM) and click Publish."
+            echo "It is public about 10 to 15 minutes later at https://repo.maven.apache.org/maven2/com/auth0/android/guardian/$VERSION/"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Clean up credentials
         if: always()
