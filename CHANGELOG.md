@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.11.3](https://github.com/auth0/Guardian.Android/tree/0.11.3) (2026-10-21)
+[Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.11.2...0.11.3)
+
+**Changed**
+- Release/0.11.2 (see [PR](https://github.com/auth0/Guardian.Android/pull/158))
+- GHA CI/CD implementation (see [PR](https://github.com/auth0/Guardian.Android/pull/159))
+- Initial release pipeline (see [PR](https://github.com/auth0/Guardian.Android/pull/161))
+- Fix signing secret name, add coverage to release test job, remove secret debugging (see [PR](https://github.com/auth0/Guardian.Android/pull/164))
+- NAPP-173: merge the release PR before tagging and publishing (see [PR](https://github.com/auth0/Guardian.Android/pull/168))
+
 ## [0.11.2](https://github.com/auth0/Guardian.Android/tree/0.11.2) (2026-10-01)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.11.1...0.11.2)
 
