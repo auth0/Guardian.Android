@@ -45,8 +45,16 @@ on:
         description: "Version to release (X.Y.Z). Run on master."
         required: true
         type: string
+      # A confirmation, not an action: the workflow cannot tell which staging upload
+      # is which, so it trusts this. Leave it unticked for every normal release, for
+      # re-running a failed run and for any other manual run. Tick it only when an
+      # earlier run uploaded this version, nobody clicked Publish, a fix for the same
+      # version was merged, the new run stopped with "already uploaded to staging
+      # from another commit", and you clicked Drop on the old upload in the Portal.
+      # Once a version is Published it can never change: release the fix as the
+      # next version. (The input keeps its name; the form shows the description.)
       staging_dropped:
-        description: "Correction only: I dropped the earlier staging deployment for this version in the Maven Central Portal"
+        description: "Replace an unpublished upload: tick only after you clicked Drop on this version's earlier upload in the Maven Central Portal"
         required: false
         type: boolean
         default: false
@@ -391,10 +399,10 @@ jobs:
               exit 0
             fi
             if [[ "$STAGING_DROPPED" != "true" ]]; then
-              echo "::error::$VERSION was already uploaded to staging from $tag_sha, and this run is for $SHA. Drop that deployment in the Maven Central Portal (Deployments, Drop), then run Release manually for $VERSION with 'staging_dropped' ticked."
+              echo "::error::$VERSION was already uploaded to staging from another commit, $tag_sha (this run is for $SHA). In the Maven Central Portal, Deployments, click Drop on that upload, then run Release by hand for $VERSION with 'Replace an unpublished upload' ticked. If $VERSION was already Published there, it can no longer change: release the fix as the next version."
               exit 1
             fi
-            echo "The earlier staging deployment was dropped; moving the Release and tag to $SHA."
+            echo "'Replace an unpublished upload' is ticked: the earlier upload was dropped, so moving the Release and tag to $SHA and uploading again."
             state="moved"
           fi
           echo "state=$state" >> "$GITHUB_OUTPUT"
