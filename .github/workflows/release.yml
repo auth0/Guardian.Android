@@ -11,7 +11,8 @@ name: Release
 # It releases the merge commit of the newest merged release/X.Y.Z PR, not master's
 # head, and fails if there is no such PR (Prepare release was never run or merged).
 #
-# Jobs: validate-version -> test -> publish (maven-central-release approval gate).
+# Jobs: validate-version -> test -> publish (maven-central-release approval gate)
+#       -> validate-release.
 # Test is skipped when the release PR's Test check already passed on a commit with
 # exactly the same tree as the merge commit (the usual case: the release branch was
 # up to date with master), since it would run the same suite on the same files.
@@ -20,7 +21,11 @@ name: Release
 #      (a draft does not create the tag), with the CHANGELOG entry as its body;
 #   2. uploads to Maven Central staging;
 #   3. publishes the draft, which creates the X.Y.Z tag on the merge commit.
-# Then promote the staging deployment by hand at https://central.sonatype.com.
+# Then validate-release (validate-release.yml, stage staged) checks the GitHub side
+# of the release: the Release and its notes, the tag, master's versions and this
+# run. It reports a pass or fail table and never changes the release.
+# Then promote the staging deployment by hand at https://central.sonatype.com, and
+# run Validate release by hand with stage published to check Maven Central.
 #
 # Re-runs never need a manual cleanup: a failed upload leaves only the draft,
 # which the next run reuses. A newer run for the same version cancels older runs
@@ -562,6 +567,7 @@ jobs:
             echo
             echo "Next: open https://central.sonatype.com, Deployments, check the com.auth0.android:guardian $VERSION deployment (files and POM) and click Publish."
             echo "It is public about 10 to 15 minutes later at https://repo.maven.apache.org/maven2/com/auth0/android/guardian/$VERSION/"
+            echo "Then run Validate release by hand for $VERSION with stage published, to check Maven Central."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Clean up credentials
@@ -570,3 +576,19 @@ jobs:
           rm -f /tmp/secring.gpg
           sed -i '/mavenCentralUsername\|mavenCentralPassword\|signing\./d' \
             ~/.gradle/gradle.properties 2>/dev/null || true
+
+  # ── 4. Check the GitHub side of the release ────────────────────────────────
+  # Also after a run that had nothing left to redo, so the report covers it too.
+  # Maven Central is checked after the Portal promotion, by hand (stage published).
+  validate-release:
+    name: Validate release
+    needs: [validate-version, publish]
+    if: "!cancelled() && needs.publish.result == 'success'"
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    uses: ./.github/workflows/validate-release.yml
+    with:
+      version: ${{ needs.validate-version.outputs.version }}
+      stage: staged
