@@ -1,0 +1,77 @@
+name: Validate release
+
+# Checks that every part of a release happened and reports each check as a pass or
+# fail row in the job summary (see .github/scripts/validate-release.sh for the
+# list). Read-only: it never changes a release. The job fails if any check fails.
+#
+# Two stages, because promotion in the Maven Central Portal is a manual click:
+#   staged     runs automatically as the last job of the Release workflow, before
+#              promotion: the GitHub Release, its notes, the tag, master's versions
+#              and the Release run.
+#   published  start it by hand after clicking Publish in the Portal (Actions tab,
+#              Validate release, Run workflow, with the version): the same checks,
+#              plus that Maven Central serves the POM, the AAR and their signatures
+#              and that the version resolves. Use wait-minutes (for example 30) to
+#              let it poll while the version becomes public.
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version to validate (X.Y.Z)"
+        required: true
+        type: string
+      stage:
+        description: "staged (before promotion in the Portal) or published (after it)"
+        required: false
+        type: string
+        default: staged
+      wait-minutes:
+        description: "How long to wait for Maven Central to serve the version"
+        required: false
+        type: number
+        default: 0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to validate (X.Y.Z)"
+        required: true
+        type: string
+      stage:
+        description: "staged (before promotion in the Portal) or published (after it)"
+        required: true
+        type: choice
+        options: [published, staged]
+        default: published
+      wait-minutes:
+        description: "How long to wait for Maven Central to serve the version"
+        required: false
+        type: number
+        default: 30
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate release ${{ inputs.version }} (${{ inputs.stage }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read         # find the newest Release run for the version
+      pull-requests: read   # find the release PR and map runs to it
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
+
+      - name: Validate
+        run: .github/scripts/validate-release.sh "$VERSION"
+        env:
+          VERSION: ${{ inputs.version }}
+          STAGE: ${{ inputs.stage }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          WAIT_MINUTES: ${{ inputs.wait-minutes }}
+          # Called from Release, this is that run's id, which counts as the newest
+          # Release run for the version.
+          CURRENT_RUN_ID: ${{ github.run_id }}
