@@ -20,28 +20,24 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.guardian.sample;
+package com.auth0.guardian.sample
 
-import android.net.Uri;
+import androidx.core.net.toUri
+import com.auth0.android.guardian.sdk.Guardian
 
-import com.auth0.android.guardian.sdk.Guardian;
-
-final class SampleGuardian {
-
-    private SampleGuardian() {
-    }
+object SampleGuardian {
 
     /**
      * Builds the Guardian client for the configured tenant. HTTP logging is debug-only: it
      * logs request and response bodies, which carry the bearer token, the TOTP secret and
      * transaction tokens, and those must not end up in the logs of a release build.
      */
-    static Guardian create() {
-        Guardian.Builder builder = new Guardian.Builder()
-                .url(Uri.parse(BuildConfig.TENANT_URL));
+    @JvmStatic
+    fun create(): Guardian {
+        val builder = Guardian.Builder().url(BuildConfig.TENANT_URL.toUri())
         if (BuildConfig.DEBUG) {
-            builder.enableLogging();
+            builder.enableLogging()
         }
-        return builder.build();
+        return builder.build()
     }
 }

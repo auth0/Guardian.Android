@@ -20,39 +20,32 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.guardian.sample;
+package com.auth0.guardian.sample
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.core.content.edit
 
 /**
- * Persists the sample's single enrollment. Shared by {@link MainActivity} and
- * {@link EnrollActivity}, so an enrollment started on its own (e.g. through the
- * {@code ENROLLMENT_DATA} test hook) is still known to the app afterwards.
+ * Persists the sample's single enrollment. Shared by [MainActivity] and [EnrollActivity], so an
+ * enrollment started on its own (e.g. through the `ENROLLMENT_DATA` test hook) is still known to
+ * the app afterwards.
  */
-final class EnrollmentStorage {
-
-    private EnrollmentStorage() {
-    }
+object EnrollmentStorage {
 
     // Same file android.preference.PreferenceManager used, so existing enrollments survive.
-    private static SharedPreferences preferences(Context context) {
-        return context.getSharedPreferences(
-                context.getPackageName() + "_preferences", Context.MODE_PRIVATE);
-    }
+    private fun preferences(context: Context): SharedPreferences =
+        context.getSharedPreferences("${context.packageName}_preferences", Context.MODE_PRIVATE)
 
-    @Nullable
-    static ParcelableEnrollment load(@NonNull Context context) {
-        String json = preferences(context).getString(Constants.ENROLLMENT, null);
-        return json != null ? ParcelableEnrollment.fromJSON(json) : null;
-    }
+    @JvmStatic
+    fun load(context: Context): ParcelableEnrollment? =
+        preferences(context).getString(Constants.ENROLLMENT, null)
+            ?.let { ParcelableEnrollment.fromJSON(it) }
 
-    static void save(@NonNull Context context, @Nullable ParcelableEnrollment enrollment) {
-        preferences(context).edit()
-                .putString(Constants.ENROLLMENT, enrollment != null ? enrollment.toJSON() : null)
-                .apply();
+    @JvmStatic
+    fun save(context: Context, enrollment: ParcelableEnrollment?) {
+        preferences(context).edit {
+            putString(Constants.ENROLLMENT, enrollment?.toJSON())
+        }
     }
 }

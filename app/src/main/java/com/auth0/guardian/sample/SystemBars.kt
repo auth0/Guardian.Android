@@ -20,39 +20,36 @@
  * THE SOFTWARE.
  */
 
-package com.auth0.guardian.sample;
+package com.auth0.guardian.sample
 
-import android.graphics.Color;
-import android.view.View;
+import android.graphics.Color
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
-import androidx.activity.ComponentActivity;
-import androidx.activity.EdgeToEdge;
-import androidx.activity.SystemBarStyle;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-
-final class SystemBars {
-
-    private SystemBars() {
-    }
+object SystemBars {
 
     /**
      * Apps targeting API 35+ are always drawn edge-to-edge. Pad the content view by the
      * system bar insets so the toolbar and the bottom action buttons stay visible and tappable.
      */
-    static void applyEdgeToEdge(ComponentActivity activity) {
+    @JvmStatic
+    fun applyEdgeToEdge(activity: ComponentActivity) {
         // The theme is dark (Theme.AppCompat): force light bar icons, otherwise EdgeToEdge
         // picks dark icons whenever the system itself is in light mode.
-        EdgeToEdge.enable(activity,
-                SystemBarStyle.dark(Color.TRANSPARENT),
-                SystemBarStyle.dark(Color.TRANSPARENT));
-        View content = activity.findViewById(android.R.id.content);
-        ViewCompat.setOnApplyWindowInsetsListener(content, (view, windowInsets) -> {
-            Insets bars = windowInsets.getInsets(
-                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
-            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
-            return WindowInsetsCompat.CONSUMED;
-        });
+        activity.enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+        )
+        val content = activity.findViewById<android.view.View>(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(content) { view, windowInsets ->
+            val bars = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
     }
 }

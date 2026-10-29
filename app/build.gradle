@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'com.google.gms.google-services'
 
 // Guardian tenant the sample talks to. Override per machine or per CI run with
@@ -42,6 +43,12 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
     namespace 'com.auth0.guardian.sample'
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
 }
 
 dependencies {
