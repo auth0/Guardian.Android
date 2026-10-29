@@ -30,7 +30,7 @@ jobs:
 
       # ruby-version intentionally omitted — reads .ruby-version automatically.
       # bundler: 'Gemfile.lock' installs the exact version from BUNDLED WITH.
-      - uses: ruby/setup-ruby@824c0e29fdfc7d689c191c27acc969d2d04b7dd8 # pin@v1.331.0
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # pin@v1.335.0
         with:
           bundler: 'Gemfile.lock'
 
