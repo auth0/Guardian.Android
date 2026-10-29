@@ -22,12 +22,16 @@
 
 package com.auth0.guardian.sample.fcm;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Color;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationChannelCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import android.util.Log;
 
 import com.auth0.android.guardian.sdk.Guardian;
 import com.auth0.android.guardian.sdk.ParcelableNotification;
@@ -44,13 +48,15 @@ public class FcmListenerService extends FirebaseMessagingService {
 
     private static final String TAG = FcmListenerService.class.getName();
 
+    private static final String CHANNEL_ID = "guardian_notifications";
+
     /**
      * Called when message is received.
      *
      * @param message The message instance
      */
     @Override
-    public void onMessageReceived(RemoteMessage message) {
+    public void onMessageReceived(@NonNull RemoteMessage message) {
         if (BuildConfig.DEBUG) {
             Log.d(TAG, String.format("Received FCM message from: %s with data: %s", message.getFrom(), message.getData()));
         }
@@ -61,31 +67,50 @@ public class FcmListenerService extends FirebaseMessagingService {
             if (eventBus.hasSubscriberForEvent(GuardianNotificationReceivedEvent.class)) {
                 eventBus.post(new GuardianNotificationReceivedEvent(notification));
             } else {
-                Intent intent = MainActivity.getStartIntent(this, notification);
-                PendingIntent pendingIntent = PendingIntent
-                        .getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setColor(Color.BLACK)
-                        .setContentTitle(getString(R.string.guardian_notification_title))
-                        .setContentText(getString(R.string.guardian_notification_text))
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(true);
-                NotificationManagerCompat.from(this)
-                        .notify(notification.getTransactionToken().hashCode(), builder.build());
+                showNotification(notification);
             }
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "Received a notification that is not a Guardian Notification", e);
         }
     }
 
+    // areNotificationsEnabled() covers the POST_NOTIFICATIONS runtime permission on API 33+
+    @SuppressLint("MissingPermission")
+    private void showNotification(ParcelableNotification notification) {
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        if (!notificationManager.areNotificationsEnabled()) {
+            Log.w(TAG, "Notifications are disabled, dropping Guardian notification");
+            return;
+        }
+        notificationManager.createNotificationChannel(
+                new NotificationChannelCompat.Builder(CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_HIGH)
+                        .setName(getString(R.string.notification_channel_name))
+                        .build());
+
+        Intent intent = MainActivity.getStartIntent(this, notification);
+        // One PendingIntent per transaction: with a shared request code the extras of the
+        // latest notification would replace those of every older one still on screen.
+        int notificationId = notification.getTransactionToken().hashCode();
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, notificationId, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setColor(Color.BLACK)
+                .setContentTitle(getString(R.string.guardian_notification_title))
+                .setContentText(getString(R.string.guardian_notification_text))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+        notificationManager.notify(notificationId, builder.build());
+    }
+
     /**
-     * Called if InstanceID token is updated. This may occur if the security of
-     * the previous token had been compromised. This call is initiated by the
-     * InstanceID provider.
+     * Called when the FCM registration token is updated. This may occur if the
+     * security of the previous token had been compromised.
      */
+    @SuppressWarnings("deprecation") // see FcmUtils#fetchFcmToken
     @Override
-    public void onNewToken(String token) {
+    public void onNewToken(@NonNull String token) {
         // Use updated token and notify our app's server of any changes (if applicable).
         Log.w(TAG, "Should refresh token!");
     }

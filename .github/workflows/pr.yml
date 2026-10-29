@@ -68,3 +68,42 @@ jobs:
         with:
           name: reports
           path: guardian/build/reports/reports.html
+
+  sample:
+    name: Build sample app
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # pin@v6.1.0
+        with:
+          distribution: temurin
+          java-version-file: '.java-version'
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # pin@v6.4.0
+
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # pin@v1.335.0
+        with:
+          bundler: 'Gemfile.lock'
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
+        with:
+          path: ~/vendor/bundle
+          key: bundle-v1-${{ hashFiles('fastlane/Gemfile.lock') }}
+          restore-keys: bundle-v1-
+
+      - name: Install Ruby dependencies
+        run: bundle check || bundle install --jobs 4 --retry 3
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle
+
+      # Runs in parallel with the test job and reports its own result, so a lint or
+      # coverage failure can't hide a broken sample (and vice versa). Fails the PR if
+      # the sample stops compiling against the SDK sources under review.
+      - name: Build sample app
+        run: bundle exec fastlane android build_sample
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+          BUNDLE_PATH: ~/vendor/bundle

@@ -36,11 +36,13 @@
 
             <com.auth0.guardian.sample.scanner.CaptureView
                 android:id="@+id/scanner"
+                android:contentDescription="@string/cd_qr_scanner"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
             <TextView
+                android:id="@+id/scanHintText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/colorPrimary50"
@@ -51,6 +53,13 @@
                 android:text="Scan a Guardian QR code"
                 android:textAlignment="center"
                 android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/enterLinkButton"
+                android:contentDescription="@string/cd_enter_link_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/enter_link_button" />
 
         </LinearLayout>
 
@@ -67,6 +76,7 @@
             android:visibility="invisible">
 
             <TextView
+                android:id="@+id/permissionMessageText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -77,10 +87,19 @@
 
             <Button
                 android:id="@+id/requestPermissionButton"
+                android:contentDescription="@string/cd_request_camera_permission_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:text="Request permission" />
+
+            <Button
+                android:id="@+id/enterLinkPermissionButton"
+                android:contentDescription="@string/cd_enter_link_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/enter_link_button" />
 
         </LinearLayout>
 

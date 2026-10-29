@@ -22,21 +22,25 @@
 
 package com.auth0.guardian.sample;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.IntentCompat;
 
 import com.auth0.android.guardian.sdk.Guardian;
 import com.auth0.android.guardian.sdk.GuardianException;
@@ -58,8 +62,6 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
 
     private static final String TAG = MainActivity.class.getName();
 
-    private static final int ENROLL_REQUEST = 123;
-
     private View loadingView;
     private View enrollView;
     private View accountView;
@@ -73,6 +75,22 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
     private ParcelableEnrollment enrollment;
     private String fcmToken;
 
+    private final ActivityResultLauncher<Intent> enrollLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    ParcelableEnrollment enrollment = IntentCompat.getParcelableExtra(
+                            result.getData(), Constants.ENROLLMENT, ParcelableEnrollment.class);
+                    updateEnrollment(enrollment);
+                }
+            });
+
+    // Denying is not fatal: notifications that arrive while the app is visible are
+    // delivered through EventBus and don't need the permission.
+    private final ActivityResultLauncher<String> notificationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                    granted -> Log.i(TAG, "POST_NOTIFICATIONS granted: " + granted));
+
     public static Intent getStartIntent(@NonNull Context context,
                                         @NonNull ParcelableNotification notification) {
         Intent intent = new Intent(context, MainActivity.class);
@@ -84,16 +102,14 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        SystemBars.applyEdgeToEdge(this);
 
         setupUI();
+        requestNotificationPermission();
 
         eventBus = EventBus.getDefault();
-        eventBus.register(this);
 
-        guardian = new Guardian.Builder()
-                .url(Uri.parse(getString(R.string.tenant_url)))
-                .enableLogging()
-                .build();
+        guardian = SampleGuardian.create();
 
         /*
          * The following fetch token call is NOT required in a production app
@@ -105,34 +121,45 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
         FcmUtils fcmUtils = new FcmUtils();
         fcmUtils.fetchFcmToken(this);
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String enrollmentJSON = sharedPreferences.getString(Constants.ENROLLMENT, null);
-        if (enrollmentJSON != null) {
-            enrollment = ParcelableEnrollment.fromJSON(enrollmentJSON);
+        enrollment = EnrollmentStorage.load(this);
+        if (enrollment != null) {
             updateUI();
 
-            ParcelableNotification notification = getIntent().getParcelableExtra(Constants.NOTIFICATION);
-            if (notification != null) {
+            // Only on the first creation: after a rotation the intent still carries the
+            // notification and the request screen would open a second time.
+            ParcelableNotification notification = IntentCompat.getParcelableExtra(
+                    getIntent(), Constants.NOTIFICATION, ParcelableNotification.class);
+            if (notification != null && savedInstanceState == null) {
                 onPushNotificationReceived(notification);
             }
         }
     }
 
+    // Subscribed only while visible. FcmListenerService posts to EventBus whenever there is a
+    // subscriber and shows a system notification otherwise. Staying subscribed while in the
+    // background would swallow the push, because Android 10+ blocks starting
+    // NotificationActivity from the background.
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        eventBus.unregister(this);
+    protected void onStart() {
+        super.onStart();
+        // Pick up an enrollment saved while this activity was stopped (EnrollActivity
+        // persists it itself, and a rotation during enrollment loses the activity result).
+        enrollment = EnrollmentStorage.load(this);
+        updateUI();
+        eventBus.register(this);
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == ENROLL_REQUEST) {
-            if (resultCode == RESULT_OK) {
-                ParcelableEnrollment enrollment = data.getParcelableExtra(Constants.ENROLLMENT);
-                updateEnrollment(enrollment);
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
+    protected void onStop() {
+        eventBus.unregister(this);
+        super.onStop();
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
         }
     }
 
@@ -188,7 +215,7 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
     private void onEnrollRequested() {
         Intent enrollIntent = EnrollActivity
                 .getStartIntent(this, deviceNameText.getText().toString(), fcmToken);
-        startActivityForResult(enrollIntent, ENROLL_REQUEST);
+        enrollLauncher.launch(enrollIntent);
     }
 
     private void onUnEnrollRequested() {
@@ -216,10 +243,7 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
     }
 
     private void updateEnrollment(ParcelableEnrollment enrollment) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(Constants.ENROLLMENT, enrollment != null ? enrollment.toJSON() : null);
-        editor.apply();
+        EnrollmentStorage.save(this, enrollment);
 
         this.enrollment = enrollment;
 
@@ -227,7 +251,16 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
     }
 
     private void onPushNotificationReceived(ParcelableNotification notification) {
-        startActivity(NotificationActivity.getStartIntent(this, notification, enrollment));
+        if (enrollment == null) {
+            Log.w(TAG, "Received a notification but the device is not enrolled, ignoring it");
+            return;
+        }
+        try {
+            startActivity(NotificationActivity.getStartIntent(this, notification, enrollment));
+        } catch (IllegalArgumentException e) {
+            // e.g. a stale notification for an enrollment that has since been replaced
+            Log.w(TAG, "Ignoring a notification that doesn't match the current enrollment", e);
+        }
     }
 
     @Override

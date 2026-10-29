@@ -1,1 +1,3 @@
 /build
+# Real Firebase config for a test project; overrides the placeholder app/google-services.json
+/src/debug/google-services.json

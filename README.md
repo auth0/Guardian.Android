@@ -309,6 +309,12 @@ Auth0 helps you to:
 
 ## Development
 
+### Sample app
+
+The `app` module is a sample Guardian authenticator built against the local SDK. It is
+compiled on every PR to `master` (the `sample` job in `pr.yml`). See [app/README.md](app/README.md) for how
+to point it at your tenant and Firebase project.
+
 ### CI / Toolchain maintenance
 
 Runtime versions are pinned in `.java-version` and `.ruby-version`. The

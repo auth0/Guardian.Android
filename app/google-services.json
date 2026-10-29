@@ -1,9 +1,9 @@
 /*
 ** THIS IS A SAMPLE CONFIGURATION FILE WITH DUMMY DATA
 **
-** Replace this file with a valid google-services.json
-** downloaded from the Firebase Console with your project details.
-** See: https://console.firebase.google.com
+** Kept on purpose so a clean clone and CI can build the app. Do not replace or
+** commit a real config here: put yours in app/src/debug/google-services.json
+** (git-ignored). See app/README.md.
 */
 
 {

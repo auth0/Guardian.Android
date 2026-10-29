@@ -24,7 +24,6 @@ package com.auth0.guardian.sample;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -32,6 +31,7 @@ import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.IntentCompat;
 import androidx.fragment.app.Fragment;
 
 import com.auth0.android.guardian.sdk.Guardian;
@@ -78,38 +78,39 @@ public class NotificationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification);
+        SystemBars.applyEdgeToEdge(this);
 
-        guardian = new Guardian.Builder()
-                .url(Uri.parse(getString(R.string.tenant_url)))
-                .enableLogging()
-                .build();
+        guardian = SampleGuardian.create();
 
         Intent intent = getIntent();
-        enrollment = intent.getParcelableExtra(Constants.ENROLLMENT);
-        notification = intent.getParcelableExtra(Constants.NOTIFICATION);
+        enrollment = IntentCompat.getParcelableExtra(
+                intent, Constants.ENROLLMENT, ParcelableEnrollment.class);
+        notification = IntentCompat.getParcelableExtra(
+                intent, Constants.NOTIFICATION, ParcelableNotification.class);
 
         setupUI();
 
         if (notification.getTransactionLinkingId() != null) {
             try {
                 guardian.fetchConsent(notification, enrollment).start(new Callback<RichConsent>() {
+                    // Guardian calls back on a background thread
                     @Override
                     public void onSuccess(RichConsent response) {
                         richConsent = response;
-                        updateUI();
+                        runOnUiThread(NotificationActivity.this::updateUI);
                     }
 
                     @Override
                     public void onFailure(Throwable exception) {
-                        if (exception instanceof GuardianException) {
-                            GuardianException guardianException = (GuardianException) exception;
-                            if (guardianException.isResourceNotFound()) {
-                                // Render regular authentication request details
-                                updateUI();
-                            }
+                        if (exception instanceof GuardianException
+                                && ((GuardianException) exception).isResourceNotFound()) {
+                            // Render regular authentication request details
+                            runOnUiThread(NotificationActivity.this::updateUI);
                         } else {
+                            // Don't crash the sample: fall back to the regular request details,
+                            // which can still be allowed or rejected.
                             Log.e(TAG, "Error requesting consent details", exception);
-                            throw new RuntimeException(exception);
+                            runOnUiThread(NotificationActivity.this::updateUI);
                         }
                     }
                 });
@@ -161,9 +162,12 @@ public class NotificationActivity extends AppCompatActivity {
 
         }
 
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.authenticationDetailsFragmentContainer, fragment)
-                .commit();
+                .commitAllowingStateLoss();
 
     }
 

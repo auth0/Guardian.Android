@@ -26,15 +26,22 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
+import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.auth0.android.guardian.sdk.CurrentDevice;
 import com.auth0.android.guardian.sdk.Enrollment;
@@ -52,16 +59,40 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
 
     private static final String DEVICE_NAME = "com.auth0.guardian.sample.EnrollActivity.DEVICE_NAME";
     private static final String FCM_TOKEN = "com.auth0.guardian.sample.EnrollActivity.FCM_TOKEN";
-
-    private static final int REQUEST_CAMERA = 55;
+    /**
+     * Optional enrollment URI (the content of the Guardian QR code). When present the
+     * camera is skipped and enrollment starts immediately, so integration tests and
+     * emulators can enroll without scanning a QR code.
+     */
+    static final String ENROLLMENT_DATA = "com.auth0.guardian.sample.EnrollActivity.ENROLLMENT_DATA";
 
     private Guardian guardian;
     private String deviceName;
     private String fcmToken;
+    private String enrollmentData;
+    // False for the ENROLLMENT_DATA test hook and on devices without a camera (e.g. emulators
+    // and some tablets): the enrollment link is entered by hand instead of scanned.
+    private boolean useCamera;
+
+    private final ActivityResultLauncher<String> cameraPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            granted -> {
+                if (granted) {
+                    Log.i(TAG, "CAMERA permission has now been granted. Showing preview.");
+                    showScanView();
+                } else {
+                    Log.i(TAG, "CAMERA permission was NOT granted.");
+                }
+            });
+
+    private static final String STATE_LINK_DIALOG_OPEN = "linkDialogOpen";
+    private static final String STATE_LINK_TEXT = "linkText";
 
     private View permissionLayout;
     private View scannerLayout;
     private CaptureView scanner;
+    private AlertDialog linkDialog;
+    private EditText linkInput;
 
     static Intent getStartIntent(@NonNull Context context,
                                  @NonNull String deviceName,
@@ -72,20 +103,73 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
         return intent;
     }
 
+    static Intent getStartIntent(@NonNull Context context,
+                                 @NonNull String deviceName,
+                                 @NonNull String fcmToken,
+                                 @Nullable String enrollmentData) {
+        Intent intent = getStartIntent(context, deviceName, fcmToken);
+        intent.putExtra(ENROLLMENT_DATA, enrollmentData);
+        return intent;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enroll);
+        SystemBars.applyEdgeToEdge(this);
 
         setupGuardian();
         setupUI();
-        checkCameraPermission();
+        useCamera = enrollmentData == null && hasCamera();
+        if (enrollmentData == null && !useCamera) {
+            showManualEntryOnly();
+            if (savedInstanceState == null) {
+                showEnrollmentLinkDialog(null);
+            }
+        } else if (enrollmentData != null) {
+            // Test hook: no camera, no scanner UI. An enrollment already in flight can't be
+            // resumed after a recreation (it belongs to the destroyed instance), so give up.
+            scannerLayout.setVisibility(View.GONE);
+            permissionLayout.setVisibility(View.GONE);
+            if (savedInstanceState == null) {
+                onCodeScanned(enrollmentData);
+            } else {
+                abortEnrollment();
+            }
+        } else {
+            checkCameraPermission();
+        }
+
+        // The paste dialog is rebuilt after a rotation, keeping what was typed.
+        if (savedInstanceState != null && savedInstanceState.getBoolean(STATE_LINK_DIALOG_OPEN)) {
+            showEnrollmentLinkDialog(savedInstanceState.getString(STATE_LINK_TEXT));
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (linkDialog != null && linkDialog.isShowing()) {
+            outState.putBoolean(STATE_LINK_DIALOG_OPEN, true);
+            outState.putString(STATE_LINK_TEXT, linkInput.getText().toString());
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (linkDialog != null) {
+            linkDialog.dismiss();
+            linkDialog = null;
+        }
+        super.onDestroy();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        scanner.start(this);
+        if (useCamera) {
+            scanner.start(this);
+        }
     }
 
     @Override
@@ -97,43 +181,25 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     @Override
     protected void onPause() {
         super.onPause();
-        scanner.pause();
+        if (useCamera) {
+            scanner.pause();
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        scanner.stop();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_CAMERA) {
-            // Received permission result for camera permission.
-            Log.i(TAG, "Received response for Camera permission request.");
-
-            // Check if the only required permission has been granted
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Camera permission has been granted, preview can be displayed
-                Log.i(TAG, "CAMERA permission has now been granted. Showing preview.");
-                // Set up QR code scanning
-                showScanView();
-            } else {
-                Log.i(TAG, "CAMERA permission was NOT granted.");
-            }
-        } else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (useCamera) {
+            scanner.stop();
         }
     }
 
     @Override
-    public void onCodeScanned(String enrollmentData) {
+    public void onCodeScanned(String code) {
         try {
             KeyPair keyPair = generateKeyPair();
             CurrentDevice device = new CurrentDevice(this, fcmToken, deviceName);
-            guardian.enroll(enrollmentData, device, keyPair)
+            guardian.enroll(code, device, keyPair)
                     .start(new DialogCallback<>(this,
                             R.string.progress_title_please_wait,
                             R.string.progress_message_enroll,
@@ -146,11 +212,12 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
 
                                 @Override
                                 public void onFailure(Throwable exception) {
-                                    // TODO might not need here
-                                    // It looks like the toast resumes scanning as well
-                                    // This resume happens as the error is popped up,
-                                    // wait to dismiss instead
-                                    // resumeScanning();
+                                    // DialogCallback has already shown the error and the user
+                                    // dismissed it. Scanning resumes on its own (onResume); with
+                                    // the test hook there is nothing to retry.
+                                    if (enrollmentData != null) {
+                                        abortEnrollment();
+                                    }
                                 }
                             }));
         } catch (IllegalArgumentException exception) {
@@ -163,21 +230,26 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
         Intent intent = getIntent();
         deviceName = intent.getStringExtra(DEVICE_NAME);
         fcmToken = intent.getStringExtra(FCM_TOKEN);
+        enrollmentData = intent.getStringExtra(ENROLLMENT_DATA);
 
         if (deviceName == null || fcmToken == null) {
             throw new IllegalStateException("Missing deviceName or fcmToken");
         }
 
-        guardian = new Guardian.Builder()
-                .url(Uri.parse(getString(R.string.tenant_url)))
-                .enableLogging()
-                .build();
+        guardian = SampleGuardian.create();
     }
 
     private void setupUI() {
         permissionLayout = findViewById(R.id.permissionLayout);
         scannerLayout = findViewById(R.id.scannerLayout);
         scanner = (CaptureView) findViewById(R.id.scanner);
+
+        // Reachable from both the scanner and the camera permission screen, so a user who
+        // denies the camera can still enroll with the link.
+        findViewById(R.id.enterLinkButton)
+                .setOnClickListener(v -> showEnrollmentLinkDialog(null));
+        findViewById(R.id.enterLinkPermissionButton)
+                .setOnClickListener(v -> showEnrollmentLinkDialog(null));
 
         Button requestPermissionButton = (Button) findViewById(R.id.requestPermissionButton);
         assert requestPermissionButton != null;
@@ -187,6 +259,56 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
                 requestCameraPermission();
             }
         });
+    }
+
+    private boolean hasCamera() {
+        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+    }
+
+    private void showManualEntryOnly() {
+        scanner.setVisibility(View.GONE);
+        permissionLayout.setVisibility(View.GONE);
+        scannerLayout.setVisibility(View.VISIBLE);
+        ((TextView) findViewById(R.id.scanHintText)).setText(R.string.no_camera_hint);
+    }
+
+    /**
+     * Lets the user paste the enrollment link (the content of the Guardian QR code) instead of
+     * scanning it. It takes the same path as a scanned code.
+     */
+    private void showEnrollmentLinkDialog(@Nullable String prefill) {
+        if (linkDialog != null && linkDialog.isShowing()) {
+            return;
+        }
+        EditText input = new EditText(this);
+        linkInput = input;
+        if (prefill != null) {
+            input.setText(prefill);
+        }
+        input.setId(R.id.enrollmentLinkInput);
+        input.setContentDescription(getString(R.string.cd_enrollment_link_input));
+        input.setHint(R.string.enter_link_hint);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI
+                | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        input.setMinLines(3);
+
+        int padding = getResources().getDimensionPixelSize(R.dimen.activity_horizontal_margin);
+        FrameLayout container = new FrameLayout(this);
+        container.setPadding(padding, 0, padding, 0);
+        container.addView(input);
+
+        linkDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.enter_link_title)
+                .setMessage(R.string.enter_link_message)
+                .setView(container)
+                .setPositiveButton(R.string.enroll_action, (dialog, which) -> {
+                    String link = input.getText().toString().trim();
+                    if (!link.isEmpty()) {
+                        onCodeScanned(link);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void checkCameraPermission() {
@@ -216,9 +338,7 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     }
 
     private void requestCameraPermission() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{android.Manifest.permission.CAMERA},
-                REQUEST_CAMERA);
+        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
     }
 
     private void showCameraPermissionUnavailable() {
@@ -232,12 +352,22 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
     }
 
     private void resumeScanning() {
-        scanner.resume();
+        if (useCamera) {
+            scanner.resume();
+        }
+    }
+
+    private void abortEnrollment() {
+        setResult(RESULT_CANCELED);
+        finish();
     }
 
     private void onEnrollSuccess(Enrollment enrollment) {
         Intent data = new Intent();
         ParcelableEnrollment parcelableEnrollment = new ParcelableEnrollment(enrollment);
+        // Persist here too: when this activity is started on its own (test hook) there is no
+        // MainActivity result callback to do it, and pushes would be ignored afterwards.
+        EnrollmentStorage.save(this, parcelableEnrollment);
         data.putExtra(Constants.ENROLLMENT, parcelableEnrollment);
         setResult(RESULT_OK, data);
         finish();
@@ -261,7 +391,11 @@ public class EnrollActivity extends AppCompatActivity implements CaptureView.Lis
                         .setOnDismissListener(new DialogInterface.OnDismissListener() {
                             @Override
                             public void onDismiss(DialogInterface dialog) {
-                                resumeScanning();
+                                if (enrollmentData != null) {
+                                    abortEnrollment();
+                                } else {
+                                    resumeScanning();
+                                }
                             }
                         })
                         .create()
