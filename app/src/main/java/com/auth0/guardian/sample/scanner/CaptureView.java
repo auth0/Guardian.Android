@@ -173,7 +173,8 @@ public class CaptureView extends LinearLayout
         if (cameraSource != null) {
             try {
                 preview.start(cameraSource, graphicOverlay);
-            } catch (IOException e) {
+            } catch (IOException | RuntimeException e) {
+                // RuntimeException: e.g. no back camera (emulators, some tablets)
                 Log.e(TAG, "Unable to start camera source.", e);
                 cameraSource.release();
                 cameraSource = null;

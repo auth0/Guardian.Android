@@ -25,26 +25,25 @@ package com.auth0.guardian.sample.fcm;
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class FcmUtils {
 
+    // getToken() is deprecated since firebase-messaging 25.1.0 in favor of FID-based
+    // register(). Guardian enrolls the device with an FCM registration token, so the
+    // token API is kept until the Guardian backend supports FID registration.
+    @SuppressWarnings("deprecation")
     public void fetchFcmToken(FcmTokenListener listener) {
-        FirebaseInstanceId.getInstance().getInstanceId()
-                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(new OnCompleteListener<String>() {
                     @Override
-                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
-                        String token = task.getResult().getToken();
-                        listener.onFcmTokenObtained(token);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        listener.onFcmFailure(e);
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (task.isSuccessful()) {
+                            listener.onFcmTokenObtained(task.getResult());
+                        } else {
+                            listener.onFcmFailure(task.getException());
+                        }
                     }
                 });
     }

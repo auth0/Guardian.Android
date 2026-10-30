@@ -51,6 +51,16 @@ Assembles the :guardian library's release AAR (guardian-release.aar).
 
 Accepts an inert `build_type:` for contract-parity; a library ships a single release AAR.
 
+### android build_sample
+
+```sh
+[bundle exec] fastlane android build_sample
+```
+
+Assembles the :app sample's debug APK. A compile gate only — the sample is never shipped.
+
+Run by the `sample` job in pr.yml so the SDK's only end-to-end consumer cannot silently break.
+
 ### android publish_maven
 
 ```sh

@@ -21,6 +21,7 @@ default_platform :android
 #   lint           run Android Lint on the library module (:guardian)
 #   coverage       generate the JaCoCo report for :guardian (informational, no threshold)
 #   build          assemble the library's release AAR (guardian-release.aar)
+#   build_sample   assemble the :app sample's debug APK (compile gate, never shipped)
 #   publish_maven  upload :guardian to Maven Central staging (release pipeline only)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -65,6 +66,13 @@ platform :android do
     UI.header("Build · assembling the :guardian release AAR")
     UI.message("Requested build_type=#{build_type} (library assembles its release AAR)")
     gradle(task: ":guardian:assembleRelease")
+  end
+
+  desc "Assembles the :app sample's debug APK. A compile gate only — the sample is never shipped."
+  desc "Run by the `sample` job in pr.yml so the SDK's only end-to-end consumer cannot silently break."
+  lane :build_sample do
+    UI.header("Build · assembling the :app sample debug APK (always debug)")
+    gradle(task: ":app:assembleDebug")
   end
 
   desc "Uploads :guardian to Maven Central staging via com.vanniktech.maven.publish."

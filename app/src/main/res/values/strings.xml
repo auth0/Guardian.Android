@@ -36,4 +36,20 @@
     <string name="os_sample">Windows 98</string>
     <string name="location_label">Location</string>
     <string name="location_sample">Buenos Aires, Argentina</string>
+    <string name="notification_channel_name">Guardian authentication requests</string>
+    <string name="enroll_action">Enroll</string>
+    <string name="enter_link_button">Enter enrollment link</string>
+    <string name="enter_link_title">Enrollment link</string>
+    <string name="enter_link_message">Paste the enrollment link, which is the content of the Guardian QR code.</string>
+    <string name="enter_link_hint">otpauth://totp/…</string>
+    <string name="no_camera_hint">No camera available. Enter the enrollment link instead.</string>
+    <string name="cd_enter_link_button">Enter enrollment link</string>
+    <string name="cd_enrollment_link_input">Enrollment link</string>
+    <string name="cd_enroll_button">Enroll</string>
+    <string name="cd_unenroll_button">Unenroll</string>
+    <string name="cd_otp_code">One-time code</string>
+    <string name="cd_qr_scanner">Guardian QR code scanner</string>
+    <string name="cd_request_camera_permission_button">Request permission to use the camera</string>
+    <string name="cd_reject_button">Deny authentication request</string>
+    <string name="cd_allow_button">Allow authentication request</string>
 </resources>

@@ -121,7 +121,8 @@ public class CameraSourceCropPreview extends ViewGroup {
                 startIfReady();
             } catch (SecurityException se) {
                 Log.e(TAG,"Do not have permission to start the camera", se);
-            } catch (IOException e) {
+            } catch (IOException | RuntimeException e) {
+                // RuntimeException: e.g. no back camera (emulators, some tablets)
                 Log.e(TAG, "Could not start camera source.", e);
             }
         }

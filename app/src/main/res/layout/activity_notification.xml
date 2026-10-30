@@ -50,6 +50,7 @@
 
             <Button
                 android:id="@+id/rejectButton"
+                android:contentDescription="@string/cd_reject_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -57,6 +58,7 @@
 
             <Button
                 android:id="@+id/allowButton"
+                android:contentDescription="@string/cd_allow_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

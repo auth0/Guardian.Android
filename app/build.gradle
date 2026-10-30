@@ -1,15 +1,36 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'com.google.gms.google-services'
 
+// Guardian tenant the sample talks to. Override per machine or per CI run with
+// -PguardianTenantUrl=https://<tenant>.<region>.auth0.com, an entry in
+// ~/.gradle/gradle.properties, or the GUARDIAN_TENANT_URL environment variable.
+def guardianTenantUrl = project.findProperty('guardianTenantUrl') ?:
+        System.getenv('GUARDIAN_TENANT_URL') ?:
+        'https://guardian-demo.us.auth0.com'
+// It is compiled into a Java string literal, so reject anything that would break it.
+if (!(guardianTenantUrl ==~ /^https:\/\/[^"\\\s]+$/)) {
+    throw new GradleException("guardianTenantUrl must be an https URL, got: '${guardianTenantUrl}'")
+}
+
 android {
-    compileSdkVersion 33
+    compileSdk 36
+
+    buildFeatures {
+        // Explicit: gradle.properties' android.defaults.buildfeatures.buildconfig is deprecated
+        buildConfig true
+    }
 
     defaultConfig {
         applicationId "com.auth0.guardian.sample"
-        minSdkVersion 22
-        targetSdkVersion 33
+        minSdkVersion 24
+        targetSdkVersion 36
         versionCode 1
         versionName "1.0"
+
+        buildConfigField "String", "TENANT_URL", "\"${guardianTenantUrl}\""
+        // Exposed to instrumentation tests via InstrumentationRegistry.getArguments().
+        testInstrumentationRunnerArguments tenantUrl: guardianTenantUrl
     }
     buildTypes {
         release {
@@ -18,28 +39,36 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     namespace 'com.auth0.guardian.sample'
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':guardian')
 
-    implementation platform('com.google.firebase:firebase-bom:22.1.0')
+    implementation platform('com.google.firebase:firebase-bom:35.1.0')
     // FCM
-    implementation 'com.google.firebase:firebase-core'
     implementation 'com.google.firebase:firebase-messaging'
 
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'androidx.appcompat:appcompat:1.8.0'
+    implementation 'androidx.activity:activity:1.13.0'
+    implementation 'androidx.core:core:1.18.0'
+    implementation 'com.google.android.material:material:1.14.0'
     // GSON
-    implementation 'com.google.code.gson:gson:2.9.1'
+    implementation 'com.google.code.gson:gson:2.15.0'
     // EventBus
     implementation 'org.greenrobot:eventbus:3.3.1'
     // ZXing QR decoder deps
-    implementation 'com.google.zxing:core:3.5.0'
+    implementation 'com.google.zxing:core:3.5.4'
 
     implementation 'org.bouncycastle:bcprov-jdk18on:1.85'
 }

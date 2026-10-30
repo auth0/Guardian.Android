@@ -86,6 +86,7 @@
 
             <Button
                 android:id="@+id/enrollButton"
+                android:contentDescription="@string/cd_enroll_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
@@ -127,6 +128,7 @@
 
                 <com.auth0.guardian.sample.views.TOTPCodeView
                     android:id="@+id/otpView"
+                    android:contentDescription="@string/cd_otp_code"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="48sp"
@@ -138,6 +140,7 @@
 
             <Button
                 android:id="@+id/unenrollButton"
+                android:contentDescription="@string/cd_unenroll_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
