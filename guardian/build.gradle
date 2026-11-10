@@ -167,9 +167,13 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.squareup.okhttp3:logging-interceptor'
     // JWT signing/verification
-    implementation 'com.auth0:java-jwt:4.6.1'
-    // Pin patched Jackson (fixes CVEs in the version pulled transitively by java-jwt)
-    implementation platform('com.fasterxml.jackson:jackson-bom:2.22.2')
+    implementation 'com.auth0:java-jwt:4.6.2'
+    // Pin patched Jackson (fixes CVEs in the version pulled transitively by java-jwt).
+    // Declared directly, with an explicit version, so Maven consumers (nearest-wins) and POM-only
+    // scanners also resolve the patched version. Keep these in sync with the BOM above.
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.22.4')
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.22.4'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.4'
 
     testImplementation 'com.squareup.okhttp3:mockwebserver'
     // Mockito
