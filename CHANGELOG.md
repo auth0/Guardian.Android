@@ -12,6 +12,11 @@
 - Initial release pipeline (see [PR](https://github.com/auth0/Guardian.Android/pull/161))
 - Fix signing secret name, add coverage to release test job, remove secret debugging (see [PR](https://github.com/auth0/Guardian.Android/pull/164))
 - NAPP-173: merge the release PR before tagging and publishing (see [PR](https://github.com/auth0/Guardian.Android/pull/168))
+- Release pipeline fixes from the first live releases (Android side of NAPP-177 to NAPP-186) (see [PR](https://github.com/auth0/Guardian.Android/pull/202))
+- Bump the actions group across 1 directory with 3 updates (see [PR](https://github.com/auth0/Guardian.Android/pull/188))
+- Bump ruby/setup-ruby from 1.331.0 to 1.335.0 in the actions group (see [PR](https://github.com/auth0/Guardian.Android/pull/204))
+- [NAPP-167] Fix the Guardian.Android sample app so it compiles and is ready for integration tests (see [PR](https://github.com/auth0/Guardian.Android/pull/206))
+- chore: move OpsLevel ownership to authn_-_native_apps (see [PR](https://github.com/auth0/Guardian.Android/pull/205))
 
 ## [0.11.2](https://github.com/auth0/Guardian.Android/tree/0.11.2) (2026-10-01)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.11.1...0.11.2)
