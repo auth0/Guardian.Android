@@ -1,7 +1,10 @@
 # Change Log
 
-## [0.11.3](https://github.com/auth0/Guardian.Android/tree/0.11.3) (2026-10-21)
+## [0.11.3](https://github.com/auth0/Guardian.Android/tree/0.11.3) (2026-11-11)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.11.2...0.11.3)
+
+**Security**
+- Bump `com.auth0:java-jwt` from `4.6.1` to `4.6.2` and update the `com.fasterxml.jackson:jackson-bom` pin from `2.22.2` to `2.22.4`, and declare `jackson-core` and `jackson-databind` directly so every consumer resolves the patched version. Addresses CVE-2026-85473 in `java-jwt`, CVE-2026-89425 and CVE-2026-89407 in `jackson-core`, and CVE-2026-91776, CVE-2026-91777 and CVE-2026-110879 in `jackson-databind`.
 
 **Changed**
 - Release/0.11.2 (see [PR](https://github.com/auth0/Guardian.Android/pull/158))
@@ -9,6 +12,11 @@
 - Initial release pipeline (see [PR](https://github.com/auth0/Guardian.Android/pull/161))
 - Fix signing secret name, add coverage to release test job, remove secret debugging (see [PR](https://github.com/auth0/Guardian.Android/pull/164))
 - NAPP-173: merge the release PR before tagging and publishing (see [PR](https://github.com/auth0/Guardian.Android/pull/168))
+- Release pipeline fixes from the first live releases (Android side of NAPP-177 to NAPP-186) (see [PR](https://github.com/auth0/Guardian.Android/pull/202))
+- Bump the actions group across 1 directory with 3 updates (see [PR](https://github.com/auth0/Guardian.Android/pull/188))
+- Bump ruby/setup-ruby from 1.331.0 to 1.335.0 in the actions group (see [PR](https://github.com/auth0/Guardian.Android/pull/204))
+- [NAPP-167] Fix the Guardian.Android sample app so it compiles and is ready for integration tests (see [PR](https://github.com/auth0/Guardian.Android/pull/206))
+- chore: move OpsLevel ownership to authn_-_native_apps (see [PR](https://github.com/auth0/Guardian.Android/pull/205))
 
 ## [0.11.2](https://github.com/auth0/Guardian.Android/tree/0.11.2) (2026-10-01)
 [Full Changelog](https://github.com/auth0/Guardian.Android/compare/0.11.1...0.11.2)
